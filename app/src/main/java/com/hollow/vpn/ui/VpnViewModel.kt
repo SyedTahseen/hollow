@@ -10,7 +10,9 @@ import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.FetchingProgressState
 import com.hollow.vpn.data.FetchingStage
 import com.hollow.vpn.data.ServerEntity
+import com.hollow.vpn.data.ServerCategory
 import com.hollow.vpn.data.ServerFilter
+import com.hollow.vpn.data.categoryLabel
 import com.hollow.vpn.data.SubscriptionEntity
 import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -131,6 +134,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedFilter = MutableStateFlow(ServerFilter.FASTEST)
     val selectedFilter: StateFlow<ServerFilter> = _selectedFilter.asStateFlow()
 
+    private val _selectedCategory = MutableStateFlow(ServerCategory.ALL_KEY)
+    val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
+
     private val _telemetry = MutableStateFlow(ConnectionTelemetryState())
     val telemetry: StateFlow<ConnectionTelemetryState> = _telemetry.asStateFlow()
 
@@ -162,50 +168,57 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
+    val allSubscriptions: StateFlow<List<SubscriptionEntity>> = dao.observeSubscriptions()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    /** Pills for the Servers screen: All, Default (manual), then one per subscription. */
+    val serverCategories: StateFlow<List<ServerCategory>> = allSubscriptions
+        .map { subs ->
+            val labels = subs.map { it.categoryLabel() }
+            val seen = mutableMapOf<String, Int>()
+            val subCategories = subs.mapIndexed { i, sub ->
+                val base = labels[i]
+                val n = (seen[base] ?: 0) + 1
+                seen[base] = n
+                val label = if (labels.count { it == base } > 1) "$base $n" else base
+                ServerCategory(key = sub.url.trim(), label = label)
+            }
+            listOf(
+                ServerCategory(ServerCategory.ALL_KEY, "All"),
+                ServerCategory(ServerCategory.DEFAULT_KEY, "Default")
+            ) + subCategories
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf(
+                ServerCategory(ServerCategory.ALL_KEY, "All"),
+                ServerCategory(ServerCategory.DEFAULT_KEY, "Default")
+            )
+        )
+
     val filteredServers: StateFlow<List<ServerEntity>> = combine(
         allServers,
-        _selectedFilter,
-        _settings
-    ) { servers, filter, settings ->
+        _selectedCategory,
+        _settings,
+        allSubscriptions
+    ) { servers, category, settings, subs ->
         val protocolFiltered = filterByProtocolPreference(servers, settings.protocolPreference)
-        when (filter) {
-            ServerFilter.FASTEST -> {
-                protocolFiltered.sortedWith(
-                    compareBy<ServerEntity> { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
-                        .thenByDescending { it.lastSpeedMbps }
-                )
-            }
-            ServerFilter.ALL -> {
-                protocolFiltered.sortedWith(
-                    compareByDescending<ServerEntity> { it.isSelected }
-                        .thenBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
-                )
-            }
-            ServerFilter.RECOMMENDED -> {
-                protocolFiltered
-                    .sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
-                    .take(15)
-            }
-            ServerFilter.LOW_PING -> {
-                val minLive = protocolFiltered.filter { it.pingMs > 0 }.minOfOrNull { it.pingMs } ?: 120
-                val threshold = max(120, minLive + 45)
-                protocolFiltered.filter { it.pingMs in 1..threshold }.sortedBy { it.pingMs }
-            }
-            ServerFilter.HIGH_SPEED -> {
-                protocolFiltered.filter {
-                    it.transport.equals("Reality", ignoreCase = true) ||
-                        it.transport.equals("VLESS", ignoreCase = true) ||
-                        it.transport.equals("gRPC", ignoreCase = true) ||
-                        it.transport.equals("WebSocket", ignoreCase = true) ||
-                        it.transport.equals("Hysteria2", ignoreCase = true)
-                }.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }.take(15)
-            }
-            ServerFilter.CUSTOM -> {
-                protocolFiltered.filter { it.isCustom }.sortedWith(
-                    compareByDescending<ServerEntity> { it.isSelected }
-                        .thenBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
-                )
-            }
+        val sorted = protocolFiltered.sortedWith(
+            compareByDescending<ServerEntity> { it.isSelected }
+                .thenBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
+        )
+        val knownSubscription = subs.any { it.url.trim() == category }
+        when {
+            category == ServerCategory.DEFAULT_KEY ->
+                sorted.filter { it.isCustom || it.subscriptionUrl.isBlank() }
+            knownSubscription ->
+                sorted.filter { !it.isCustom && it.subscriptionUrl.trim() == category }
+            else -> sorted
         }
     }.stateIn(
         scope = viewModelScope,
@@ -631,6 +644,10 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setFilter(filter: ServerFilter) {
         _selectedFilter.value = filter
+    }
+
+    fun setCategory(key: String) {
+        _selectedCategory.value = key
     }
 
     fun checkForAppUpdates() {
@@ -1060,7 +1077,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 dao.clearSelection()
                 val verified = candidate.copy(pingMs = verifiedPing, isSelected = true, isCustom = true)
                 dao.insertServer(verified)
-                _selectedFilter.value = ServerFilter.CUSTOM
+                _selectedCategory.value = ServerCategory.DEFAULT_KEY
                 navigateTo(VpnScreen.SERVER_LIST)
                 showMessage("Added custom server (${verified.countryName} · $verifiedPing ms)")
                 return@launch
@@ -1133,7 +1150,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             }
             dao.clearSelection()
             dao.insertServer(finalServer)
-            _selectedFilter.value = ServerFilter.CUSTOM
+            _selectedCategory.value = ServerCategory.DEFAULT_KEY
             navigateTo(VpnScreen.SERVER_LIST)
             showMessage("Added ${finalServer.countryName} · ${finalServer.resolvedIp} ($verifiedPing ms)")
         }

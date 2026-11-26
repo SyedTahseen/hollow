@@ -1598,20 +1598,13 @@ fun ServerItemRowContent(
                     overflow = TextOverflow.Ellipsis
                 )
                 if (server.isSelected) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = NothingCanvas,
-                        border = BorderStroke(1.dp, NothingMatrixGreen)
-                    ) {
-                        Text(
-                            text = "ACTIVE",
-                            fontFamily = JetBrainsMonoFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 8.5.sp,
-                            color = NothingMatrixGreen,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                        )
-                    }
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(NothingMatrixGreen)
+                            .semantics { contentDescription = "Active server" }
+                    )
                 } else if (showLightningBadge) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),

@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -80,7 +81,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hollow.vpn.data.ServerEntity
-import com.hollow.vpn.data.ServerFilter
+import com.hollow.vpn.data.ServerCategory
 import com.hollow.vpn.ui.components.HollowBlinkingDot
 import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDottedDivider
@@ -117,10 +118,14 @@ import com.hollow.vpn.ui.theme.nothingPressScale
 @Composable
 fun CountryServerListScreen(
     servers: List<ServerEntity>,
-    selectedFilter: ServerFilter = ServerFilter.FASTEST,
+    categories: List<ServerCategory> = listOf(
+        ServerCategory(ServerCategory.ALL_KEY, "All"),
+        ServerCategory(ServerCategory.DEFAULT_KEY, "Default")
+    ),
+    selectedCategoryKey: String = ServerCategory.ALL_KEY,
     activeProtocolPreference: String = "Auto (V2Ray)",
     bottomContentPadding: Dp = 0.dp,
-    onSelectFilter: (ServerFilter) -> Unit = {},
+    onSelectCategory: (String) -> Unit = {},
     onResetProtocolFilter: () -> Unit = {},
     onSelectServer: (ServerEntity) -> Unit,
     onRefresh: () -> Unit,
@@ -182,15 +187,8 @@ fun CountryServerListScreen(
         displayedServers.take(6)
     }
 
-    val tabs = remember {
-        listOf(
-            ServerFilter.FASTEST to "Fastest",
-            ServerFilter.ALL to "All",
-            ServerFilter.LOW_PING to "Low ping",
-            ServerFilter.CUSTOM to "Custom"
-        )
-    }
-    val selectedTabIndex = tabs.indexOfFirst { it.first == selectedFilter }.let { if (it >= 0) it else 0 }
+    val selectedTabIndex = categories.indexOfFirst { it.key == selectedCategoryKey }.let { if (it >= 0) it else 0 }
+    val activeCategory = categories.getOrNull(selectedTabIndex)
 
     Box(
         modifier = Modifier
@@ -223,15 +221,6 @@ fun CountryServerListScreen(
                         letterSpacing = 0.9.sp,
                         maxLines = 1,
                         color = NothingOnCanvas
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = "${displayedServers.size} NODES  ·  ${rawGroups.size} COUNTRIES",
-                        fontFamily = JetBrainsMonoFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 10.5.sp,
-                        letterSpacing = 1.2.sp,
-                        color = HollowInkSecondary
                     )
                 }
 
@@ -374,12 +363,12 @@ fun CountryServerListScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Nothing OS Pill Filter Chips (FASTEST, ALL, LOW PING, CUSTOM)
+            // Category pills: All, Default (manually added), then one per subscription
             NothingPillTabRow(
-                tabs = tabs.map { it.second },
+                tabs = categories.map { it.label },
                 selectedIndex = selectedTabIndex,
-                onSelectTab = { idx -> onSelectFilter(tabs[idx].first) },
-                tabTestTags = tabs.map { "country_filter_${it.first.name.lowercase()}" },
+                onSelectTab = { idx -> categories.getOrNull(idx)?.let { onSelectCategory(it.key) } },
+                tabTestTags = categories.map { "server_category_${it.key.hashCode()}" },
                 fontSizeSp = 10.5f
             )
 
@@ -465,140 +454,21 @@ fun CountryServerListScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            AnimatedContent(
-                targetState = selectedFilter,
-                transitionSpec = {
-                    val ease = NothingMotion.FluidEase
-                    val fromIdx = tabs.indexOfFirst { it.first == initialState }.coerceAtLeast(0)
-                    val toIdx = tabs.indexOfFirst { it.first == targetState }.coerceAtLeast(0)
-                    val dir = if (toIdx >= fromIdx) 1 else -1
-                    (slideInHorizontally(tween(240, easing = ease)) { dir * (it * 0.10f).toInt() } +
-                        fadeIn(tween(200, easing = ease)))
-                        .togetherWith(
-                            slideOutHorizontally(tween(200, easing = ease)) { -dir * (it * 0.08f).toInt() } +
-                                fadeOut(tween(150))
-                        )
-                },
-                modifier = Modifier.weight(1f),
-                label = "server_filter_tab_motion"
-            ) { activeFilter ->
+            val isDefaultCategory = selectedCategoryKey == ServerCategory.DEFAULT_KEY
+            val listTitle = when {
+                selectedCategoryKey == ServerCategory.ALL_KEY || activeCategory == null -> "All servers"
+                isDefaultCategory -> "Default servers"
+                else -> "${activeCategory.label} servers"
+            }
+
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
+                    .fillMaxWidth()
                     .testTag("server_lazy_column"),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                val isFastestTab = activeFilter == ServerFilter.FASTEST
-                val isCustomTab = activeFilter == ServerFilter.CUSTOM
-
-                // Nothing OS Inverted High-Contrast FASTEST Hero Card (white in Dark, matte black in Light)
-                if (isFastestTab && fastestNode != null) {
-                    item(key = "fastest_hero_card") {
-                        val heroInteraction = remember { MutableInteractionSource() }
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateItem()
-                                .nothingPressScale(heroInteraction, pressedScale = 0.97f)
-                                .clip(RoundedCornerShape(22.dp))
-                                .clickable(
-                                    interactionSource = heroInteraction,
-                                    indication = androidx.compose.material3.ripple(),
-                                    role = Role.Button
-                                ) { onSelectServer(fastestNode) }
-                                .testTag("server_card_featured"),
-                            shape = RoundedCornerShape(22.dp),
-                            color = NothingInvertedSurface
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 18.dp, vertical = 16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        HollowBlinkingDot(
-                                            color = NothingRed,
-                                            modifier = Modifier.size(6.dp)
-                                        )
-                                        Text(
-                                            text = "FASTEST",
-                                            fontFamily = JetBrainsMonoFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 10.sp,
-                                            letterSpacing = 1.4.sp,
-                                            color = NothingOnInvertedSurface
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(7.dp)
-                                    ) {
-                                        CountryFlag(countryCode = fastestNode.countryCode, width = 28.dp, height = 19.dp)
-                                        Text(
-                                            text = fastestNode.countryName.ifBlank { "FASTEST" }.uppercase(),
-                                            fontFamily = DotoDisplayFamily,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            fontSize = 21.sp,
-                                            letterSpacing = 0.8.sp,
-                                            color = NothingOnInvertedSurface,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    val addr = fastestNode.resolvedIp.ifBlank { fastestNode.host }
-                                    Text(
-                                        text = addr,
-                                        fontFamily = JetBrainsMonoFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 11.5.sp,
-                                        color = NothingOnInvertedSecondary,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(10.dp))
-
-                                Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(
-                                        text = if (fastestNode.pingMs > 0) "${fastestNode.pingMs}" else "—",
-                                        fontFamily = DotoDisplayFamily,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 30.sp,
-                                        color = NothingOnInvertedSurface
-                                    )
-                                    if (fastestNode.pingMs > 0) {
-                                        Spacer(modifier = Modifier.width(3.dp))
-                                        Text(
-                                            text = "ms",
-                                            fontFamily = JetBrainsMonoFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 11.5.sp,
-                                            color = NothingOnInvertedSecondary,
-                                            modifier = Modifier.padding(bottom = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(14.dp))
-                    }
-                }
-
-                val isEmpty = when {
-                    isFastestTab -> topFastestServers.isEmpty()
-                    isCustomTab -> displayedServers.isEmpty()
-                    else -> orderedGroups.isEmpty()
-                }
-                if (isEmpty) {
+                if (displayedServers.isEmpty()) {
                     item(key = "empty_state") {
                         Surface(
                             modifier = Modifier
@@ -622,7 +492,7 @@ fun CountryServerListScreen(
                                     modifier = Modifier.size(30.dp)
                                 )
                                 Text(
-                                    text = if (isCustomTab) "No custom servers" else "No matching servers",
+                                    text = if (isDefaultCategory) "No default servers" else "No matching servers",
                                     fontFamily = SpaceGroteskFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
@@ -631,7 +501,7 @@ fun CountryServerListScreen(
                                 val emptyMsg = when {
                                     activeProtocolPreference != "Auto (V2Ray)" ->
                                         "No servers match \"${formatConsumerProtocol(activeProtocolPreference)}\". Reset to Auto or add a server."
-                                    isCustomTab ->
+                                    isDefaultCategory ->
                                         "Manually added servers, pasted config keys, and scanned QR nodes will show up here."
                                     else ->
                                         "Import a subscription link, server config, or QR code to populate servers."
@@ -649,7 +519,7 @@ fun CountryServerListScreen(
                                         }
                                     }
                                     Button(
-                                        onClick = if (isCustomTab) onOpenAddManualServer else onOpenAddServer,
+                                        onClick = if (isDefaultCategory) onOpenAddManualServer else onOpenAddServer,
                                         shape = RoundedCornerShape(14.dp),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = HollowInk,
@@ -657,319 +527,70 @@ fun CountryServerListScreen(
                                         ),
                                         modifier = Modifier.testTag("empty_add_server_button")
                                     ) {
-                                        Text(if (isCustomTab) "Add custom server" else "Add server")
+                                        Text(if (isDefaultCategory) "Add custom server" else "Add server")
                                     }
                                 }
                             }
                         }
                     }
-                }
-
-                if (isCustomTab && displayedServers.isNotEmpty()) {
-                    item(key = "custom_list_header") {
+                } else {
+                    item(key = "list_header") {
                         Text(
-                            text = "CUSTOM SERVERS · ${displayedServers.size}",
+                            text = "$listTitle (${displayedServers.size})",
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp,
-                            letterSpacing = 1.4.sp,
+                            letterSpacing = 1.2.sp,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    item(key = "custom_flat_list") {
+                    itemsIndexed(displayedServers, key = { _, server -> server.id }) { idx, server ->
+                        val isChecked = server.id in selectedIds
                         Column(modifier = Modifier.fillMaxWidth()) {
-                            displayedServers.forEachIndexed { idx, server ->
-                                val isChecked = server.id in selectedIds
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            if (isSelectionMode) {
-                                                selectedIds = if (isChecked) {
-                                                    selectedIds - server.id
-                                                } else {
-                                                    selectedIds + server.id
-                                                }
-                                            } else {
-                                                onSelectServer(server)
-                                            }
-                                        }
-                                        .testTag("custom_server_${server.id}")
-                                ) {
-                                    ServerItemRowContent(
-                                        server = server,
-                                        showLightningBadge = server.isSelected,
-                                        onSelect = { onSelectServer(server) },
-                                        onPing = { onPingServer(server) },
-                                        onInspectJson = { onInspectJson(server) },
-                                        onDelete = { onDeleteServer(server) },
-                                        onCopyFeedback = onShowMessage,
-                                        onShareQr = { onShareQr(server) },
-                                        isSelectionMode = isSelectionMode,
-                                        isCheckedForBatch = isChecked,
-                                        onToggleBatchCheck = {
-                                            selectedIds = if (isChecked) {
-                                                selectedIds - server.id
-                                            } else {
-                                                selectedIds + server.id
-                                            }
-                                        },
-                                        showCountryBadge = true
-                                    )
-                                }
-                                if (idx < displayedServers.lastIndex) {
-                                    NothingDottedDivider()
-                                }
-                            }
-                        }
-                    }
-                } else if (isFastestTab && topFastestServers.isNotEmpty()) {
-                    item(key = "fastest_list_header") {
-                        Text(
-                            text = "TOP ${topFastestServers.size} FASTEST",
-                            fontFamily = JetBrainsMonoFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp,
-                            letterSpacing = 1.4.sp,
-                            color = HollowInkSecondary,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-                    item(key = "fastest_flat_list") {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            topFastestServers.forEachIndexed { idx, server ->
-                                val isChecked = server.id in selectedIds
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            if (isSelectionMode) {
-                                                selectedIds = if (isChecked) {
-                                                    selectedIds - server.id
-                                                } else {
-                                                    selectedIds + server.id
-                                                }
-                                            } else {
-                                                onSelectServer(server)
-                                            }
-                                        }
-                                        .testTag("fastest_server_${server.id}")
-                                ) {
-                                    ServerItemRowContent(
-                                        server = server,
-                                        showLightningBadge = idx == 0 || server.isSelected,
-                                        onSelect = { onSelectServer(server) },
-                                        onPing = { onPingServer(server) },
-                                        onInspectJson = { onInspectJson(server) },
-                                        onDelete = { onDeleteServer(server) },
-                                        onCopyFeedback = onShowMessage,
-                                        onShareQr = { onShareQr(server) },
-                                        isSelectionMode = isSelectionMode,
-                                        isCheckedForBatch = isChecked,
-                                        onToggleBatchCheck = {
-                                            selectedIds = if (isChecked) {
-                                                selectedIds - server.id
-                                            } else {
-                                                selectedIds + server.id
-                                            }
-                                        },
-                                        showCountryBadge = true
-                                    )
-                                }
-                                if (idx < topFastestServers.lastIndex) {
-                                    NothingDottedDivider()
-                                }
-                            }
-                        }
-                    }
-                } else if (!isFastestTab) {
-                    // Country Rows (All / Low ping tabs — without top Fastest hero card)
-                    orderedGroups.forEachIndexed { groupIndex, (country, countryServers) ->
-                    val orderedServers = countryServers.sortedBy {
-                        if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE
-                    }
-                    val bestPing = orderedServers.firstOrNull { it.pingMs > 0 }?.pingMs ?: 0
-                    val hasSelected = orderedServers.any { it.isSelected }
-                    val isExpanded = expanded[country] ?: (isSelectionMode || orderedGroups.size == 1)
-
-                    val groupCode = orderedServers.firstOrNull {
-                        it.countryCode.length == 2 && !it.countryCode.equals("XX", ignoreCase = true)
-                    }?.countryCode
-
-                    item(key = "country_$country") {
-                        val chevronAngle by animateFloatAsState(
-                            targetValue = if (isExpanded) 90f else 0f,
-                            animationSpec = NothingMotion.snappySpring(),
-                            label = "country_chevron_$country"
-                        )
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateItem()
-                        ) {
-                            Row(
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .minimumInteractiveComponentSize()
-                                    .clickable(role = Role.Button) {
-                                        expanded[country] = !isExpanded
+                                    .clickable {
+                                        if (isSelectionMode) {
+                                            selectedIds = if (isChecked) {
+                                                selectedIds - server.id
+                                            } else {
+                                                selectedIds + server.id
+                                            }
+                                        } else {
+                                            onSelectServer(server)
+                                        }
                                     }
-                                    .padding(vertical = 13.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .testTag("server_row_${server.id}")
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        CountryFlag(countryCode = groupCode, width = 26.dp, height = 18.dp)
-                                        Text(
-                                            text = country,
-                                            fontFamily = SpaceGroteskFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 15.5.sp,
-                                            color = NothingOnCanvas,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        if (hasSelected) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(6.dp)
-                                                    .clip(RoundedCornerShape(50))
-                                                    .background(NothingRed)
-                                            )
+                                ServerItemRowContent(
+                                    server = server,
+                                    showLightningBadge = server.isSelected,
+                                    onSelect = { onSelectServer(server) },
+                                    onPing = { onPingServer(server) },
+                                    onInspectJson = { onInspectJson(server) },
+                                    onDelete = { onDeleteServer(server) },
+                                    onCopyFeedback = onShowMessage,
+                                    onShareQr = { onShareQr(server) },
+                                    isSelectionMode = isSelectionMode,
+                                    isCheckedForBatch = isChecked,
+                                    onToggleBatchCheck = {
+                                        selectedIds = if (isChecked) {
+                                            selectedIds - server.id
+                                        } else {
+                                            selectedIds + server.id
                                         }
-                                    }
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Text(
-                                        text = "${orderedServers.size} NODE${if (orderedServers.size == 1) "" else "S"}",
-                                        fontFamily = JetBrainsMonoFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 10.sp,
-                                        letterSpacing = 1.2.sp,
-                                        color = HollowInkSecondary
-                                    )
-                                }
-
-                                Column(
-                                    horizontalAlignment = Alignment.End,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    if (bestPing > 0) {
-                                        Row(verticalAlignment = Alignment.Bottom) {
-                                            Text(
-                                                text = "$bestPing",
-                                                fontFamily = JetBrainsMonoFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 13.sp,
-                                                color = NothingOnCanvas
-                                            )
-                                            Spacer(modifier = Modifier.width(3.dp))
-                                            Text(
-                                                text = "ms",
-                                                fontFamily = JetBrainsMonoFamily,
-                                                fontSize = 11.sp,
-                                                color = HollowInkSecondary
-                                            )
-                                        }
-                                    } else {
-                                        Text(
-                                            text = "TIMEOUT",
-                                            fontFamily = JetBrainsMonoFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 10.5.sp,
-                                            letterSpacing = 0.8.sp,
-                                            color = NothingRed
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    NothingSignalDots(pingMs = bestPing, dotSize = 5.dp, dotSpacing = 4.dp)
-                                }
-
-                                Spacer(modifier = Modifier.width(10.dp))
-
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                                    contentDescription = if (isExpanded) "Collapse $country" else "Expand $country",
-                                    tint = HollowInkSecondary,
-                                    modifier = Modifier
-                                        .size(18.dp)
-                                        .rotate(chevronAngle)
+                                    },
+                                    showCountryBadge = true
                                 )
                             }
-
-                            AnimatedVisibility(
-                                visible = isExpanded,
-                                enter = expandVertically() + fadeIn(),
-                                exit = shrinkVertically() + fadeOut()
-                            ) {
-                                Surface(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 14.dp),
-                                    shape = RoundedCornerShape(18.dp),
-                                    color = NothingCardSurface,
-                                    border = BorderStroke(1.dp, NothingBorder)
-                                ) {
-                                    Column(modifier = Modifier.fillMaxWidth()) {
-                                        orderedServers.forEachIndexed { idx, server ->
-                                            val isChecked = server.id in selectedIds
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        if (isSelectionMode) {
-                                                            selectedIds = if (isChecked) {
-                                                                selectedIds - server.id
-                                                            } else {
-                                                                selectedIds + server.id
-                                                            }
-                                                        } else {
-                                                            onSelectServer(server)
-                                                        }
-                                                    }
-                                                    .testTag("country_server_${server.id}")
-                                            ) {
-                                                ServerItemRowContent(
-                                                    server = server,
-                                                    showLightningBadge = server.isSelected,
-                                                    onSelect = { onSelectServer(server) },
-                                                    onPing = { onPingServer(server) },
-                                                    onInspectJson = { onInspectJson(server) },
-                                                    onDelete = { onDeleteServer(server) },
-                                                    onCopyFeedback = onShowMessage,
-                                                    onShareQr = { onShareQr(server) },
-                                                    isSelectionMode = isSelectionMode,
-                                                    isCheckedForBatch = isChecked,
-                                                    onToggleBatchCheck = {
-                                                        selectedIds = if (isChecked) {
-                                                            selectedIds - server.id
-                                                        } else {
-                                                            selectedIds + server.id
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                            if (idx < orderedServers.lastIndex) {
-                                                NothingDottedDivider(
-                                                    modifier = Modifier.padding(horizontal = 12.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (groupIndex < orderedGroups.lastIndex) {
+                            if (idx < displayedServers.lastIndex) {
                                 NothingDottedDivider()
                             }
                         }
                     }
                 }
-                }
-            }
             }
         }
     }

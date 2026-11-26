@@ -52,20 +52,24 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
 
-      - name: Assemble debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+      # Build the minified (R8) release variant, signed with the temporary keystore.
+      # Debug builds are not minified, so they are ~2x bigger. This gives one small APK per CPU type.
+      - name: Assemble minified APKs (arm64-v8a / armeabi-v7a)
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      - name: Rename debug APK
+      - name: Pick arm64-v8a APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/debug/*.apk dist/HollowVPN-debug.apk
+          ls -lh app/build/outputs/apk/release/
+          APK=$(ls app/build/outputs/apk/release/*arm64-v8a*.apk | head -n 1)
+          cp "$APK" dist/HollowVPN-arm64-v8a.apk
           ls -lh dist
 
-      - name: Upload debug APK (zipped workflow artifact)
+      - name: Upload APK (zipped workflow artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: hollow-vpn-debug-apk
-          path: dist/HollowVPN-debug.apk
+          name: hollow-vpn-arm64-apk
+          path: dist/HollowVPN-arm64-v8a.apk
           if-no-files-found: error
 
       # Direct, un-zipped APK download: Releases page -> "debug-latest" -> HollowVPN-debug.apk
@@ -77,15 +81,15 @@ jobs:
           git tag -f debug-latest
           git push -f origin refs/tags/debug-latest
 
-      - name: Publish debug APK to GitHub Release
+      - name: Publish APK to GitHub Release
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: debug-latest
-          name: Latest debug build
+          name: Latest build (arm64-v8a)
           prerelease: true
           make_latest: false
           body: |
-            Automatic debug build from commit `${{ github.sha }}`.
-            Download `HollowVPN-debug.apk` below and install it directly (no unzipping needed).
-          files: dist/HollowVPN-debug.apk
+            Automatic build (arm64-v8a, minified) from commit `${{ github.sha }}`.
+            Download `HollowVPN-arm64-v8a.apk` below and install it directly (no unzipping needed).
+          files: dist/HollowVPN-arm64-v8a.apk

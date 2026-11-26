@@ -57,6 +57,32 @@ data class SubscriptionEntity(
     val failedPulls: Int = 0
 )
 
+/** A pill on the Servers screen: "All", "Default" (manually added), or one per subscription. */
+data class ServerCategory(val key: String, val label: String) {
+    companion object {
+        const val ALL_KEY = "all"
+        const val DEFAULT_KEY = "default"
+    }
+}
+
+/** Human readable pill label for a subscription (its name, or a name derived from its URL). */
+fun SubscriptionEntity.categoryLabel(): String {
+    val trimmedName = name.trim()
+    if (trimmedName.isNotBlank() && !trimmedName.equals("Custom Subscription", ignoreCase = true)) return trimmedName
+    return try {
+        val uri = java.net.URI(url.trim())
+        val host = uri.host?.removePrefix("www.").orEmpty()
+        val segments = uri.path.orEmpty().split('/').filter { it.isNotBlank() }
+        when {
+            (host == "raw.githubusercontent.com" || host == "github.com") && segments.isNotEmpty() -> segments[0]
+            host.isNotBlank() -> host
+            else -> "Subscription"
+        }
+    } catch (_: Exception) {
+        "Subscription"
+    }
+}
+
 enum class ServerFilter(val label: String) {
     FASTEST("Fastest"),
     ALL("All"),

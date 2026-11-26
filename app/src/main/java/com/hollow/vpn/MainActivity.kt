@@ -136,7 +136,8 @@ fun HollowVpnApp(
     val gettingStartedStep by vpnViewModel.gettingStartedStep.collectAsStateWithLifecycle()
     val allServers by vpnViewModel.allServers.collectAsStateWithLifecycle()
     val filteredServers by vpnViewModel.filteredServers.collectAsStateWithLifecycle()
-    val selectedFilter by vpnViewModel.selectedFilter.collectAsStateWithLifecycle()
+    val serverCategories by vpnViewModel.serverCategories.collectAsStateWithLifecycle()
+    val selectedCategory by vpnViewModel.selectedCategory.collectAsStateWithLifecycle()
     val selectedServer by vpnViewModel.selectedServer.collectAsStateWithLifecycle()
     val telemetry by vpnViewModel.telemetry.collectAsStateWithLifecycle()
     val settings by vpnViewModel.settings.collectAsStateWithLifecycle()
@@ -541,10 +542,11 @@ fun HollowVpnApp(
                             VpnScreen.SERVER_LIST -> {
                                 CountryServerListScreen(
                                     servers = filteredServers,
-                                    selectedFilter = selectedFilter,
+                                    categories = serverCategories,
+                                    selectedCategoryKey = selectedCategory,
                                     activeProtocolPreference = settings.protocolPreference,
                                     bottomContentPadding = innerPadding.calculateBottomPadding(),
-                                    onSelectFilter = vpnViewModel::setFilter,
+                                    onSelectCategory = vpnViewModel::setCategory,
                                     onResetProtocolFilter = {
                                         vpnViewModel.updateSettings { it.copy(protocolPreference = "Auto (V2Ray)") }
                                     },
