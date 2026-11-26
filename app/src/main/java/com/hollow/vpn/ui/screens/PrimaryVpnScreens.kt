@@ -48,7 +48,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -958,19 +957,14 @@ private fun HomeContent(
                             color = pingColor,
                             maxLines = 1
                         )
-                        Spacer(modifier = Modifier.width(HollowSpace.Xs))
+                    } else {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = "Add server",
+                            tint = HollowInkSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-
-                    Icon(
-                        imageVector = if (selectedServer != null) {
-                            Icons.AutoMirrored.Rounded.KeyboardArrowRight
-                        } else {
-                            Icons.Rounded.Add
-                        },
-                        contentDescription = if (selectedServer != null) "Choose server" else "Add server",
-                        tint = HollowInkSecondary,
-                        modifier = Modifier.size(20.dp)
-                    )
                 }
             }
 
