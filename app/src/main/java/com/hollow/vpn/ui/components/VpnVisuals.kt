@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowSpace
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -413,7 +414,7 @@ fun HollowBottomNavigationBar(
             .fillMaxWidth()
             .background(if (showBackdrop) animBg else Color.Transparent)
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
+            .padding(horizontal = HollowSpace.Gutter, vertical = HollowSpace.Sm),
         contentAlignment = Alignment.Center
     ) {
         Surface(
@@ -428,7 +429,7 @@ fun HollowBottomNavigationBar(
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 7.dp, vertical = 6.dp)
+                    .padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Sm)
             ) {
                 val itemGap = 6.dp
                 val slotWidth = ((maxWidth - itemGap * 2) / 3f).coerceAtLeast(1.dp)
@@ -775,7 +776,7 @@ fun HollowSwitch(
                 .clip(RoundedCornerShape(14.dp))
                 .background(trackColor)
                 .border(1.4.dp, borderColor, RoundedCornerShape(14.dp))
-                .padding(horizontal = 4.dp),
+                .padding(horizontal = HollowSpace.Xs),
             contentAlignment = Alignment.CenterStart
         ) {
             Box(
@@ -859,7 +860,7 @@ fun HollowEditorialRouteCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val w = size.width
@@ -1074,7 +1075,7 @@ fun HollowEditorialRouteCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 4.dp),
+                    .padding(horizontal = HollowSpace.Xs),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1122,7 +1123,7 @@ fun HollowConnectedSpeedPair(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
     ) {
         Surface(
             modifier = Modifier.weight(1f),
@@ -1130,7 +1131,7 @@ fun HollowConnectedSpeedPair(
             color = HollowForestCard
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+                modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Lg)
             ) {
                 Text(
                     text = "DOWNLOAD",
@@ -1141,7 +1142,7 @@ fun HollowConnectedSpeedPair(
                     color = HollowForestMuted,
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = downloadNum,
@@ -1151,13 +1152,13 @@ fun HollowConnectedSpeedPair(
                         color = HollowDarkInk,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(HollowSpace.Xs))
                     Text(
                         text = downloadUnit,
                         fontFamily = JetBrainsMonoFamily,
                         fontSize = 13.sp,
                         color = HollowForestMuted,
-                        modifier = Modifier.padding(bottom = 3.dp)
+                        modifier = Modifier.padding(bottom = HollowSpace.Xs)
                     )
                 }
             }
@@ -1169,7 +1170,7 @@ fun HollowConnectedSpeedPair(
             color = HollowForestCard
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+                modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Lg)
             ) {
                 Text(
                     text = "UPLOAD",
@@ -1180,7 +1181,7 @@ fun HollowConnectedSpeedPair(
                     color = HollowForestMuted,
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = uploadNum,
@@ -1190,13 +1191,13 @@ fun HollowConnectedSpeedPair(
                         color = HollowDarkInk,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(HollowSpace.Xs))
                     Text(
                         text = uploadUnit,
                         fontFamily = JetBrainsMonoFamily,
                         fontSize = 13.sp,
                         color = HollowForestMuted,
-                        modifier = Modifier.padding(bottom = 3.dp)
+                        modifier = Modifier.padding(bottom = HollowSpace.Xs)
                     )
                 }
             }
@@ -1242,7 +1243,7 @@ fun HollowThroughputEqualizer(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs),
         verticalAlignment = Alignment.Bottom
     ) {
         samples.forEachIndexed { index, targetFraction ->
@@ -1302,7 +1303,7 @@ fun HollowProtectedTunnelCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                    .padding(horizontal = HollowSpace.Xl, vertical = HollowSpace.Lg),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
@@ -1324,7 +1325,7 @@ fun HollowProtectedTunnelCard(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Sm))
                     Text(
                         text = "You",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
@@ -1336,14 +1337,14 @@ fun HollowProtectedTunnelCard(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(bottom = 18.dp),
+                        .padding(bottom = HollowSpace.Lg),
                     contentAlignment = Alignment.Center
                 ) {
                     Canvas(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(16.dp)
-                            .padding(horizontal = 6.dp)
+                            .padding(horizontal = HollowSpace.Sm)
                     ) {
                         val y = size.height / 2f
                         drawLine(
@@ -1369,7 +1370,7 @@ fun HollowProtectedTunnelCard(
                     Box(
                         modifier = Modifier
                             .background(HollowForestCard)
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .padding(horizontal = HollowSpace.Sm, vertical = 2.dp)
                     ) {
                         Text(
                             text = "ENCRYPTED",
@@ -1402,7 +1403,7 @@ fun HollowProtectedTunnelCard(
                             color = HollowForest
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Sm))
                     Text(
                         text = countryName,
                         style = MaterialTheme.typography.bodySmall.copy(
@@ -1419,13 +1420,13 @@ fun HollowProtectedTunnelCard(
             HorizontalDivider(
                 thickness = 1.dp,
                 color = HollowForestDivider,
-                modifier = Modifier.padding(horizontal = 18.dp)
+                modifier = Modifier.padding(horizontal = HollowSpace.Lg)
             )
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = HollowSpace.Xl, vertical = HollowSpace.Lg),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1439,7 +1440,7 @@ fun HollowProtectedTunnelCard(
                         color = HollowForestMuted,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = realIp,
                         fontFamily = JetBrainsMonoFamily,
@@ -1465,7 +1466,7 @@ fun HollowProtectedTunnelCard(
                         color = HollowForestMuted,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = websitesSeeIp,
                         fontFamily = JetBrainsMonoFamily,
@@ -1524,14 +1525,14 @@ fun HollowProtectedSpeedChartCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 18.dp, end = 18.dp, top = 11.dp, bottom = 4.dp),
+                    .padding(start = HollowSpace.Lg, end = HollowSpace.Lg, top = HollowSpace.Md, bottom = HollowSpace.Xs),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         Box(
                             modifier = Modifier
@@ -1558,7 +1559,7 @@ fun HollowProtectedSpeedChartCard(
                             color = HollowDarkInk,
                             maxLines = 1
                         )
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(HollowSpace.Xs))
                         Text(
                             text = downloadUnit,
                             fontFamily = JetBrainsMonoFamily,
@@ -1575,7 +1576,7 @@ fun HollowProtectedSpeedChartCard(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         Box(
                             modifier = Modifier
@@ -1602,7 +1603,7 @@ fun HollowProtectedSpeedChartCard(
                             color = HollowDarkInk,
                             maxLines = 1
                         )
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(HollowSpace.Xs))
                         Text(
                             text = uploadUnit,
                             fontFamily = JetBrainsMonoFamily,
@@ -1618,7 +1619,7 @@ fun HollowProtectedSpeedChartCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(chartHeight)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = HollowSpace.Lg)
             ) {
                 val w = size.width
                 val h = size.height
@@ -1727,7 +1728,7 @@ fun HollowProtectedSpeedChartCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 9.dp),
+                    .padding(start = HollowSpace.Lg, end = HollowSpace.Lg, top = 2.dp, bottom = HollowSpace.Sm),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
@@ -1774,7 +1775,7 @@ fun HollowUnderlinedTabRow(
                     modifier = Modifier
                         .then(if (tag != null) Modifier.testTag(tag) else Modifier)
                         .clickable(role = Role.Tab) { onSelectTab(index) }
-                        .padding(top = 6.dp),
+                        .padding(top = HollowSpace.Sm),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -1786,7 +1787,7 @@ fun HollowUnderlinedTabRow(
                         color = if (isSelected) HollowInk else HollowInkSecondary,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Md))
                     Box(
                         modifier = Modifier
                             .height(2.5.dp)
@@ -1848,7 +1849,7 @@ fun HollowDisconnectedExposureCard(
         border = BorderStroke(1.dp, HollowCreamDivider)
     ) {
         Column(modifier = if (fillCanvasHeight) Modifier.fillMaxSize() else Modifier.fillMaxWidth()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
 
             val mapInkColor = HollowInk
             val mapCanvasColor = NothingCanvas
@@ -1864,7 +1865,7 @@ fun HollowDisconnectedExposureCard(
                             Modifier.height(mapHeight)
                         }
                     )
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = HollowSpace.Md)
             ) {
                 val w = size.width
                 val h = size.height
@@ -1973,20 +1974,20 @@ fun HollowDisconnectedExposureCard(
 
             NothingDottedDivider(
                 color = HollowCreamDivider,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = HollowSpace.Lg)
             )
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 11.dp),
+                    .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 10.dp),
+                        .padding(end = HollowSpace.Md),
                     horizontalAlignment = Alignment.Start
                 ) {
                     Text(
@@ -2020,7 +2021,7 @@ fun HollowDisconnectedExposureCard(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 10.dp),
+                        .padding(start = HollowSpace.Md),
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
@@ -2035,7 +2036,7 @@ fun HollowDisconnectedExposureCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         CountryFlag(countryCode = originCountryCode, width = 20.dp, height = 14.dp)
                         Text(
@@ -2425,7 +2426,7 @@ fun HollowVpnLogoCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(18.dp)
+                .padding(HollowSpace.Lg)
         ) {
             Box(
                 modifier = Modifier

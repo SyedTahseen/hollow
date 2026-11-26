@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import android.Manifest
 import android.content.pm.PackageManager
 import android.util.Size
@@ -147,7 +149,7 @@ fun QrScanScreen(
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = HollowScreenPadding)
-                .padding(top = 12.dp, bottom = 12.dp),
+                .padding(top = HollowSpace.Md, bottom = HollowSpace.Md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             HollowTopSquareButton(
@@ -166,7 +168,7 @@ fun QrScanScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(HollowSpace.Md))
 
             Text(
                 text = "SCAN QR",
@@ -179,7 +181,7 @@ fun QrScanScreen(
                 modifier = Modifier.weight(1f)
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
                 if (hasPermission && hasFlash) {
                     HollowTopSquareButton(
                         containerColor = NothingTopBtnFill,
@@ -243,14 +245,14 @@ fun QrScanScreen(
                         tint = NothingRed,
                         modifier = Modifier.size(56.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
                     Text(
                         text = "Scan a QR code",
                         fontWeight = FontWeight.Bold,
                         fontSize = 19.sp,
                         color = HollowInk
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Sm))
                     Text(
                         text = if (permissionDenied) {
                             "Camera permission is needed to scan. You can still pick a QR image from your gallery."
@@ -260,9 +262,9 @@ fun QrScanScreen(
                         fontSize = 13.sp,
                         color = HollowInkSecondary,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp)
+                        modifier = Modifier.padding(horizontal = HollowSpace.Xxxl)
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xxl))
                     Button(
                         onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
                         shape = RoundedCornerShape(14.dp),
@@ -271,7 +273,7 @@ fun QrScanScreen(
                             contentColor = HollowCream
                         ),
                         modifier = Modifier
-                            .height(48.dp)
+                            .height(HollowSizes.Button)
                             .testTag("btn_grant_camera_permission")
                     ) {
                         Text(
@@ -292,7 +294,7 @@ fun QrScanScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                        .padding(horizontal = HollowSpace.Xxl, vertical = HollowSpace.Md)
                 )
             }
         }

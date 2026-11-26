@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -217,16 +220,14 @@ fun CountryServerListScreen(
     ) {
         Column(
             modifier = Modifier
+                .widthIn(max = HollowSizes.MaxContent)
                 .fillMaxSize()
-                .widthIn(max = 620.dp)
                 .align(Alignment.TopCenter)
                 .padding(horizontal = HollowScreenPadding)
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Nothing OS Header: Doto ALL-CAPS SERVERS + monospace count on left, circular hairline action buttons on right
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -243,7 +244,7 @@ fun CountryServerListScreen(
                 }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     HollowTopSquareButton(
@@ -323,7 +324,7 @@ fun CountryServerListScreen(
                             HorizontalDivider(
                                 thickness = 1.dp,
                                 color = NothingBorder,
-                                modifier = Modifier.padding(vertical = 4.dp)
+                                modifier = Modifier.padding(vertical = HollowSpace.Xs)
                             )
                             ServerOverflowMenuItem(
                                 icon = Icons.Outlined.DeleteOutline,
@@ -366,7 +367,7 @@ fun CountryServerListScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             // Category pills: All, Default (manually added), then one per subscription
             val favTabKey = "__favorites__"
@@ -395,7 +396,7 @@ fun CountryServerListScreen(
             )
 
             if (activeProtocolPreference != "Auto (V2Ray)") {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Md))
                 Surface(
                     shape = RoundedCornerShape(50),
                     color = HollowCreamSurface,
@@ -405,9 +406,9 @@ fun CountryServerListScreen(
                         .testTag("chip_reset_protocol_filter")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Sm),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         Text(
                             text = "Protocol: ${formatConsumerProtocol(activeProtocolPreference)}",
@@ -425,7 +426,7 @@ fun CountryServerListScreen(
             }
 
             if (isSelectionMode) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Md))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -435,7 +436,7 @@ fun CountryServerListScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -444,7 +445,7 @@ fun CountryServerListScreen(
                             style = MaterialTheme.typography.titleSmall,
                             color = HollowInk
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)) {
                             TextButton(
                                 onClick = {
                                     isSelectionMode = false
@@ -474,7 +475,7 @@ fun CountryServerListScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             val isDefaultCategory = selectedCategoryKey == ServerCategory.DEFAULT_KEY
             val listTitle = when {
@@ -489,14 +490,14 @@ fun CountryServerListScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .testTag("server_lazy_column"),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                contentPadding = PaddingValues(bottom = HollowSpace.Xxl)
             ) {
                 if (displayedServers.isEmpty()) {
                     item(key = "empty_state") {
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 12.dp),
+                                .padding(top = HollowSpace.Md),
                             shape = RoundedCornerShape(20.dp),
                             color = HollowCreamSurface,
                             border = BorderStroke(1.dp, HollowCreamDivider)
@@ -504,9 +505,9 @@ fun CountryServerListScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(28.dp),
+                                    .padding(HollowSpace.Xxl),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.PublicOff,
@@ -535,7 +536,7 @@ fun CountryServerListScreen(
                                     color = HollowInkSecondary,
                                     textAlign = TextAlign.Center
                                 )
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
                                     if (activeProtocolPreference != "Auto (V2Ray)") {
                                         TextButton(onClick = onResetProtocolFilter) {
                                             Text("Reset Protocol", color = HollowInk)
@@ -568,7 +569,7 @@ fun CountryServerListScreen(
                             fontSize = 11.sp,
                             letterSpacing = 1.2.sp,
                             color = HollowInkSecondary,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
                     }
                     item(key = "fastest_server") {
@@ -683,7 +684,7 @@ private fun FastestServerRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = !isTesting, onClick = onClick)
-            .padding(start = 0.dp, end = 0.dp, top = 12.dp, bottom = 12.dp)
+            .padding(start = 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md)
             .testTag("server_fastest_row"),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -709,7 +710,7 @@ private fun FastestServerRow(
                 )
             }
         }
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Fastest server",
@@ -741,7 +742,7 @@ private fun ServerOverflowMenuItem(
         text = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md),
                 modifier = Modifier.padding(vertical = 2.dp)
             ) {
                 Icon(

@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import android.Manifest
 import android.app.Activity
 import android.content.ClipboardManager
@@ -155,28 +157,28 @@ fun GettingStartedScreen(
         NothingDotMatrixBackdrop()
         BoxWithConstraints(
             modifier = Modifier
+                .widthIn(max = HollowSizes.MaxContent)
                 .fillMaxSize()
-                .widthIn(max = 600.dp)
                 .align(Alignment.TopCenter)
                 .padding(horizontal = HollowScreenPadding)
         ) {
             val isCompact = maxHeight < 660.dp
 
             Column(modifier = Modifier.fillMaxSize()) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Md))
 
                 // Top 3-segment progress bar + Skip button matching GettingStarted HTML
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
+                        .height(HollowSizes.Control),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            .padding(end = HollowSpace.Xl),
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         for (index in 0..2) {
@@ -318,7 +320,7 @@ private fun GettingStartedWelcomeStep(
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(if (isCompact) 4.dp else 10.dp))
+            Spacer(modifier = Modifier.height(if (isCompact) HollowSpace.Xs else HollowSpace.Md))
 
             // Radar concentric rings + 3 orbital dots + centered 120dp shield mark
             val radarDividerColor = HollowCreamDivider
@@ -380,7 +382,7 @@ private fun GettingStartedWelcomeStep(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
 
             Text(
                 text = "Private by default.",
@@ -392,7 +394,7 @@ private fun GettingStartedWelcomeStep(
                 color = HollowInk
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             Text(
                 text = "Hollow sends your whole device through servers you control. No accounts, no tracking.",
@@ -407,7 +409,7 @@ private fun GettingStartedWelcomeStep(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 18.dp)
+                .padding(top = HollowSpace.Md, bottom = HollowSpace.Lg)
         ) {
             Button(
                 onClick = onGetStarted,
@@ -418,7 +420,7 @@ private fun GettingStartedWelcomeStep(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(HollowSizes.Button)
                     .testTag("onboarding_next_button")
             ) {
                 Text(
@@ -448,7 +450,7 @@ private fun GettingStartedServersStep(
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(if (isCompact) 10.dp else 20.dp))
+            Spacer(modifier = Modifier.height(if (isCompact) HollowSpace.Md else HollowSpace.Xl))
 
             Text(
                 text = "Bring your own servers.",
@@ -460,7 +462,7 @@ private fun GettingStartedServersStep(
                 color = HollowInk
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
 
             Text(
                 text = "Add a server any of these ways. You can change it later.",
@@ -472,7 +474,7 @@ private fun GettingStartedServersStep(
             )
 
             if (serverCount > 0 || isImportingQr) {
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Lg))
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = HollowCreamSurface,
@@ -481,9 +483,9 @@ private fun GettingStartedServersStep(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                     ) {
                         if (isImportingQr) {
                             CircularProgressIndicator(
@@ -523,7 +525,7 @@ private fun GettingStartedServersStep(
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Xxl))
 
             OnboardingServerOptionCard(
                 icon = Icons.Rounded.Link,
@@ -533,7 +535,7 @@ private fun GettingStartedServersStep(
                 testTag = "onboarding_card_subscription"
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             OnboardingServerOptionCard(
                 icon = Icons.Outlined.ContentPaste,
@@ -543,7 +545,7 @@ private fun GettingStartedServersStep(
                 testTag = "onboarding_card_paste"
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             OnboardingServerOptionCard(
                 icon = Icons.Rounded.QrCodeScanner,
@@ -557,7 +559,7 @@ private fun GettingStartedServersStep(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 18.dp)
+                .padding(top = HollowSpace.Md, bottom = HollowSpace.Lg)
         ) {
             Button(
                 onClick = onContinue,
@@ -568,7 +570,7 @@ private fun GettingStartedServersStep(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(HollowSizes.Button)
                     .testTag("onboarding_next_button")
             ) {
                 Text(
@@ -604,7 +606,7 @@ private fun OnboardingServerOptionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(13.dp),
+                .padding(HollowSpace.Md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -623,7 +625,7 @@ private fun OnboardingServerOptionCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(HollowSpace.Md))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -828,7 +830,7 @@ private fun GettingStartedPermissionsStep(
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(if (isCompact) 4.dp else 10.dp))
+            Spacer(modifier = Modifier.height(if (isCompact) HollowSpace.Xs else HollowSpace.Md))
 
             Text(
                 text = if (settings.hasCompletedOnboarding) {
@@ -844,7 +846,7 @@ private fun GettingStartedPermissionsStep(
                 color = HollowInk
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
 
             Text(
                 text = "Verify VPN access, Always-on kill switch protection, and background permissions so your connection stays leak-free.",
@@ -855,7 +857,7 @@ private fun GettingStartedPermissionsStep(
                 color = HollowInkSecondary
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -866,13 +868,13 @@ private fun GettingStartedPermissionsStep(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Sm),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         Box(
                             modifier = Modifier
@@ -902,7 +904,7 @@ private fun GettingStartedPermissionsStep(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
             HorizontalDivider(thickness = 1.dp, color = HollowCreamDivider)
 
             PermissionChecklistRow(
@@ -992,7 +994,7 @@ private fun GettingStartedPermissionsStep(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 16.dp)
+                .padding(top = HollowSpace.Sm, bottom = HollowSpace.Lg)
         ) {
             Button(
                 onClick = {
@@ -1016,7 +1018,7 @@ private fun GettingStartedPermissionsStep(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(HollowSizes.Button)
                     .testTag("onboarding_allow_button")
             ) {
                 val label = when {
@@ -1108,11 +1110,11 @@ private fun PermissionGuideModalSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = 26.dp)
+                .padding(bottom = HollowSpace.Xxl)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 Box(
                     modifier = Modifier
@@ -1138,7 +1140,7 @@ private fun PermissionGuideModalSheet(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             Text(
                 text = summary,
@@ -1146,7 +1148,7 @@ private fun PermissionGuideModalSheet(
                 color = HollowInkSecondary
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -1155,13 +1157,13 @@ private fun PermissionGuideModalSheet(
                 border = BorderStroke(1.dp, HollowCreamDivider)
             ) {
                 Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier.padding(HollowSpace.Lg),
+                    verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                 ) {
                     steps.forEachIndexed { idx, stepText ->
                         Row(
                             verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -1189,7 +1191,7 @@ private fun PermissionGuideModalSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Button(
                 onClick = onPrimaryAction,
@@ -1200,14 +1202,14 @@ private fun PermissionGuideModalSheet(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(HollowSizes.Button)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
                     contentDescription = null,
                     modifier = Modifier.size(17.dp)
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(HollowSpace.Sm))
                 Text(
                     text = primaryActionLabel,
                     fontFamily = SpaceGroteskFamily,
@@ -1216,7 +1218,7 @@ private fun PermissionGuideModalSheet(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             OutlinedButton(
                 onClick = onSecondaryAction,
@@ -1225,7 +1227,7 @@ private fun PermissionGuideModalSheet(
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = HollowInk),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(HollowSizes.Button)
             ) {
                 Text(
                     text = secondaryActionLabel,
@@ -1254,7 +1256,7 @@ private fun PermissionChecklistRow(
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(vertical = 10.dp)
+            .padding(vertical = HollowSpace.Md)
             .testTag(testTag)
             .semantics { contentDescription = "$title, $subtitle, $badgeText" },
         verticalAlignment = Alignment.CenterVertically
@@ -1293,7 +1295,7 @@ private fun PermissionChecklistRow(
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Md))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -1314,7 +1316,7 @@ private fun PermissionChecklistRow(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Sm))
 
         Text(
             text = badgeText,
@@ -1351,7 +1353,7 @@ private fun OnboardingSubscriptionSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = 28.dp)
+                .padding(bottom = HollowSpace.Xxl)
         ) {
             Text(
                 text = "Subscription link",
@@ -1360,13 +1362,13 @@ private fun OnboardingSubscriptionSheet(
                 fontSize = 24.sp,
                 color = HollowInk
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
             Text(
                 text = "Paste an Xray / V2Ray subscription URL. Hollow will verify and rank your fastest servers.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = HollowInkSecondary
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             OutlinedTextField(
                 value = urlInput,
@@ -1391,7 +1393,7 @@ private fun OnboardingSubscriptionSheet(
                     .testTag("onboarding_sub_input")
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             OutlinedButton(
                 onClick = {
@@ -1414,12 +1416,12 @@ private fun OnboardingSubscriptionSheet(
                     modifier = Modifier.size(16.dp),
                     tint = HollowInk
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(HollowSpace.Sm))
                 Text("Paste from clipboard", color = HollowInk)
             }
 
             if (!errorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Md))
                 Text(
                     text = errorMessage.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
@@ -1427,7 +1429,7 @@ private fun OnboardingSubscriptionSheet(
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Button(
                 onClick = {
@@ -1451,7 +1453,7 @@ private fun OnboardingSubscriptionSheet(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(HollowSizes.Button)
                     .testTag("onboarding_sub_submit")
             ) {
                 if (isLoading) {
@@ -1460,7 +1462,7 @@ private fun OnboardingSubscriptionSheet(
                         color = HollowCream,
                         strokeWidth = 2.dp
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(HollowSpace.Md))
                     Text("Fetching & verifying…")
                 } else {
                     Text(
@@ -1498,7 +1500,7 @@ private fun OnboardingPasteConfigSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = 28.dp)
+                .padding(bottom = HollowSpace.Xxl)
         ) {
             Text(
                 text = "Paste a config",
@@ -1507,13 +1509,13 @@ private fun OnboardingPasteConfigSheet(
                 fontSize = 24.sp,
                 color = HollowInk
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
             Text(
                 text = "Supports vless://, vmess://, trojan://, ss://, hy2:// links or raw Xray JSON.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = HollowInkSecondary
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             OutlinedTextField(
                 value = configInput,
@@ -1539,7 +1541,7 @@ private fun OnboardingPasteConfigSheet(
                     .testTag("onboarding_paste_input")
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             OutlinedButton(
                 onClick = {
@@ -1562,12 +1564,12 @@ private fun OnboardingPasteConfigSheet(
                     modifier = Modifier.size(16.dp),
                     tint = HollowInk
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(HollowSpace.Sm))
                 Text("Paste from clipboard", color = HollowInk)
             }
 
             if (!errorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Md))
                 Text(
                     text = errorMessage.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
@@ -1575,7 +1577,7 @@ private fun OnboardingPasteConfigSheet(
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Button(
                 onClick = {
@@ -1599,7 +1601,7 @@ private fun OnboardingPasteConfigSheet(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(HollowSizes.Button)
                     .testTag("onboarding_paste_submit")
             ) {
                 if (isLoading) {
@@ -1608,7 +1610,7 @@ private fun OnboardingPasteConfigSheet(
                         color = HollowCream,
                         strokeWidth = 2.dp
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(HollowSpace.Md))
                     Text("Verifying server…")
                 } else {
                     Text(

@@ -157,7 +157,9 @@ data class AppSettingsState(
     val mirrorsEnabled: Boolean = false,
     val strictTlsEnabled: Boolean = false,
     val domesticCountryCode: String = "IR",
-    val themeMode: String = "Dark"
+    val themeMode: String = "Dark",
+    /** App-wide display size in percent (80..130), same as Outrun's "Display size". */
+    val displayScalePercent: Int = 100
 ) {
     companion object {
         const val DEFAULT_SUBSCRIPTION_URL = ""
@@ -211,7 +213,8 @@ class VpnPreferencesStore(context: Context) {
             mirrorsEnabled = prefs.getBoolean("mirrors_enabled", false),
             strictTlsEnabled = prefs.getBoolean("strict_tls_enabled", false),
             domesticCountryCode = prefs.getString("domestic_country_code", "IR") ?: "IR",
-            themeMode = prefs.getString("theme_mode", "Dark") ?: "Dark"
+            themeMode = prefs.getString("theme_mode", "Dark") ?: "Dark",
+            displayScalePercent = prefs.getInt("display_scale_percent", 100).coerceIn(80, 130)
         )
     }
 
@@ -239,6 +242,7 @@ class VpnPreferencesStore(context: Context) {
             .putBoolean("strict_tls_enabled", state.strictTlsEnabled)
             .putString("domestic_country_code", state.domesticCountryCode)
             .putString("theme_mode", state.themeMode)
+            .putInt("display_scale_percent", state.displayScalePercent.coerceIn(80, 130))
             .apply()
     }
 

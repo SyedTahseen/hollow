@@ -41,6 +41,7 @@ fun HollowVpnTheme(
     darkTheme: Boolean = true,
     oledDark: Boolean = true,
     dynamicColor: Boolean = false,
+    displayScalePercent: Int = HollowDisplay.DEFAULT,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -54,16 +55,18 @@ fun HollowVpnTheme(
         else -> CarbonDarkHollowPalette
     }
 
-    CompositionLocalProvider(
-        LocalHollowPalette provides hollowPalette,
-        LocalHollowIsDark provides darkTheme,
-        LocalHollowIsOled provides (darkTheme && oledDark)
-    ) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography,
-            shapes = ExpressiveShapes,
-            content = content
-        )
+    HollowDesignScale(displayScalePercent) {
+        CompositionLocalProvider(
+            LocalHollowPalette provides hollowPalette,
+            LocalHollowIsDark provides darkTheme,
+            LocalHollowIsOled provides (darkTheme && oledDark)
+        ) {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                typography = Typography,
+                shapes = ExpressiveShapes,
+                content = content
+            )
+        }
     }
 }

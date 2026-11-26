@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -51,6 +54,8 @@ import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.AccountTree
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
@@ -82,6 +87,8 @@ import com.hollow.vpn.ui.components.HollowSwitch
 import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
+import com.hollow.vpn.ui.theme.HollowDisplay
+import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowCreamSurface
 import com.hollow.vpn.ui.theme.HollowInk
@@ -198,8 +205,8 @@ fun SettingsScreen(
     ) {
         Column(
             modifier = Modifier
+                .widthIn(max = HollowSizes.MaxContent)
                 .fillMaxSize()
-                .widthIn(max = 600.dp)
                 .align(Alignment.TopCenter)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = HollowScreenPadding)
@@ -241,7 +248,7 @@ fun SettingsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp + bottomContentPadding))
+            Spacer(modifier = Modifier.height(HollowSpace.Xxl + bottomContentPadding))
             if (bottomContentPadding == 0.dp) {
                 Spacer(modifier = Modifier.navigationBarsPadding())
             }
@@ -326,19 +333,22 @@ private fun SettingsOverview(
     onCheckUpdates: () -> Unit,
     onOpenAbout: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(12.dp))
-    // Same title style as Home ("HOLLOW VPN") and Servers ("SERVERS").
-    Text(
-        text = "SETTINGS",
-        fontFamily = DotoDisplayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        letterSpacing = 0.9.sp,
-        maxLines = 1,
-        color = NothingOnCanvas,
-        modifier = Modifier.testTag("settings_title")
-    )
-    Spacer(modifier = Modifier.height(6.dp))
+    // Same title style and 64dp header row as Home ("HOLLOW VPN") and Servers ("SERVERS").
+    Box(
+        modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = "SETTINGS",
+            fontFamily = DotoDisplayFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            letterSpacing = 0.9.sp,
+            maxLines = 1,
+            color = NothingOnCanvas,
+            modifier = Modifier.testTag("settings_title")
+        )
+    }
 
     SettingsSectionHeader("Features")
     SettingsRow(
@@ -496,7 +506,7 @@ private fun SettingsSectionHeader(title: String) {
         fontSize = 10.sp,
         letterSpacing = 0.9.sp,
         color = HollowOrange,
-        modifier = Modifier.padding(top = 22.dp, bottom = 6.dp, start = 2.dp)
+        modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = HollowSpace.Sm, start = 2.dp)
     )
 }
 
@@ -513,7 +523,7 @@ private fun SettingsRow(
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(vertical = 12.dp)
+            .padding(vertical = HollowSpace.Md)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -523,7 +533,7 @@ private fun SettingsRow(
             tint = HollowInk,
             modifier = Modifier.size(22.dp)
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -533,7 +543,7 @@ private fun SettingsRow(
                 color = HollowInk
             )
             if (!subtitle.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Text(
                     text = subtitle,
                     fontFamily = SpaceGroteskFamily,
@@ -574,8 +584,10 @@ private fun SettingsDetail(
         SettingsPage.HIDE_RECENTS -> "Hide from recent apps"
     }
 
-    Spacer(modifier = Modifier.height(12.dp))
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         HollowTopSquareButton(
             containerColor = NothingTopBtnFill,
             contentColor = NothingOnCanvas,
@@ -591,7 +603,7 @@ private fun SettingsDetail(
                 modifier = Modifier.size(21.dp)
             )
         }
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Text(
             text = title.uppercase(),
             fontFamily = DotoDisplayFamily,
@@ -603,7 +615,7 @@ private fun SettingsDetail(
             color = NothingOnCanvas
         )
     }
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
     when (page) {
         SettingsPage.SPLIT_TUNNELING -> {
@@ -696,7 +708,7 @@ private fun SettingsDetail(
             DetailDescription("Keep your server list fresh by refreshing subscriptions in the background.")
             DetailToggleRow("Auto-update subscriptions", settings.autoConfigure, { v -> onUpdateSettings { it.copy(autoConfigure = v) } }, "switch_auto_configure")
             if (settings.autoConfigure) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Sm))
                 SettingsSectionHeader("Update interval")
                 DetailRadioList(UPDATE_INTERVAL_OPTIONS, settings.updateIntervalLabel) { chosen ->
                     onUpdateSettings { it.copy(updateIntervalLabel = chosen, subUpdateInterval = chosen) }
@@ -710,11 +722,81 @@ private fun SettingsDetail(
                 selectedMode = settings.themeMode,
                 onSelectMode = { mode -> onUpdateSettings { it.copy(themeMode = mode) } }
             )
+            Spacer(modifier = Modifier.height(HollowSpace.Xl))
+            DisplaySizeStepper(
+                percent = settings.displayScalePercent,
+                onChange = { p ->
+                    onUpdateSettings {
+                        it.copy(displayScalePercent = p.coerceIn(HollowDisplay.MIN, HollowDisplay.MAX))
+                    }
+                }
+            )
+            DetailDescription("Makes text and controls across the app smaller or larger.")
         }
 
         SettingsPage.HIDE_RECENTS -> {
             DetailDescription("Hide the app preview in Android's recent apps screen.")
             DetailToggleRow("Hide from recent apps", settings.hideFromRecentApps, { v -> onUpdateSettings { it.copy(hideFromRecentApps = v) } }, "switch_hide_recents")
+        }
+    }
+}
+
+@Composable
+private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = HollowSizes.Control)
+            .testTag("row_display_size"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Display size",
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            color = HollowInk,
+            modifier = Modifier.weight(1f)
+        )
+        HollowTopSquareButton(
+            containerColor = NothingTopBtnFill,
+            contentColor = NothingOnCanvas,
+            borderColor = NothingTopBtnBorder,
+            contentDescription = "Decrease display size",
+            onClick = { if (percent > HollowDisplay.MIN) onChange(percent - HollowDisplay.STEP) },
+            modifier = Modifier.testTag("btn_display_size_minus")
+        ) { tint ->
+            Icon(
+                imageVector = Icons.Rounded.Remove,
+                contentDescription = null,
+                tint = if (percent > HollowDisplay.MIN) tint else tint.copy(alpha = 0.3f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Box(modifier = Modifier.widthIn(min = 56.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text = "$percent%",
+                fontFamily = JetBrainsMonoFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                color = HollowInk,
+                maxLines = 1
+            )
+        }
+        HollowTopSquareButton(
+            containerColor = NothingTopBtnFill,
+            contentColor = NothingOnCanvas,
+            borderColor = NothingTopBtnBorder,
+            contentDescription = "Increase display size",
+            onClick = { if (percent < HollowDisplay.MAX) onChange(percent + HollowDisplay.STEP) },
+            modifier = Modifier.testTag("btn_display_size_plus")
+        ) { tint ->
+            Icon(
+                imageVector = Icons.Rounded.Add,
+                contentDescription = null,
+                tint = if (percent < HollowDisplay.MAX) tint else tint.copy(alpha = 0.3f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -727,7 +809,7 @@ private fun DetailDescription(text: String) {
         fontSize = 10.sp,
         lineHeight = 15.sp,
         color = HollowInkSecondary,
-        modifier = Modifier.padding(start = 2.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 2.dp, bottom = HollowSpace.Sm)
     )
 }
 
@@ -743,7 +825,7 @@ private fun DetailToggleRow(
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
             .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 14.dp)
+            .padding(vertical = HollowSpace.Lg)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -755,7 +837,7 @@ private fun DetailToggleRow(
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Md))
         HollowSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
@@ -774,7 +856,7 @@ private fun DetailRadioList(
                     .fillMaxWidth()
                     .minimumInteractiveComponentSize()
                     .clickable(role = Role.RadioButton) { onSelect(option.value) }
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = HollowSpace.Md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
@@ -785,7 +867,7 @@ private fun DetailRadioList(
                         unselectedColor = HollowInkSecondary
                     )
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(HollowSpace.Lg))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = option.label,
@@ -794,7 +876,7 @@ private fun DetailRadioList(
                         fontSize = 12.sp,
                         color = HollowInk
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = option.subtitle,
                         fontFamily = SpaceGroteskFamily,
@@ -819,7 +901,7 @@ private fun PerAppInlineModeRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = HollowSpace.Md)
             .testTag("switch_bypass_selected_apps"),
         shape = RoundedCornerShape(12.dp),
         color = HollowCreamSurface,
@@ -828,7 +910,7 @@ private fun PerAppInlineModeRow(
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
+                .padding(HollowSpace.Xs)
         ) {
             val gap = 4.dp
             val slotWidth = ((maxWidth - gap) / 2f).coerceAtLeast(1.dp)
@@ -842,7 +924,7 @@ private fun PerAppInlineModeRow(
                     .align(Alignment.CenterStart)
                     .offset(x = pillOffset)
                     .width(slotWidth)
-                    .height(36.dp)
+                    .height(HollowSizes.Chip)
                     .clip(RoundedCornerShape(9.dp))
                     .background(NothingPillActiveBg)
             )
@@ -886,7 +968,7 @@ private fun ThemeModeInlineSelector(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = HollowSpace.Sm),
         shape = RoundedCornerShape(13.dp),
         color = HollowCreamSurface,
         border = BorderStroke(1.dp, HollowCreamDivider)
@@ -894,7 +976,7 @@ private fun ThemeModeInlineSelector(
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
+                .padding(HollowSpace.Xs)
         ) {
             val gap = 4.dp
             val slotWidth = ((maxWidth - gap * 2) / 3f).coerceAtLeast(1.dp)
@@ -908,7 +990,7 @@ private fun ThemeModeInlineSelector(
                     .align(Alignment.CenterStart)
                     .offset(x = pillOffset)
                     .width(slotWidth)
-                    .height(36.dp)
+                    .height(HollowSizes.Chip)
                     .clip(RoundedCornerShape(9.dp))
                     .background(NothingPillActiveBg)
             )
@@ -980,8 +1062,8 @@ private fun ThemeModeSegment(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(36.dp)
-                .padding(horizontal = 6.dp)
+                .height(HollowSizes.Chip)
+                .padding(horizontal = HollowSpace.Sm)
         ) {
             Icon(
                 imageVector = icon,
@@ -989,7 +1071,7 @@ private fun ThemeModeSegment(
                 tint = contentTint,
                 modifier = Modifier.size(15.dp)
             )
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(HollowSpace.Xs))
             Text(
                 text = label,
                 fontFamily = SpaceGroteskFamily,
@@ -1031,7 +1113,7 @@ private fun InlineModeSegment(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(36.dp),
+                .height(HollowSizes.Chip),
             contentAlignment = Alignment.Center
         ) {
             Text(

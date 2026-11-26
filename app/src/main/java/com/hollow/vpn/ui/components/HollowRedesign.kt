@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowSpace
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -227,7 +228,7 @@ fun NothingPillTabRow(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         tabs.forEachIndexed { index, title ->
@@ -275,7 +276,7 @@ fun NothingPillTabRow(
                         letterSpacing = 1.0.sp,
                         color = contentColor,
                         maxLines = 1,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                        modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm)
                     )
                 }
             }
@@ -363,7 +364,7 @@ fun HollowRouteCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 14.dp)
+                .padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Lg)
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Canvas(
@@ -487,7 +488,7 @@ fun HollowRouteCard(
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp)
+                        .padding(top = HollowSpace.Md)
                 )
             }
         }
@@ -526,7 +527,7 @@ private fun RouteNode(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 6.dp)
+            modifier = Modifier.padding(top = HollowSpace.Sm)
         )
     }
 }
@@ -551,8 +552,8 @@ fun HollowSpeedBarsCard(
         history.add(downloadBytesPerSec)
         while (history.size > SPEED_BAR_COUNT) history.removeAt(0)
     }
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md), modifier = Modifier.fillMaxWidth()) {
             SpeedCell("DOWNLOAD", downloadValue, downloadUnit, Modifier.weight(1f))
             SpeedCell("UPLOAD", uploadValue, uploadUnit, Modifier.weight(1f))
         }
@@ -603,7 +604,7 @@ private fun SpeedCell(label: String, value: String, unit: String, modifier: Modi
         border = BorderStroke(1.dp, HollowForestDivider)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md)
         ) {
             Text(
                 text = label,
@@ -614,7 +615,7 @@ private fun SpeedCell(label: String, value: String, unit: String, modifier: Modi
                 color = HollowForestMuted,
                 maxLines = 1
             )
-            Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(top = 3.dp)) {
+            Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(top = HollowSpace.Xs)) {
                 Text(
                     text = value,
                     fontFamily = DotoDisplayFamily,

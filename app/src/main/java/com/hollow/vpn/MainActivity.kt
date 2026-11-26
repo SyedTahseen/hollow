@@ -1,5 +1,6 @@
 package com.hollow.vpn
 
+import com.hollow.vpn.ui.theme.HollowSpace
 import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
@@ -183,7 +184,11 @@ fun HollowVpnApp(
         insetsController.isAppearanceLightNavigationBars = !isDarkSurfaceNow
     }
 
-    HollowVpnTheme(darkTheme = isDarkTheme, oledDark = isOledHardware) {
+    HollowVpnTheme(
+        darkTheme = isDarkTheme,
+        oledDark = isOledHardware,
+        displayScalePercent = settings.displayScalePercent
+    ) {
 
     LaunchedEffect(settings.hideFromRecentApps) {
         try {
@@ -404,10 +409,10 @@ fun HollowVpnApp(
                                     shadowElevation = 6.dp,
                                     modifier = Modifier
                                         .padding(
-                                            start = 18.dp,
-                                            end = 18.dp,
-                                            top = 4.dp,
-                                            bottom = if (renderNavBar) 6.dp else 12.dp
+                                            start = HollowSpace.Lg,
+                                            end = HollowSpace.Lg,
+                                            top = HollowSpace.Xs,
+                                            bottom = if (renderNavBar) HollowSpace.Sm else HollowSpace.Md
                                         )
                                         .then(if (!renderNavBar) Modifier.navigationBarsPadding() else Modifier)
                                         .minimumInteractiveComponentSize()
@@ -417,9 +422,9 @@ fun HollowVpnApp(
                                         }
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
+                                        modifier = Modifier.padding(start = HollowSpace.Lg, end = HollowSpace.Sm, top = HollowSpace.Sm, bottom = HollowSpace.Sm),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                                     ) {
                                         HollowBlinkingDot(
                                             color = if (fetchingProgress.workingCount > 0) NothingMatrixGreen else HollowOrange
@@ -442,7 +447,7 @@ fun HollowVpnApp(
                                                 fontSize = 10.5.sp,
                                                 letterSpacing = 0.8.sp,
                                                 color = Color.White,
-                                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
+                                                modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
                                             )
                                         }
                                     }

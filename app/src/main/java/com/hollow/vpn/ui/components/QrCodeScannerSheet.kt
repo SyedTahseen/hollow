@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowSpace
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -142,7 +143,7 @@ fun CameraQrScannerDialog(
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 if (hasCameraPermission) {
                     CameraQrPreviewBox(
@@ -166,9 +167,9 @@ fun CameraQrScannerDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(HollowSpace.Lg),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.QrCodeScanner,
@@ -218,7 +219,7 @@ fun CameraQrScannerDialog(
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(Modifier.size(8.dp))
+                    Spacer(Modifier.size(HollowSpace.Sm))
                     Text("Pick QR Image from Gallery")
                 }
             }
@@ -436,7 +437,7 @@ fun ServerQrShareDialog(
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 com.hollow.vpn.ui.components.CountryFlag(countryCode = server.countryCode)
                 Column {
@@ -457,7 +458,7 @@ fun ServerQrShareDialog(
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 if (qrBitmap != null) {
                     Surface(
@@ -470,7 +471,7 @@ fun ServerQrShareDialog(
                             contentDescription = "QR code for ${server.countryName}",
                             filterQuality = FilterQuality.None,
                             modifier = Modifier
-                                .padding(14.dp)
+                                .padding(HollowSpace.Lg)
                                 .size(220.dp)
                                 .testTag("server_qr_image")
                         )
@@ -506,7 +507,7 @@ fun ServerQrShareDialog(
                     contentDescription = null,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(HollowSpace.Sm))
                 Text(if (server.shareUri.isNotBlank()) "Copy Share Link" else "Copy Config")
             }
         },

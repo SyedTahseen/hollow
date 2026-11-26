@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -172,7 +174,7 @@ internal fun XrayDiagnosticLogsDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(20.dp),
+                            .padding(HollowSpace.Xl),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -187,8 +189,8 @@ internal fun XrayDiagnosticLogsDialog(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(scrollState)
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                            .padding(HollowSpace.Md),
+                        verticalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                     ) {
                         logs.forEach { line ->
                             Text(
@@ -210,7 +212,7 @@ internal fun XrayDiagnosticLogsDialog(
             }
         },
         confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)) {
                 if (logs.isNotEmpty()) {
                     TextButton(
                         onClick = onClearLogs,
@@ -231,7 +233,7 @@ internal fun XrayDiagnosticLogsDialog(
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(HollowSpace.Sm))
                         Text("Copy")
                     }
                 } else {
@@ -316,7 +318,7 @@ internal fun PerAppProxyPickerDialog(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = 20.dp)
+                .padding(bottom = HollowSpace.Xl)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -353,12 +355,12 @@ internal fun PerAppProxyPickerDialog(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.sp,
                         color = if (workingSelection.isNotEmpty()) HollowOrange else HollowInkSecondary,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Sm)
                     )
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(HollowSpace.Lg))
 
             // 2-Segment Mode Switcher
             Surface(
@@ -370,8 +372,8 @@ internal fun PerAppProxyPickerDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(HollowSpace.Xs),
+                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                 ) {
                     PerAppModeChip(
                         label = "Skip VPN",
@@ -388,7 +390,7 @@ internal fun PerAppProxyPickerDialog(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HollowSpace.Md))
 
             OutlinedTextField(
                 value = searchQuery,
@@ -425,7 +427,7 @@ internal fun PerAppProxyPickerDialog(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(HollowSpace.Sm))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -469,13 +471,13 @@ internal fun PerAppProxyPickerDialog(
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(HollowSpace.Xs))
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(320.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 if (filteredApps.isEmpty()) {
                     item {
@@ -514,14 +516,14 @@ internal fun PerAppProxyPickerDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .minimumInteractiveComponentSize()
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    .padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Sm),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 InstalledAppIcon(
                                     packageName = app.packageName,
                                     appLabel = app.label
                                 )
-                                Spacer(Modifier.width(12.dp))
+                                Spacer(Modifier.width(HollowSpace.Md))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = app.label,
@@ -562,11 +564,11 @@ internal fun PerAppProxyPickerDialog(
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(HollowSpace.Lg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 Button(
                     onClick = onDismiss,
@@ -578,7 +580,7 @@ internal fun PerAppProxyPickerDialog(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(HollowSizes.Button)
                 ) {
                     Text("Cancel", fontWeight = FontWeight.SemiBold)
                 }
@@ -591,7 +593,7 @@ internal fun PerAppProxyPickerDialog(
                     ),
                     modifier = Modifier
                         .weight(1.4f)
-                        .height(48.dp)
+                        .height(HollowSizes.Button)
                 ) {
                     Text(
                         text = if (workingSelection.isEmpty()) "Save (Off)" else "Save (${workingSelection.size})",
@@ -612,7 +614,7 @@ private fun PerAppModeChip(
 ) {
     Surface(
         modifier = modifier
-            .height(38.dp)
+            .height(HollowSizes.Chip)
             .clip(RoundedCornerShape(10.dp))
             .clickable(role = Role.RadioButton, onClick = onClick),
         shape = RoundedCornerShape(10.dp),
@@ -696,7 +698,7 @@ fun SettingOptionPickerDialog(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = 24.dp)
+                .padding(bottom = HollowSpace.Xxl)
         ) {
             Text(
                 text = title,
@@ -706,13 +708,13 @@ fun SettingOptionPickerDialog(
                 color = HollowInk
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 options.forEach { option ->
                     val isSelected = option.value == selectedValue
@@ -729,7 +731,7 @@ fun SettingOptionPickerDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                                .padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Md),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
@@ -740,7 +742,7 @@ fun SettingOptionPickerDialog(
                                     unselectedColor = HollowInkSecondary
                                 )
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(HollowSpace.Sm))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = option.label,
@@ -763,7 +765,7 @@ fun SettingOptionPickerDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Button(
                 onClick = onDismiss,
@@ -775,7 +777,7 @@ fun SettingOptionPickerDialog(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(HollowSizes.Button)
             ) {
                 Text("Close", fontWeight = FontWeight.SemiBold)
             }
@@ -868,7 +870,7 @@ internal fun AboutHollowSheet(
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = 26.dp)
+                .padding(bottom = HollowSpace.Xxl)
         ) {
             // Nothing OS Glyph Showcase Card
             Surface(
@@ -898,11 +900,11 @@ internal fun AboutHollowSheet(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp)
+                            .padding(HollowSpace.Xl)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            horizontalArrangement = Arrangement.spacedBy(HollowSpace.Lg)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -943,12 +945,12 @@ internal fun AboutHollowSheet(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.5.sp,
                                     color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Xs)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
                         Text(
                             text = "Built for fast, resilient encrypted routing across VLESS Reality, VMess, Trojan, Shadowsocks, and Hysteria2 with zero tracking and strict local control.",
@@ -962,7 +964,7 @@ internal fun AboutHollowSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Text(
                 text = "ARCHITECTURE & PRIVACY",
@@ -972,7 +974,7 @@ internal fun AboutHollowSheet(
                 letterSpacing = 1.4.sp,
                 color = HollowOrange
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -980,7 +982,7 @@ internal fun AboutHollowSheet(
                 color = HollowCreamSurface,
                 border = BorderStroke(1.dp, HollowCreamDivider)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(HollowSpace.Lg)) {
                     AboutFeatureRow(
                         icon = Icons.Outlined.Shield,
                         title = "Xray-core Tunnel Engine",
@@ -989,7 +991,7 @@ internal fun AboutHollowSheet(
                     HorizontalDivider(
                         thickness = 1.dp,
                         color = HollowCreamDivider,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        modifier = Modifier.padding(vertical = HollowSpace.Md)
                     )
                     AboutFeatureRow(
                         icon = Icons.Outlined.Lock,
@@ -999,7 +1001,7 @@ internal fun AboutHollowSheet(
                     HorizontalDivider(
                         thickness = 1.dp,
                         color = HollowCreamDivider,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        modifier = Modifier.padding(vertical = HollowSpace.Md)
                     )
                     AboutFeatureRow(
                         icon = Icons.Outlined.Dns,
@@ -1009,7 +1011,7 @@ internal fun AboutHollowSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Text(
                 text = "BUILD METADATA",
@@ -1019,7 +1021,7 @@ internal fun AboutHollowSheet(
                 letterSpacing = 1.4.sp,
                 color = HollowInkSecondary
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -1028,8 +1030,8 @@ internal fun AboutHollowSheet(
                 border = BorderStroke(1.dp, HollowCreamDivider)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(HollowSpace.Lg),
+                    verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                 ) {
                     AboutMetaRow(label = "VERSION", value = "v${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})")
                     AboutMetaRow(label = "PACKAGE", value = BuildConfig.APPLICATION_ID)
@@ -1038,11 +1040,11 @@ internal fun AboutHollowSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 OutlinedButton(
                     onClick = {
@@ -1055,14 +1057,14 @@ internal fun AboutHollowSheet(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = HollowInk),
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(HollowSizes.Button)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(HollowSpace.Sm))
                     Text(
                         text = "Copy info",
                         fontSize = 13.5.sp,
@@ -1080,7 +1082,7 @@ internal fun AboutHollowSheet(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(HollowSizes.Button)
                         .testTag("btn_about_check_updates")
                 ) {
                     Icon(
@@ -1088,7 +1090,7 @@ internal fun AboutHollowSheet(
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(HollowSpace.Sm))
                     Text(
                         text = "Check update",
                         fontSize = 13.5.sp,
@@ -1109,7 +1111,7 @@ private fun AboutFeatureRow(
 ) {
     Row(
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
     ) {
         Box(
             modifier = Modifier
@@ -1163,7 +1165,7 @@ private fun AboutMetaRow(
             letterSpacing = 0.8.sp,
             color = HollowInkSecondary
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Md))
         Text(
             text = value,
             fontFamily = JetBrainsMonoFamily,
@@ -1263,7 +1265,7 @@ internal fun AppUpdateCheckDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 when (updateState) {
                     AppUpdateState.Idle, AppUpdateState.Checking -> {
@@ -1281,8 +1283,8 @@ internal fun AppUpdateCheckDialog(
                             border = BorderStroke(1.dp, HollowCreamDivider)
                         ) {
                             Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                modifier = Modifier.padding(HollowSpace.Lg),
+                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                             ) {
                                 AboutMetaRow("INSTALLED", "v${updateState.currentVersion}")
                                 AboutMetaRow("LATEST RELEASE", updateState.latestVersion)
@@ -1302,8 +1304,8 @@ internal fun AppUpdateCheckDialog(
                             border = BorderStroke(1.dp, NothingBorder)
                         ) {
                             Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                modifier = Modifier.padding(HollowSpace.Lg),
+                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                             ) {
                                 Text(
                                     text = "v${updateState.currentVersion}  →  ${updateState.latestVersion}",
@@ -1355,7 +1357,7 @@ internal fun AppUpdateCheckDialog(
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(HollowSpace.Sm))
                         Text(if (updateState.apkDownloadUrl != null) "Download APK" else "Open Release")
                     }
                 }

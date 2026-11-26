@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -213,10 +215,10 @@ fun SplashFetchingScreen(
         NothingDotMatrixBackdrop()
         Column(
             modifier = Modifier
+                .widthIn(max = HollowSizes.FocusMaxWidth)
                 .fillMaxSize()
-                .widthIn(max = 520.dp)
                 .align(Alignment.Center)
-                .padding(horizontal = 22.dp, vertical = 14.dp),
+                .padding(horizontal = HollowScreenPadding, vertical = HollowSpace.Lg),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top bar: Brand + Live Pipeline status on left, Hide button on right
@@ -227,7 +229,7 @@ fun SplashFetchingScreen(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                 ) {
                     HollowBrandShieldLogo(size = 34.dp, cornerRadius = 10.dp)
                     Column {
@@ -241,7 +243,7 @@ fun SplashFetchingScreen(
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                         ) {
                             HollowBlinkingDot(color = HollowOrange)
                             Text(
@@ -267,9 +269,9 @@ fun SplashFetchingScreen(
                         .testTag("btn_hide_fetching_top")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.KeyboardArrowDown,
@@ -288,7 +290,7 @@ fun SplashFetchingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Md))
 
             Column(
                 modifier = Modifier
@@ -308,12 +310,12 @@ fun SplashFetchingScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 22.dp),
+                        .padding(horizontal = HollowSpace.Xl, vertical = HollowSpace.Xxl),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     FetchingSpinnerRing(size = 64.dp)
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
                     Text(
                         text = progress.headline.ifBlank { stringResource(R.string.fetching_servers_title) },
@@ -325,7 +327,7 @@ fun SplashFetchingScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xs))
 
                     Text(
                         text = displaySubtitle,
@@ -336,7 +338,7 @@ fun SplashFetchingScreen(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
                     // Progress track
                     if (progress.stage == FetchingStage.DOWNLOADING && progress.parsedCount == 0) {
@@ -358,7 +360,7 @@ fun SplashFetchingScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
                     // Dual-Lane Concurrent Pipeline Strip: FETCH -> TEST
                     Surface(
@@ -370,14 +372,14 @@ fun SplashFetchingScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                                .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                                 ) {
                                     HollowBlinkingDot(color = HollowOrange)
                                     Text(
@@ -389,7 +391,7 @@ fun SplashFetchingScreen(
                                         color = HollowInkSecondary
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(3.dp))
+                                Spacer(modifier = Modifier.height(HollowSpace.Xs))
                                 Text(
                                     text = "${progress.parsedCount} parsed",
                                     fontFamily = JetBrainsMonoFamily,
@@ -404,7 +406,7 @@ fun SplashFetchingScreen(
                                 contentDescription = null,
                                 tint = HollowInkSecondary,
                                 modifier = Modifier
-                                    .padding(horizontal = 8.dp)
+                                    .padding(horizontal = HollowSpace.Sm)
                                     .size(16.dp)
                             )
 
@@ -414,7 +416,7 @@ fun SplashFetchingScreen(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                                 ) {
                                     HollowBlinkingDot(
                                         color = if (progress.workingCount > 0) NothingMatrixGreen else HollowOrange
@@ -428,7 +430,7 @@ fun SplashFetchingScreen(
                                         color = HollowInkSecondary
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(3.dp))
+                                Spacer(modifier = Modifier.height(HollowSpace.Xs))
                                 Text(
                                     text = "${progress.workingCount} ready · ${progress.testedCount} probed",
                                     fontFamily = JetBrainsMonoFamily,
@@ -442,7 +444,7 @@ fun SplashFetchingScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
                     // 3-Column Live Metrics Strip
                     Row(
@@ -460,7 +462,7 @@ fun SplashFetchingScreen(
                         VerticalDivider(
                             thickness = 1.dp,
                             color = HollowCreamDivider,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = HollowSpace.Xs)
                         )
                         FetchingMetricCell(
                             label = "WORKING",
@@ -471,7 +473,7 @@ fun SplashFetchingScreen(
                         VerticalDivider(
                             thickness = 1.dp,
                             color = HollowCreamDivider,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = HollowSpace.Xs)
                         )
                         FetchingMetricCell(
                             label = "FASTEST",
@@ -490,11 +492,11 @@ fun SplashFetchingScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 14.dp),
+                                .padding(top = HollowSpace.Lg),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             HorizontalDivider(thickness = 1.dp, color = HollowCreamDivider)
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(HollowSpace.Md))
                             Text(
                                 text = "DISCOVERED LOCATIONS (${progress.countryCount})",
                                 fontFamily = JetBrainsMonoFamily,
@@ -503,10 +505,10 @@ fun SplashFetchingScreen(
                                 letterSpacing = 0.9.sp,
                                 color = HollowInkSecondary
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(HollowSpace.Sm))
                             FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm, Alignment.CenterHorizontally),
+                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 progress.discoveredCountries.take(8).forEach { (code, _) ->
@@ -516,9 +518,9 @@ fun SplashFetchingScreen(
                                         border = BorderStroke(1.dp, HollowCreamDivider)
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                                            modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
                                         ) {
                                             Text(
                                                 text = code,
@@ -543,7 +545,7 @@ fun SplashFetchingScreen(
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 11.sp,
                                             color = HollowInkSecondary,
-                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                                            modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
                                         )
                                     }
                                 }
@@ -553,7 +555,7 @@ fun SplashFetchingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             OutlinedButton(
                 onClick = onCancelOrSkip,
@@ -561,7 +563,7 @@ fun SplashFetchingScreen(
                 border = BorderStroke(1.dp, HollowCreamDivider),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(HollowSizes.Button)
                     .testTag("btn_hide_fetching")
             ) {
                 Icon(
@@ -570,7 +572,7 @@ fun SplashFetchingScreen(
                     tint = HollowInk,
                     modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(HollowSpace.Sm))
                 Text(
                     text = "Hide",
                     fontFamily = SpaceGroteskFamily,
@@ -580,7 +582,7 @@ fun SplashFetchingScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Sm))
 
             Text(
                 text = "Runs in background — keep using Hollow while servers verify",
@@ -601,7 +603,7 @@ private fun FetchingMetricCell(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(horizontal = 4.dp),
+        modifier = modifier.padding(horizontal = HollowSpace.Xs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -612,7 +614,7 @@ private fun FetchingMetricCell(
             letterSpacing = 0.7.sp,
             color = HollowInkSecondary
         )
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(HollowSpace.Xs))
         Text(
             text = value,
             fontFamily = DotoDisplayFamily,
@@ -788,10 +790,11 @@ private fun HomeContent(
     val titleColor = when (phase) { 2 -> HollowLime; 1 -> HollowAmber; else -> Color(0xFFD71921) }
     val infoColor = when (phase) { 2 -> HollowForestMuted; 1 -> HollowObsidianMuted; else -> HollowInkSecondary }
 
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     BoxWithConstraints(
         modifier = Modifier
+            .widthIn(max = HollowSizes.MaxContent)
             .fillMaxSize()
-            .widthIn(max = 600.dp)
             .padding(horizontal = HollowScreenPadding)
     ) {
         val screenMaxHeight = maxHeight
@@ -799,7 +802,6 @@ private fun HomeContent(
         val cardGap = if (isCompact) 8.dp else 12.dp
 
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(12.dp))
             when (phase) {
                 2 -> HomeTopBar(
                     dotColor = HollowLime, textColor = HollowDarkInk,
@@ -818,7 +820,7 @@ private fun HomeContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 28.dp))
+            Spacer(modifier = Modifier.height(if (isCompact) HollowSpace.Lg else HollowSpace.Xxl))
 
             Text(
                 text = titleText,
@@ -836,10 +838,10 @@ private fun HomeContent(
             Row(
                 modifier = Modifier
                     .heightIn(min = 34.dp)
-                    .padding(vertical = 4.dp, horizontal = 2.dp)
+                    .padding(vertical = HollowSpace.Xs, horizontal = 2.dp)
                     .testTag("row_real_ip"),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 Text(
                     text = infoLine,
@@ -889,7 +891,7 @@ private fun HomeContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = if (isCompact) 10.dp else 12.dp),
+                        .padding(horizontal = HollowSpace.Lg, vertical = if (isCompact) HollowSpace.Md else HollowSpace.Md),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (selectedServer == null) {
@@ -908,10 +910,10 @@ private fun HomeContent(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(HollowSpace.Md))
                     } else {
                         CountryFlag(countryCode = selectedServer.countryCode)
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(HollowSpace.Md))
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
@@ -947,7 +949,7 @@ private fun HomeContent(
                             selectedServer.pingMs > 450 -> HollowOrange
                             else -> HollowInkSecondary
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(HollowSpace.Sm))
                         Text(
                             text = if (selectedServer.pingMs > 0) "${selectedServer.pingMs} ms" else "—",
                             fontFamily = JetBrainsMonoFamily,
@@ -956,7 +958,7 @@ private fun HomeContent(
                             color = pingColor,
                             maxLines = 1
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(HollowSpace.Xs))
                     }
 
                     Icon(
@@ -972,7 +974,7 @@ private fun HomeContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(cardGap + 8.dp))
+            Spacer(modifier = Modifier.height(cardGap + HollowSpace.Sm))
 
             when (phase) {
                 2 -> HollowSlideActionPill(
@@ -988,7 +990,7 @@ private fun HomeContent(
                 1 -> Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(HollowSizes.Button)
                         .clip(RoundedCornerShape(14.dp))
                         .clickable(role = Role.Button, onClick = onToggleConnect)
                         .testTag("bottom_disconnect_connect_button"),
@@ -1015,8 +1017,9 @@ private fun HomeContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(HollowSpace.Lg))
         }
+    }
     }
 }
 
@@ -1060,7 +1063,7 @@ private fun ConnectionStatsCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -1083,15 +1086,15 @@ private fun ConnectionStatsCard(
                     modifier = Modifier.testTag("connection_timer_text")
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
                     Text("↓", fontSize = 11.sp, color = downColor)
                     Text(
                         formatSpeed2(telemetry.downloadBytesPerSec),
                         fontFamily = SpaceGroteskFamily, fontSize = 11.sp, color = HollowDarkInk, maxLines = 1
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
                     Text("↑", fontSize = 11.sp, color = upColor)
                     Text(
                         formatSpeed2(telemetry.uploadBytesPerSec),
@@ -1115,7 +1118,7 @@ private fun HomeTopBar(
     @Suppress("UNUSED_PARAMETER") onOpenSettings: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1171,7 +1174,7 @@ fun ServerItemRowContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 0.dp, end = 0.dp, top = 10.dp, bottom = 10.dp),
+            .padding(start = 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isSelectionMode) {
@@ -1184,16 +1187,16 @@ fun ServerItemRowContent(
                     checkmarkColor = Color.White
                 )
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(HollowSpace.Xs))
         }
 
         CountryFlag(countryCode = server.countryCode)
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(HollowSpace.Lg))
 
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 Text(
                     text = server.countryName.ifBlank { cleanProtocol },
@@ -1226,7 +1229,7 @@ fun ServerItemRowContent(
                             fontWeight = FontWeight.Bold,
                             fontSize = 8.5.sp,
                             color = HollowOrange,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = HollowSpace.Xs, vertical = 2.dp)
                         )
                     }
                 }
@@ -1242,7 +1245,7 @@ fun ServerItemRowContent(
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 Text(
                     text = cleanProtocol,
@@ -1352,7 +1355,7 @@ fun ServerItemRowContent(
                 }
             }
         } else {
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(HollowSpace.Sm))
         }
     }
 }

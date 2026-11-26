@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowSizes
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -230,7 +232,7 @@ private fun AddServerMenuItem(
         text = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md),
                 modifier = Modifier.padding(vertical = 2.dp)
             ) {
                 Icon(
@@ -333,12 +335,12 @@ private fun AddSubscriptionDialog(
                     color = HollowInkSecondary
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .height(HollowSizes.Field),
                     shape = RoundedCornerShape(14.dp),
                     color = HollowCreamSurface,
                     border = BorderStroke(1.2.dp, HollowCreamDivider)
@@ -346,7 +348,7 @@ private fun AddSubscriptionDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 14.dp),
+                            .padding(horizontal = HollowSpace.Lg),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (url.isEmpty()) {
@@ -374,7 +376,7 @@ private fun AddSubscriptionDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Md))
 
                 SubscriptionOptionRow(
                     label = "Auto update",
@@ -395,7 +397,7 @@ private fun AddSubscriptionDialog(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         Text(
                             text = settings.subUpdateInterval,
@@ -477,7 +479,7 @@ private fun SubscriptionOptionRow(
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
             .clickable(role = role, onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(vertical = HollowSpace.Sm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -540,9 +542,9 @@ private fun AddManualServerSheet(
                 .imePadding()
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = HollowSpace.Xl)
+                .padding(bottom = HollowSpace.Xl),
+            verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
         ) {
             Text(
                 text = "ADD MANUALLY",
@@ -563,7 +565,7 @@ private fun AddManualServerSheet(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
                 OutlinedTextField(
                     value = host,
                     onValueChange = { host = it },
@@ -588,7 +590,7 @@ private fun AddManualServerSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 MANUAL_PROTOCOL_PRESETS.forEach { preset ->
                     PresetChip(
@@ -605,7 +607,7 @@ private fun AddManualServerSheet(
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
                 OutlinedTextField(
                     value = protocol,
                     onValueChange = { protocol = it },
@@ -630,7 +632,7 @@ private fun AddManualServerSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
             ) {
                 MANUAL_TRANSPORT_PRESETS.forEach { preset ->
                     PresetChip(
@@ -780,7 +782,7 @@ private fun AddManualServerSheet(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(HollowSizes.Button)
                     .testTag("btn_save_manual_server")
             ) {
                 Text(
