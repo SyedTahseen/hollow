@@ -207,31 +207,25 @@ fun HollowBrandShieldLogo(
 
 @Composable
 fun HollowStatusBrandRow(
-    dotColor: Color,
+    @Suppress("UNUSED_PARAMETER") dotColor: Color,
     textColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(9.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(9.dp)
-                .clip(CircleShape)
-                .background(dotColor)
-        )
-        Text(
-            text = "HOLLOW",
-            fontFamily = DotoDisplayFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            letterSpacing = 0.9.sp,
-            maxLines = 1,
-            color = textColor
-        )
-    }
+    Text(
+        text = androidx.compose.ui.text.buildAnnotatedString {
+            append("HOLLOW ")
+            pushStyle(androidx.compose.ui.text.SpanStyle(color = com.hollow.vpn.ui.theme.NothingRed))
+            append("VPN")
+            pop()
+        },
+        fontFamily = DotoDisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        letterSpacing = 0.9.sp,
+        maxLines = 1,
+        color = textColor,
+        modifier = modifier
+    )
 }
 
 @Composable

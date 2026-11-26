@@ -101,6 +101,7 @@ import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.ui.components.CameraQrScannerDialog
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
 import com.hollow.vpn.ui.components.NothingDotMatrixBackdrop
+import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
@@ -157,7 +158,7 @@ fun GettingStartedScreen(
                 .fillMaxSize()
                 .widthIn(max = 600.dp)
                 .align(Alignment.TopCenter)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
         ) {
             val isCompact = maxHeight < 660.dp
 
@@ -1106,7 +1107,7 @@ private fun PermissionGuideModalSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = 26.dp)
         ) {
             Row(
@@ -1349,7 +1350,7 @@ private fun OnboardingSubscriptionSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = 28.dp)
         ) {
             Text(
@@ -1496,7 +1497,7 @@ private fun OnboardingPasteConfigSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = 28.dp)
         ) {
             Text(

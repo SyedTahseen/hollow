@@ -113,6 +113,7 @@ import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.NothingSignalDots
 import com.hollow.vpn.ui.components.HollowGlobe
 import com.hollow.vpn.ui.components.CountryFlag
+import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowAmber
 import com.hollow.vpn.ui.theme.HollowCream
@@ -763,7 +764,7 @@ private fun DisconnectedHomeContent(
         modifier = Modifier
             .fillMaxSize()
             .widthIn(max = 600.dp)
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = HollowScreenPadding)
     ) {
         val screenMaxHeight = maxHeight
         val isCompact = screenMaxHeight < 580.dp
@@ -970,7 +971,7 @@ private fun ConnectingHomeContent(
         modifier = Modifier
             .fillMaxSize()
             .widthIn(max = 600.dp)
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = HollowScreenPadding)
     ) {
         val isCompact = maxHeight < 580.dp
 
@@ -1217,7 +1218,7 @@ private fun ProtectedHomeContent(
         modifier = Modifier
             .fillMaxSize()
             .widthIn(max = 600.dp)
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = HollowScreenPadding)
     ) {
         val isCompact = maxHeight < 620.dp
 
@@ -1549,7 +1550,7 @@ fun ServerItemRowContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+            .padding(start = 0.dp, end = 0.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isSelectionMode) {

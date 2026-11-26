@@ -91,6 +91,7 @@ import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.NothingPillTabRow
 import com.hollow.vpn.ui.components.NothingSignalDots
 import com.hollow.vpn.ui.components.CountryFlag
+import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
@@ -211,7 +212,7 @@ fun CountryServerListScreen(
                 .fillMaxSize()
                 .widthIn(max = 620.dp)
                 .align(Alignment.TopCenter)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -666,7 +667,7 @@ private fun FastestServerRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = !isTesting, onClick = onClick)
-            .padding(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 14.dp)
+            .padding(start = 0.dp, end = 0.dp, top = 12.dp, bottom = 12.dp)
             .testTag("server_fastest_row"),
         verticalAlignment = Alignment.CenterVertically
     ) {

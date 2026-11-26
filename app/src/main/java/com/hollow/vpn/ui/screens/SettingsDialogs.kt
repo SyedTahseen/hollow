@@ -96,6 +96,7 @@ import com.hollow.vpn.BuildConfig
 import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
+import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
@@ -314,7 +315,7 @@ internal fun PerAppProxyPickerDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = 20.dp)
         ) {
             Row(
@@ -694,7 +695,7 @@ fun SettingOptionPickerDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = 24.dp)
         ) {
             Text(
@@ -866,7 +867,7 @@ internal fun AboutHollowSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = 26.dp)
         ) {
             // Nothing OS Glyph Showcase Card

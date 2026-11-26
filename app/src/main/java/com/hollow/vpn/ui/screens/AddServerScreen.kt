@@ -85,6 +85,7 @@ import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.NothingPillTabRow
 import com.hollow.vpn.ui.components.decodeQrFromUri
+import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.NothingMotion
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
@@ -203,7 +204,7 @@ fun AddServerScreen(
                 .fillMaxSize()
                 .widthIn(max = 600.dp)
                 .align(Alignment.TopCenter)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = HollowScreenPadding)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
