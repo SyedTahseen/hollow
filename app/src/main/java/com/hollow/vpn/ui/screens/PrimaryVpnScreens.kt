@@ -1,0 +1,1749 @@
+package com.hollow.vpn.ui.screens
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hollow.vpn.R
+import com.hollow.vpn.data.FetchingProgressState
+import com.hollow.vpn.data.FetchingStage
+import com.hollow.vpn.data.ServerEntity
+import com.hollow.vpn.ui.ConnectionTelemetryState
+import com.hollow.vpn.ui.components.FetchingSpinnerRing
+import com.hollow.vpn.ui.components.HollowBlinkingDot
+import com.hollow.vpn.ui.components.HollowBrandShieldLogo
+import com.hollow.vpn.ui.components.HollowDisconnectedExposureCard
+import com.hollow.vpn.ui.components.HollowIndeterminateBar
+import com.hollow.vpn.ui.components.HollowRouteCard
+import com.hollow.vpn.ui.components.HollowRouteState
+import com.hollow.vpn.ui.components.HollowSlideActionPill
+import com.hollow.vpn.ui.components.HollowSpeedBarsCard
+import com.hollow.vpn.ui.components.HollowStatusBrandRow
+import com.hollow.vpn.ui.components.HollowTopSquareButton
+import com.hollow.vpn.ui.components.NothingDotMatrixBackdrop
+import com.hollow.vpn.ui.components.NothingDottedDivider
+import com.hollow.vpn.ui.components.NothingSignalDots
+import com.hollow.vpn.ui.components.CountryFlag
+import com.hollow.vpn.ui.theme.DotoDisplayFamily
+import com.hollow.vpn.ui.theme.HollowAmber
+import com.hollow.vpn.ui.theme.HollowCream
+import com.hollow.vpn.ui.theme.HollowCreamDivider
+import com.hollow.vpn.ui.theme.HollowCreamSurface
+import com.hollow.vpn.ui.theme.HollowDarkInk
+import com.hollow.vpn.ui.theme.HollowForest
+import com.hollow.vpn.ui.theme.HollowForestCard
+import com.hollow.vpn.ui.theme.HollowForestDivider
+import com.hollow.vpn.ui.theme.HollowForestMuted
+import com.hollow.vpn.ui.theme.HollowInk
+import com.hollow.vpn.ui.theme.HollowInkSecondary
+import com.hollow.vpn.ui.theme.HollowLime
+import com.hollow.vpn.ui.theme.HollowObsidian
+import com.hollow.vpn.ui.theme.HollowObsidianDivider
+import com.hollow.vpn.ui.theme.HollowObsidianMuted
+import com.hollow.vpn.ui.theme.HollowObsidianSurface
+import com.hollow.vpn.ui.theme.HollowOrange
+import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
+import com.hollow.vpn.ui.theme.NothingBackdropDot
+import com.hollow.vpn.ui.theme.NothingBlack
+import com.hollow.vpn.ui.theme.NothingCanvas
+import com.hollow.vpn.ui.theme.NothingMatrixGreen
+import com.hollow.vpn.ui.theme.NothingMotion
+import com.hollow.vpn.ui.theme.NothingOnCanvas
+import com.hollow.vpn.ui.theme.NothingSurfaceElevated
+import com.hollow.vpn.ui.theme.NothingTopBtnBorder
+import com.hollow.vpn.ui.theme.NothingTopBtnFill
+import com.hollow.vpn.ui.theme.SpaceGroteskFamily
+import com.hollow.vpn.ui.theme.TabularMonoBody
+import com.hollow.vpn.ui.theme.nothingPressScale
+import java.util.Locale
+import kotlin.math.max
+
+/**
+ * Formats internal protocol identifiers cleanly for consumer UI without technical clutter.
+ */
+internal fun formatConsumerProtocol(raw: String, transport: String? = null): String {
+    val cleaned = raw
+        .replace("(V2Ray)", "", ignoreCase = true)
+        .replace("(Xray)", "", ignoreCase = true)
+        .replace("V2Ray · ", "", ignoreCase = true)
+        .replace("Xray ", "", ignoreCase = true)
+        .trim()
+        .ifBlank { "Auto" }
+
+    val cleanTransport = transport?.trim().orEmpty()
+    return if (cleanTransport.isNotBlank() && !cleaned.contains(cleanTransport, ignoreCase = true)) {
+        "$cleaned · $cleanTransport"
+    } else {
+        cleaned
+    }
+}
+
+private fun formatShortProtocolLabel(raw: String): String {
+    return raw
+        .replace("(V2Ray)", "", ignoreCase = true)
+        .replace("(Xray)", "", ignoreCase = true)
+        .replace("V2Ray · ", "", ignoreCase = true)
+        .replace("Xray ", "", ignoreCase = true)
+        .trim()
+        .ifBlank { "Auto" }
+}
+
+private fun splitSpeedValueAndUnit(bytesPerSec: Long): Pair<String, String> {
+    val safe = max(0L, bytesPerSec)
+    return when {
+        safe < 1024L -> "$safe" to "B/s"
+        safe < 1024L * 1024L -> String.format(Locale.US, "%.1f", safe / 1024.0) to "KB/s"
+        safe < 1024L * 1024L * 1024L -> String.format(Locale.US, "%.1f", safe / (1024.0 * 1024.0)) to "MB/s"
+        else -> String.format(Locale.US, "%.2f", safe / (1024.0 * 1024.0 * 1024.0)) to "GB/s"
+    }
+}
+
+private fun formatCompactTotalBytes(bytes: Long): String {
+    val safe = max(0L, bytes)
+    return when {
+        safe < 1024L -> "$safe B"
+        safe < 1024L * 1024L -> String.format(Locale.US, "%.1f KB", safe / 1024.0)
+        safe < 1024L * 1024L * 1024L -> String.format(Locale.US, "%.1f MB", safe / (1024.0 * 1024.0))
+        else -> String.format(Locale.US, "%.2f GB", safe / (1024.0 * 1024.0 * 1024.0))
+    }
+}
+
+/**
+ * SCREEN 1: Hollow Startup & Subscription Streaming Pipeline Fetching Screen
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SplashFetchingScreen(
+    statusSubtitle: String,
+    progress: FetchingProgressState = FetchingProgressState(isActive = true, detail = statusSubtitle),
+    onCancelOrSkip: () -> Unit
+) {
+    BackHandler { onCancelOrSkip() }
+    val rawDetail = progress.detail.ifBlank { statusSubtitle }
+    val displaySubtitle = rawDetail
+        .replace("V2Ray / Xray ", "", ignoreCase = true)
+        .replace("V2Ray/Xray ", "", ignoreCase = true)
+
+    val rawProgressFraction = when (progress.stage) {
+        FetchingStage.DOWNLOADING -> 0.14f
+        FetchingStage.TESTING_PIPELINE -> {
+            val total = progress.targetTotalCount.coerceAtLeast(1)
+            (0.18f + 0.62f * (progress.testedCount.toFloat() / total.toFloat())).coerceIn(0.18f, 0.80f)
+        }
+        FetchingStage.SPEED_AND_GEO -> 0.88f
+        FetchingStage.FINALIZING -> 1.0f
+        FetchingStage.IDLE -> 0.12f
+    }
+    val animatedProgress by animateFloatAsState(
+        targetValue = rawProgressFraction,
+        animationSpec = tween(durationMillis = 320),
+        label = "fetch_pipeline_progress"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(HollowCream)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        NothingDotMatrixBackdrop()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = 520.dp)
+                .align(Alignment.Center)
+                .padding(horizontal = 22.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Top bar: Brand + Live Pipeline status on left, Hide button on right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    HollowBrandShieldLogo(size = 34.dp, cornerRadius = 10.dp)
+                    Column {
+                        Text(
+                            text = stringResource(R.string.app_name).uppercase(),
+                            fontFamily = DotoDisplayFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp,
+                            letterSpacing = 0.8.sp,
+                            color = HollowInk
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            HollowBlinkingDot(color = HollowOrange)
+                            Text(
+                                text = "LIVE PIPELINE",
+                                fontFamily = JetBrainsMonoFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 10.sp,
+                                letterSpacing = 0.8.sp,
+                                color = HollowInkSecondary
+                            )
+                        }
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(999.dp),
+                    color = HollowCreamSurface,
+                    border = BorderStroke(1.dp, HollowCreamDivider),
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .clip(RoundedCornerShape(999.dp))
+                        .clickable(role = Role.Button, onClick = onCancelOrSkip)
+                        .testTag("btn_hide_fetching_top")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.KeyboardArrowDown,
+                            contentDescription = "Hide",
+                            tint = HollowInk,
+                            modifier = Modifier.size(17.dp)
+                        )
+                        Text(
+                            text = "Hide",
+                            fontFamily = SpaceGroteskFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp,
+                            color = HollowInk
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+            // Main Editorial Pipeline Card
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = HollowCreamSurface,
+                border = BorderStroke(1.dp, HollowCreamDivider)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    FetchingSpinnerRing(size = 64.dp)
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = progress.headline.ifBlank { stringResource(R.string.fetching_servers_title) },
+                        fontFamily = DotoDisplayFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.5.sp,
+                        lineHeight = 23.sp,
+                        color = HollowInk,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    Text(
+                        text = displaySubtitle,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                        color = HollowInkSecondary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Progress track
+                    if (progress.stage == FetchingStage.DOWNLOADING && progress.parsedCount == 0) {
+                        HollowIndeterminateBar(
+                            color = HollowOrange,
+                            track = HollowCreamDivider,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = if (progress.workingCount > 0) NothingMatrixGreen else HollowOrange,
+                            trackColor = HollowCreamDivider,
+                            strokeCap = StrokeCap.Round
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Dual-Lane Concurrent Pipeline Strip: FETCH -> TEST
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = HollowCream,
+                        border = BorderStroke(1.dp, HollowCreamDivider)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    HollowBlinkingDot(color = HollowOrange)
+                                    Text(
+                                        text = "FETCH",
+                                        fontFamily = JetBrainsMonoFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.5.sp,
+                                        letterSpacing = 0.8.sp,
+                                        color = HollowInkSecondary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = "${progress.parsedCount} parsed",
+                                    fontFamily = JetBrainsMonoFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = HollowInk
+                                )
+                            }
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                tint = HollowInkSecondary,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .size(16.dp)
+                            )
+
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    HollowBlinkingDot(
+                                        color = if (progress.workingCount > 0) NothingMatrixGreen else HollowOrange
+                                    )
+                                    Text(
+                                        text = "TEST",
+                                        fontFamily = JetBrainsMonoFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.5.sp,
+                                        letterSpacing = 0.8.sp,
+                                        color = HollowInkSecondary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = "${progress.workingCount} ready · ${progress.testedCount} probed",
+                                    fontFamily = JetBrainsMonoFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = if (progress.workingCount > 0) NothingMatrixGreen else HollowInk,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 3-Column Live Metrics Strip
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FetchingMetricCell(
+                            label = "REACHABLE",
+                            value = "${progress.reachableCount}",
+                            valueColor = HollowInk,
+                            modifier = Modifier.weight(1f)
+                        )
+                        VerticalDivider(
+                            thickness = 1.dp,
+                            color = HollowCreamDivider,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        FetchingMetricCell(
+                            label = "WORKING",
+                            value = "${progress.workingCount}",
+                            valueColor = if (progress.workingCount > 0) NothingMatrixGreen else HollowInk,
+                            modifier = Modifier.weight(1f)
+                        )
+                        VerticalDivider(
+                            thickness = 1.dp,
+                            color = HollowCreamDivider,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        FetchingMetricCell(
+                            label = "FASTEST",
+                            value = if (progress.fastestPingMs > 0) "${progress.fastestPingMs}ms" else "—",
+                            valueColor = if (progress.fastestPingMs > 0) NothingMatrixGreen else HollowInkSecondary,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Live Discovered Country Flags
+                    AnimatedVisibility(
+                        visible = progress.discoveredCountries.isNotEmpty(),
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 14.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            HorizontalDivider(thickness = 1.dp, color = HollowCreamDivider)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "DISCOVERED LOCATIONS (${progress.countryCount})",
+                                fontFamily = JetBrainsMonoFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 10.sp,
+                                letterSpacing = 0.9.sp,
+                                color = HollowInkSecondary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                progress.discoveredCountries.take(8).forEach { (code, _) ->
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = HollowCream,
+                                        border = BorderStroke(1.dp, HollowCreamDivider)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text(
+                                                text = code,
+                                                fontFamily = JetBrainsMonoFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 11.sp,
+                                                color = HollowInk
+                                            )
+                                        }
+                                    }
+                                }
+                                val extraCountries = progress.countryCount - progress.discoveredCountries.take(8).size
+                                if (extraCountries > 0) {
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = HollowCream,
+                                        border = BorderStroke(1.dp, HollowCreamDivider)
+                                    ) {
+                                        Text(
+                                            text = "+$extraCountries",
+                                            fontFamily = JetBrainsMonoFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 11.sp,
+                                            color = HollowInkSecondary,
+                                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedButton(
+                onClick = onCancelOrSkip,
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, HollowCreamDivider),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .testTag("btn_hide_fetching")
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = HollowInk,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Hide",
+                    fontFamily = SpaceGroteskFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.5.sp,
+                    color = HollowInk
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Runs in background — keep using Hollow while servers verify",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                color = HollowInkSecondary,
+                textAlign = TextAlign.Center
+            )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FetchingMetricCell(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontFamily = JetBrainsMonoFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 10.sp,
+            letterSpacing = 0.7.sp,
+            color = HollowInkSecondary
+        )
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(
+            text = value,
+            fontFamily = DotoDisplayFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.5.sp,
+            color = valueColor,
+            maxLines = 1
+        )
+    }
+}
+
+/**
+ * PAGES 1, 2, 3: Hollow Home / Connect Dashboard (Disconnected, Connecting, Protected)
+ */
+@Composable
+fun ConnectedHomeScreen(
+    selectedServer: ServerEntity?,
+    telemetry: ConnectionTelemetryState,
+    tunModeEnabled: Boolean = true,
+    bottomContentPadding: Dp = 0.dp,
+    onToggleConnect: () -> Unit,
+    onOpenServerList: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenAddServer: () -> Unit,
+    onRefreshRealIp: () -> Unit = {}
+) {
+    val homePhase = when {
+        telemetry.isConnecting -> 1
+        telemetry.isConnected -> 2
+        else -> 0
+    }
+
+    val backgroundColor by animateColorAsState(
+        targetValue = when (homePhase) {
+            1 -> HollowObsidian
+            2 -> HollowForest
+            else -> HollowCream
+        },
+        animationSpec = tween(durationMillis = 280),
+        label = "home_bg_color"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .statusBarsPadding()
+            .padding(bottom = bottomContentPadding)
+    ) {
+        NothingDotMatrixBackdrop(
+            dotColor = when (homePhase) {
+                2 -> HollowLime.copy(alpha = 0.032f)
+                1 -> Color.White.copy(alpha = 0.026f)
+                else -> NothingBackdropDot
+            }
+        )
+        AnimatedContent(
+            targetState = homePhase,
+            transitionSpec = {
+                val ease = NothingMotion.FluidEase
+                (fadeIn(tween(260, easing = ease)) +
+                    scaleIn(tween(300, easing = ease), initialScale = 0.96f) +
+                    slideInVertically(tween(300, easing = ease)) { it / 22 })
+                    .togetherWith(
+                        fadeOut(tween(180, easing = ease)) +
+                            scaleOut(tween(220, easing = ease), targetScale = 0.97f)
+                    )
+            },
+            label = "home_phase_motion"
+        ) { phase ->
+            when (phase) {
+                1 -> ConnectingHomeContent(
+                    selectedServer = selectedServer,
+                    telemetry = telemetry,
+                    onCancel = onToggleConnect,
+                    onOpenAddServer = onOpenAddServer,
+                    onOpenSettings = onOpenSettings
+                )
+                2 -> ProtectedHomeContent(
+                    selectedServer = selectedServer,
+                    telemetry = telemetry,
+                    onDisconnect = onToggleConnect,
+                    onOpenServerList = onOpenServerList,
+                    onOpenAddServer = onOpenAddServer,
+                    onOpenSettings = onOpenSettings
+                )
+                else -> DisconnectedHomeContent(
+                    selectedServer = selectedServer,
+                    telemetry = telemetry,
+                    tunModeEnabled = tunModeEnabled,
+                    onConnect = onToggleConnect,
+                    onOpenServerList = onOpenServerList,
+                    onOpenAddServer = onOpenAddServer,
+                    onOpenSettings = onOpenSettings,
+                    onRefreshRealIp = onRefreshRealIp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DisconnectedHomeContent(
+    selectedServer: ServerEntity?,
+    telemetry: ConnectionTelemetryState,
+    tunModeEnabled: Boolean,
+    onConnect: () -> Unit,
+    onOpenServerList: () -> Unit,
+    onOpenAddServer: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onRefreshRealIp: () -> Unit
+) {
+    val cleanIpDisplay = remember(telemetry.realPublicIpLabel) {
+        telemetry.realPublicIpLabel.substringBefore(" · ").ifBlank { telemetry.realPublicIpLabel }
+    }
+    val originLocationLabel = remember(telemetry.realPublicIpLabel, telemetry.realPublicCountryCode) {
+        val afterDot = telemetry.realPublicIpLabel.substringAfter(" · ", "").trim()
+        when {
+            afterDot.isNotBlank() -> afterDot
+            telemetry.realPublicCountryCode.length == 2 &&
+                !telemetry.realPublicCountryCode.equals("XX", ignoreCase = true) -> telemetry.realPublicCountryCode.uppercase()
+            else -> "Current ISP"
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .widthIn(max = 600.dp)
+            .padding(horizontal = 24.dp)
+    ) {
+        val screenMaxHeight = maxHeight
+        val isCompact = screenMaxHeight < 580.dp
+        val mapCanvasHeight = (screenMaxHeight * 0.22f).coerceIn(92.dp, 152.dp)
+        val cardGap = if (isCompact) 8.dp else 12.dp
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            HomeTopBar(
+                dotColor = HollowOrange,
+                textColor = HollowInk,
+                buttonContainer = NothingTopBtnFill,
+                buttonContent = NothingOnCanvas,
+                buttonBorder = NothingTopBtnBorder,
+                onOpenAddServer = onOpenAddServer,
+                onOpenSettings = onOpenSettings
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.38f)
+                    .heightIn(min = 6.dp)
+            )
+
+            Text(
+                text = "YOUR IP IS VISIBLE.",
+                fontFamily = DotoDisplayFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = if (isCompact) 21.sp else 24.sp,
+                lineHeight = if (isCompact) 25.sp else 29.sp,
+                letterSpacing = 0.5.sp,
+                color = Color(0xFFD71921),
+                modifier = Modifier.testTag("connection_status_text")
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Row(
+                modifier = Modifier
+                    .heightIn(min = 34.dp)
+                    .padding(vertical = 4.dp, horizontal = 2.dp)
+                    .testTag("row_real_ip"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Text(
+                    text = cleanIpDisplay,
+                    fontFamily = JetBrainsMonoFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 13.sp,
+                    color = HollowInkSecondary
+                )
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.22f)
+                    .heightIn(min = 6.dp)
+            )
+
+            HollowDisconnectedExposureCard(
+                originCountryCode = telemetry.realPublicCountryCode,
+                originLocationLabel = originLocationLabel,
+                targetCountryCode = selectedServer?.countryCode,
+                targetCountryName = selectedServer?.countryName,
+                tunModeEnabled = tunModeEnabled,
+                ispLabel = telemetry.realIspLabel,
+                mapHeight = mapCanvasHeight,
+                fillCanvasHeight = false
+            )
+
+            Spacer(modifier = Modifier.height(cardGap))
+
+            // Quick Server / Add a Server Card (Page 1) with tactile press-scale
+            val serverCardInteraction = remember { MutableInteractionSource() }
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .minimumInteractiveComponentSize()
+                    .nothingPressScale(serverCardInteraction, pressedScale = 0.97f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(
+                        interactionSource = serverCardInteraction,
+                        indication = androidx.compose.material3.ripple(),
+                        role = Role.Button
+                    ) {
+                        if (selectedServer != null) onOpenServerList() else onOpenAddServer()
+                    }
+                    .testTag("active_server_pill"),
+                shape = RoundedCornerShape(20.dp),
+                color = HollowCreamSurface,
+                border = BorderStroke(1.dp, HollowCreamDivider)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = if (isCompact) 10.dp else 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (selectedServer == null) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(NothingSurfaceElevated)
+                                .border(1.dp, HollowCreamDivider, RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = null,
+                                tint = HollowInk,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = selectedServer?.countryName ?: "Add a server",
+                            fontFamily = SpaceGroteskFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = HollowInk,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        val subText = if (selectedServer != null) {
+                            val host = selectedServer.resolvedIp.ifBlank { selectedServer.host }
+                            "$host:${selectedServer.port}"
+                        } else {
+                            "Link, config or QR code"
+                        }
+                        Text(
+                            text = subText,
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                            color = HollowInkSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    if (selectedServer != null) {
+                        val pingColor = when {
+                            selectedServer.pingMs in 1..150 -> NothingMatrixGreen
+                            selectedServer.pingMs in 151..450 -> HollowInk
+                            selectedServer.pingMs > 450 -> HollowOrange
+                            else -> HollowInkSecondary
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (selectedServer.pingMs > 0) "${selectedServer.pingMs} ms" else "—",
+                            fontFamily = JetBrainsMonoFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.5.sp,
+                            color = pingColor,
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+
+                    Icon(
+                        imageVector = if (selectedServer != null) {
+                            Icons.AutoMirrored.Rounded.KeyboardArrowRight
+                        } else {
+                            Icons.Rounded.Add
+                        },
+                        contentDescription = if (selectedServer != null) "Choose server" else "Add server",
+                        tint = HollowInkSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.25f)
+                    .heightIn(min = cardGap)
+            )
+
+            HollowSlideActionPill(
+                label = "Slide to connect",
+                trackColor = NothingSurfaceElevated,
+                thumbColor = HollowOrange,
+                arrowColor = Color.White,
+                labelColor = HollowInk,
+                onSlideComplete = onConnect,
+                modifier = Modifier.testTag("bottom_disconnect_connect_button")
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.15f)
+                    .heightIn(min = 10.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConnectingHomeContent(
+    selectedServer: ServerEntity?,
+    telemetry: ConnectionTelemetryState,
+    onCancel: () -> Unit,
+    onOpenAddServer: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    val activeStep = telemetry.connectingStage.coerceIn(1, 3)
+
+    val countryName = selectedServer?.countryName ?: "Germany"
+    val protocolShort = selectedServer?.let { formatShortProtocolLabel(it.protocolCore) } ?: "Xray"
+    val transportShort = selectedServer?.transport?.ifBlank { "TCP" } ?: "TCP"
+    val pingText = selectedServer?.let { if (it.pingMs > 0) "${it.pingMs} ms" else "—" } ?: "—"
+    val serverAddr = selectedServer?.let {
+        it.resolvedIp.ifBlank { it.host }
+    } ?: telemetry.serverIpLabel
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .widthIn(max = 600.dp)
+            .padding(horizontal = 24.dp)
+    ) {
+        val isCompact = maxHeight < 580.dp
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            HomeTopBar(
+                dotColor = HollowAmber,
+                textColor = HollowDarkInk,
+                buttonContainer = HollowObsidianSurface,
+                buttonContent = HollowDarkInk,
+                buttonBorder = HollowObsidianDivider,
+                onOpenAddServer = onOpenAddServer,
+                onOpenSettings = onOpenSettings
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.35f)
+                    .heightIn(min = 10.dp)
+            )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    HollowBlinkingDot(color = HollowAmber)
+                    Text(
+                        text = "CONNECTING",
+                        fontFamily = JetBrainsMonoFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.4.sp,
+                        color = HollowAmber
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "BUILDING A\nSECURE ROUTE…",
+                    fontFamily = DotoDisplayFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (isCompact) 22.sp else 25.sp,
+                    lineHeight = if (isCompact) 27.sp else 30.sp,
+                    letterSpacing = 0.5.sp,
+                    color = Color.White,
+                    modifier = Modifier.testTag("connection_status_text")
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                HollowIndeterminateBar(
+                    color = HollowAmber,
+                    track = HollowObsidianDivider
+                )
+
+                Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 24.dp))
+
+                // Step 1: Server reached
+                ConnectingStepRow(
+                    stepNumber = 1,
+                    isCompleted = activeStep > 1,
+                    isActive = activeStep == 1,
+                    label = "Server reached · $countryName"
+                )
+                HorizontalDivider(thickness = 1.dp, color = HollowObsidianDivider)
+
+                // Step 2: Handshake
+                ConnectingStepRow(
+                    stepNumber = 2,
+                    isCompleted = activeStep > 2,
+                    isActive = activeStep == 2,
+                    label = "Handshake · $protocolShort $transportShort"
+                )
+                HorizontalDivider(thickness = 1.dp, color = HollowObsidianDivider)
+
+                // Step 3: Securing traffic
+                ConnectingStepRow(
+                    stepNumber = 3,
+                    isCompleted = false,
+                    isActive = activeStep >= 3,
+                    label = "Securing your traffic"
+                )
+            HorizontalDivider(thickness = 1.dp, color = HollowObsidianDivider)
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.65f)
+                    .heightIn(min = 12.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = if (isCompact) 10.dp else 14.dp)
+            ) {
+                ThreeColumnStatsGrid(
+                    dividerColor = HollowObsidianDivider,
+                    labelColor = HollowObsidianMuted,
+                    valueColor = HollowDarkInk,
+                    col1Label = "PROTOCOL",
+                    col1Value = protocolShort,
+                    col2Label = "PING",
+                    col2Value = pingText,
+                    col3Label = "SERVER",
+                    col3Value = serverAddr
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable(role = Role.Button, onClick = onCancel)
+                        .testTag("bottom_disconnect_connect_button"),
+                    shape = RoundedCornerShape(14.dp),
+                    color = HollowObsidianSurface,
+                    border = BorderStroke(1.dp, HollowObsidianDivider)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Cancel",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.5.sp
+                            ),
+                            color = HollowDarkInk
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConnectingStepRow(
+    stepNumber: Int,
+    isCompleted: Boolean,
+    isActive: Boolean,
+    label: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val stepState = when {
+            isCompleted -> 2
+            isActive -> 1
+            else -> 0
+        }
+        val stepBg by animateColorAsState(
+            targetValue = if (isCompleted) HollowAmber else Color.Transparent,
+            animationSpec = tween(220, easing = NothingMotion.FluidEase),
+            label = "step_bg_$stepNumber"
+        )
+        val stepBorder by animateColorAsState(
+            targetValue = if (isCompleted || isActive) HollowAmber else HollowObsidianDivider,
+            animationSpec = tween(220, easing = NothingMotion.FluidEase),
+            label = "step_border_$stepNumber"
+        )
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(stepBg)
+                .border(2.dp, stepBorder, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedContent(
+                targetState = stepState,
+                transitionSpec = {
+                    (fadeIn(tween(180)) + scaleIn(NothingMotion.tactileSpring(), initialScale = 0.6f))
+                        .togetherWith(fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.6f))
+                },
+                label = "step_icon_$stepNumber"
+            ) { state ->
+                when (state) {
+                    2 -> Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = HollowObsidian,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    1 -> CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        color = HollowAmber,
+                        strokeWidth = 2.dp
+                    )
+                    else -> Text(
+                        text = stepNumber.toString(),
+                        fontFamily = JetBrainsMonoFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        color = HollowObsidianMuted
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = if (isCompleted || isActive) FontWeight.SemiBold else FontWeight.Medium,
+                fontSize = 14.sp
+            ),
+            color = if (isCompleted || isActive) HollowDarkInk else HollowObsidianMuted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun ProtectedHomeContent(
+    selectedServer: ServerEntity?,
+    telemetry: ConnectionTelemetryState,
+    onDisconnect: () -> Unit,
+    onOpenServerList: () -> Unit,
+    onOpenAddServer: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    val countryName = selectedServer?.countryName ?: "VPN"
+    val serverIp = selectedServer?.resolvedIp?.ifBlank { selectedServer.host }
+        ?: telemetry.serverIpLabel
+    val realIpText = remember(telemetry.preConnectionIp, telemetry.realPublicIpLabel) {
+        telemetry.preConnectionIp.ifBlank {
+            telemetry.realPublicIpLabel.substringBefore(" · ").ifBlank { telemetry.realPublicIpLabel }
+        }
+    }
+    val protocolShort = selectedServer?.let { formatShortProtocolLabel(it.protocolCore) } ?: "Xray"
+    val pingText = selectedServer?.let { if (it.pingMs > 0) "${it.pingMs} ms" else "—" } ?: "—"
+    val totalText = formatCompactTotalBytes(telemetry.uploadBytes + telemetry.downloadBytes)
+    val (dlNum, dlUnit) = splitSpeedValueAndUnit(telemetry.downloadBytesPerSec)
+    val (ulNum, ulUnit) = splitSpeedValueAndUnit(telemetry.uploadBytesPerSec)
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .widthIn(max = 600.dp)
+            .padding(horizontal = 24.dp)
+    ) {
+        val isCompact = maxHeight < 620.dp
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            HomeTopBar(
+                dotColor = HollowLime,
+                textColor = HollowDarkInk,
+                buttonContainer = HollowForestCard,
+                buttonContent = HollowDarkInk,
+                buttonBorder = HollowForestDivider,
+                onOpenAddServer = onOpenAddServer,
+                onOpenSettings = onOpenSettings
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.30f)
+                    .heightIn(min = 6.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                HollowBlinkingDot(color = HollowLime)
+                Text(
+                    text = "PROTECTED",
+                    fontFamily = JetBrainsMonoFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.4.sp,
+                    color = HollowLime,
+                    modifier = Modifier.testTag("connection_status_text")
+                )
+            }
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = telemetry.formattedTimer,
+                fontFamily = DotoDisplayFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = if (isCompact) 30.sp else 36.sp,
+                letterSpacing = 0.4.sp,
+                color = HollowDarkInk,
+                modifier = Modifier.testTag("connection_timer_text")
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable(role = Role.Button, onClick = onOpenServerList)
+                    .testTag("active_server_pill"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "via $countryName · $serverIp",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp),
+                    color = HollowForestMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = HollowForestCard,
+                    border = BorderStroke(1.dp, HollowForestDivider)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(start = 11.dp, end = 7.dp, top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = "Switch",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = HollowLime,
+                            maxLines = 1
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                            contentDescription = "Switch server",
+                            tint = HollowLime,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.25f)
+                    .heightIn(min = 8.dp)
+            )
+
+            HollowRouteCard(
+                state = HollowRouteState.SECURED,
+                serverLabel = countryName,
+                realIp = realIpText.ifBlank { null },
+                exitIp = serverIp.ifBlank { null }
+            )
+
+            Spacer(modifier = Modifier.height(if (isCompact) 8.dp else 12.dp))
+
+            HollowSpeedBarsCard(
+                downloadValue = dlNum,
+                downloadUnit = dlUnit,
+                uploadValue = ulNum,
+                uploadUnit = ulUnit,
+                downloadBytesPerSec = telemetry.downloadBytesPerSec,
+                elapsedSeconds = telemetry.elapsedSeconds,
+                barsHeight = if (isCompact) 32.dp else 44.dp
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .weight(0.45f)
+                    .heightIn(min = 10.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = if (isCompact) 10.dp else 14.dp)
+            ) {
+                ThreeColumnStatsGrid(
+                    dividerColor = HollowForestDivider,
+                    labelColor = HollowForestMuted,
+                    valueColor = HollowDarkInk,
+                    col1Label = "PROTOCOL",
+                    col1Value = protocolShort,
+                    col2Label = "PING",
+                    col2Value = pingText,
+                    col3Label = "TOTAL",
+                    col3Value = totalText
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                HollowSlideActionPill(
+                    label = "Slide to disconnect",
+                    trackColor = HollowForestCard,
+                    thumbColor = HollowLime,
+                    arrowColor = NothingBlack,
+                    labelColor = HollowDarkInk,
+                    borderColor = HollowForestDivider,
+                    onSlideComplete = onDisconnect,
+                    modifier = Modifier.testTag("bottom_disconnect_connect_button")
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeTopBar(
+    dotColor: Color,
+    textColor: Color,
+    buttonContainer: Color,
+    buttonContent: Color,
+    buttonBorder: Color?,
+    onOpenAddServer: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onOpenSettings: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        HollowStatusBrandRow(
+            dotColor = dotColor,
+            textColor = textColor
+        )
+
+        HollowTopSquareButton(
+            containerColor = buttonContainer,
+            contentColor = buttonContent,
+            borderColor = buttonBorder,
+            contentDescription = "Add Server",
+            onClick = onOpenAddServer,
+            modifier = Modifier.testTag("home_add_server_button")
+        ) { tint ->
+            Icon(
+                imageVector = Icons.Rounded.Add,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(21.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThreeColumnStatsGrid(
+    dividerColor: Color,
+    labelColor: Color,
+    valueColor: Color,
+    col1Label: String,
+    col1Value: String,
+    col2Label: String,
+    col2Value: String,
+    col3Label: String,
+    col3Value: String
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalDivider(thickness = 1.dp, color = dividerColor)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            StatGridCell(
+                label = col1Label,
+                value = col1Value,
+                labelColor = labelColor,
+                valueColor = valueColor,
+                modifier = Modifier
+                    .weight(1.35f)
+                    .padding(end = 10.dp, top = 14.dp, bottom = 8.dp)
+            )
+            VerticalDivider(
+                thickness = 1.dp,
+                color = dividerColor,
+                modifier = Modifier.fillMaxHeight()
+            )
+            StatGridCell(
+                label = col2Label,
+                value = col2Value,
+                labelColor = labelColor,
+                valueColor = valueColor,
+                modifier = Modifier
+                    .weight(0.8f)
+                    .padding(horizontal = 10.dp, vertical = 0.dp)
+                    .padding(top = 14.dp, bottom = 8.dp)
+            )
+            VerticalDivider(
+                thickness = 1.dp,
+                color = dividerColor,
+                modifier = Modifier.fillMaxHeight()
+            )
+            StatGridCell(
+                label = col3Label,
+                value = col3Value,
+                labelColor = labelColor,
+                valueColor = valueColor,
+                modifier = Modifier
+                    .weight(1.0f)
+                    .padding(start = 10.dp, top = 14.dp, bottom = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatGridCell(
+    label: String,
+    value: String,
+    labelColor: Color,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            fontFamily = JetBrainsMonoFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 9.5.sp,
+            letterSpacing = 1.0.sp,
+            color = labelColor,
+            maxLines = 1
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = value,
+            fontFamily = JetBrainsMonoFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            color = valueColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Editorial server node row used inside expanded country sections on Page 4.
+ */
+@Composable
+fun ServerItemRowContent(
+    server: ServerEntity,
+    showLightningBadge: Boolean,
+    onSelect: () -> Unit,
+    onPing: () -> Unit,
+    onInspectJson: () -> Unit,
+    onDelete: () -> Unit,
+    onCopyFeedback: (String) -> Unit = {},
+    onShareQr: () -> Unit = {},
+    isSelectionMode: Boolean = false,
+    isCheckedForBatch: Boolean = false,
+    onToggleBatchCheck: () -> Unit = {},
+    showCountryBadge: Boolean = false
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val cleanProtocol = remember(server.protocolCore, server.transport) {
+        formatConsumerProtocol(server.protocolCore, server.transport)
+    }
+
+    val pingColor = when {
+        server.pingMs in 1..150 -> NothingMatrixGreen
+        server.pingMs in 151..450 -> HollowInk
+        else -> HollowOrange
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isSelectionMode) {
+            Checkbox(
+                checked = isCheckedForBatch,
+                onCheckedChange = { onToggleBatchCheck() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = HollowOrange,
+                    uncheckedColor = HollowInkSecondary,
+                    checkmarkColor = Color.White
+                )
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                if (showCountryBadge) {
+                    CountryFlag(countryCode = server.countryCode, width = 22.dp, height = 15.dp)
+                }
+                Text(
+                    text = if (showCountryBadge) {
+                        server.countryName.ifBlank { cleanProtocol }
+                    } else {
+                        cleanProtocol
+                    },
+                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.5.sp),
+                    color = HollowInk,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (server.isSelected) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = NothingCanvas,
+                        border = BorderStroke(1.dp, NothingMatrixGreen)
+                    ) {
+                        Text(
+                            text = "ACTIVE",
+                            fontFamily = JetBrainsMonoFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 8.5.sp,
+                            color = NothingMatrixGreen,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
+                    }
+                } else if (showLightningBadge) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = NothingCanvas,
+                        border = BorderStroke(1.dp, HollowOrange)
+                    ) {
+                        Text(
+                            text = "FAST",
+                            fontFamily = JetBrainsMonoFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 8.5.sp,
+                            color = HollowOrange,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+            val addrText = "${server.resolvedIp.ifBlank { server.host }}:${server.port}"
+            Text(
+                text = if (showCountryBadge) "$cleanProtocol · $addrText" else addrText,
+                style = TabularMonoBody.copy(fontSize = 11.sp, fontWeight = FontWeight.Normal),
+                color = HollowInkSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            Text(
+                text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
+                style = TabularMonoBody.copy(fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold),
+                color = pingColor
+            )
+            if (server.lastSpeedMbps > 0.0) {
+                Text(
+                    text = String.format(Locale.US, "%.1f MB/s", server.lastSpeedMbps),
+                    style = TabularMonoBody.copy(fontSize = 10.5.sp, fontWeight = FontWeight.Medium),
+                    color = HollowInkSecondary
+                )
+            } else {
+                NothingSignalDots(
+                    pingMs = server.pingMs,
+                    dotSize = 4.5.dp,
+                    dotSpacing = 3.5.dp
+                )
+            }
+        }
+
+        if (!isSelectionMode) {
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = "Server Options for ${server.countryName}",
+                        tint = HollowInkSecondary,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    containerColor = NothingSurfaceElevated
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Connect Now", color = HollowInk) },
+                        onClick = {
+                            menuExpanded = false
+                            onSelect()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            val pingSub = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout"
+                            Text("Ping Test ($pingSub)", color = HollowInk)
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onPing()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Inspect Raw Config", color = HollowInk) },
+                        onClick = {
+                            menuExpanded = false
+                            onInspectJson()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = if (server.shareUri.isNotBlank()) "Copy Share Link" else "Copy Raw Config",
+                                color = HollowInk
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            val payload = server.shareUri.ifBlank { server.rawConfigJson }
+                            if (payload.isNotBlank()) {
+                                val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                                cm?.setPrimaryClip(android.content.ClipData.newPlainText("Hollow VPN Server", payload))
+                                onCopyFeedback("Copied server config for ${server.countryName}")
+                            }
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Show QR Code", color = HollowInk) },
+                        onClick = {
+                            menuExpanded = false
+                            onShareQr()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete Server", color = HollowOrange) },
+                        onClick = {
+                            menuExpanded = false
+                            onDelete()
+                        }
+                    )
+                }
+            }
+        } else {
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+    }
+}

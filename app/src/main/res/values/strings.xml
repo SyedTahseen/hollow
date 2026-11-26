@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Hollow VPN</string>
+    <string name="fetching_servers_title">Fetching servers…</string>
+</resources>
