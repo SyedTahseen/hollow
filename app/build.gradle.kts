@@ -36,6 +36,12 @@ android {
       ndk {
         abiFilters += listOf("armeabi-v7a", "arm64-v8a")
       }
+    } else {
+      // Debug/CI builds: ship only 64-bit ARM (all modern phones). The Xray/Go core is ~15-20 MB per
+      // ABI, so bundling x86/x86_64/armeabi-v7a is what made the debug APK ~75 MB.
+      ndk {
+        abiFilters += listOf("arm64-v8a")
+      }
     }
     versionCode = buildNumber.coerceAtLeast(1)
     versionName = "1.0.$buildNumber"
@@ -100,6 +106,26 @@ android {
         it.maxParallelForks = 1
         it.systemProperty("java.awt.headless", "true")
       }
+    }
+  }
+  packaging {
+    jniLibs {
+      // Compress native libraries inside the APK (the Go core compresses very well) -> much smaller APK.
+      useLegacyPackaging = true
+    }
+    resources {
+      excludes += listOf(
+        "/META-INF/{AL2.0,LGPL2.1}",
+        "/META-INF/*.version",
+        "/META-INF/LICENSE*",
+        "/META-INF/NOTICE*",
+        "/META-INF/DEPENDENCIES",
+        "/DebugProbesKt.bin",
+        "/kotlin-tooling-metadata.json",
+        "/kotlin/**",
+        "**/*.kotlin_builtins",
+        "**/*.kotlin_module"
+      )
     }
   }
   dependenciesInfo {

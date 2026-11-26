@@ -1585,9 +1585,7 @@ fun ServerItemRowContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                if (showCountryBadge) {
-                    CountryFlag(countryCode = server.countryCode, width = 22.dp, height = 15.dp)
-                }
+                CountryFlag(countryCode = server.countryCode, width = 22.dp, height = 15.dp)
                 Text(
                     text = if (showCountryBadge) {
                         server.countryName.ifBlank { cleanProtocol }

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -55,9 +55,37 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Upload debug APK
+      - name: Rename debug APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/*.apk dist/HollowVPN-debug.apk
+          ls -lh dist
+
+      - name: Upload debug APK (zipped workflow artifact)
         uses: actions/upload-artifact@v4
         with:
           name: hollow-vpn-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: dist/HollowVPN-debug.apk
           if-no-files-found: error
+
+      # Direct, un-zipped APK download: Releases page -> "debug-latest" -> HollowVPN-debug.apk
+      - name: Move debug-latest tag to this commit
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f debug-latest
+          git push -f origin refs/tags/debug-latest
+
+      - name: Publish debug APK to GitHub Release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debug-latest
+          name: Latest debug build
+          prerelease: true
+          make_latest: false
+          body: |
+            Automatic debug build from commit `${{ github.sha }}`.
+            Download `HollowVPN-debug.apk` below and install it directly (no unzipping needed).
+          files: dist/HollowVPN-debug.apk

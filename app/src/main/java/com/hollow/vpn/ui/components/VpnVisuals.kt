@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.components
 
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -2752,11 +2754,60 @@ private fun DrawScope.nordicCross(bg: Long, cross: Long, inner: Long? = null) {
     }
 }
 
+private val flagBitmapCache = java.util.concurrent.ConcurrentHashMap<String, ImageBitmap>()
+private val flagMissing = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+private fun loadFlagBitmap(context: android.content.Context, code: String): ImageBitmap? {
+    if (code.length != 2 || !code.all { it in 'a'..'z' }) return null
+    flagBitmapCache[code]?.let { return it }
+    if (code in flagMissing) return null
+    return try {
+        context.assets.open("flags/$code.png").use { input ->
+            android.graphics.BitmapFactory.decodeStream(input)?.asImageBitmap()
+        }?.also { flagBitmapCache[code] = it } ?: run { flagMissing.add(code); null }
+    } catch (_: Exception) {
+        flagMissing.add(code)
+        null
+    }
+}
+
 /**
- * Straight (rectangular) country flag drawn with vector shapes. No emoji, no circle clipping.
+ * Straight (rectangular, flat) country flag from bundled images (assets/flags/<iso2>.png).
+ * Covers ~228 countries and territories. Falls back to a simple drawn flag / globe if missing.
  */
 @Composable
 fun CountryFlag(
+    countryCode: String?,
+    modifier: Modifier = Modifier,
+    width: Dp = 24.dp,
+    height: Dp = 16.dp
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val code = countryCode?.trim()?.lowercase().orEmpty()
+    val bitmap = remember(code) { loadFlagBitmap(context.applicationContext, code) }
+    if (bitmap != null) {
+        Box(
+            modifier = modifier.size(width, height),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.Image(
+                bitmap = bitmap,
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                filterQuality = androidx.compose.ui.graphics.FilterQuality.Medium,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    } else {
+        CanvasCountryFlag(countryCode = countryCode, modifier = modifier, width = width, height = height)
+    }
+}
+
+/**
+ * Fallback flag drawn with vector shapes (used only if no bundled image exists).
+ */
+@Composable
+private fun CanvasCountryFlag(
     countryCode: String?,
     modifier: Modifier = Modifier,
     width: Dp = 24.dp,
