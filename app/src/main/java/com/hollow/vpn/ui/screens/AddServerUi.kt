@@ -4,6 +4,7 @@ import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowText
 import com.hollow.vpn.ui.theme.HollowModalSheet
 import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowType
@@ -264,7 +265,7 @@ private fun AddServerMenuItem(
     )
 }
 
-/** Dialogs, the manual sheet and the full-screen scanner. Compose once next to [AddServerButton]. */
+/** Dialogs, the manual dialog and the full-screen scanner. Compose once next to [AddServerButton]. */
 @Composable
 fun AddServerOverlays(
     state: AddServerState,
@@ -306,8 +307,11 @@ fun AddServerOverlays(
     }
 
     if (state.showManual) {
-        AddManualServerSheet(
-            onSubmit = actions.onAddManualServer,
+        AddManualServerDialog(
+            onAdd = { raw ->
+                state.showManual = false
+                routeIncoming(raw, actions)
+            },
             onDismiss = { state.showManual = false }
         )
     }
@@ -514,339 +518,65 @@ private fun SubscriptionOptionRow(
     }
 }
 
-/** Structured manual entry (host, port, protocol, transport, Reality/WS/gRPC fields, optional raw JSON). */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * "Add manually": paste one or more server links (or a JSON / WireGuard config), one per line.
+ * Same dialog as Outrun's; the text goes through the normal import path.
+ */
 @Composable
-private fun AddManualServerSheet(
-    onSubmit: ManualServerSubmit,
+private fun AddManualServerDialog(
+    onAdd: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var text by remember { mutableStateOf("") }
+    var bad by remember { mutableStateOf(false) }
 
-    var country by remember { mutableStateOf("") }
-    var host by remember { mutableStateOf("") }
-    var port by remember { mutableStateOf("443") }
-    var protocol by remember { mutableStateOf("VLESS") }
-    var transport by remember { mutableStateOf("Reality") }
-    var uuid by remember { mutableStateOf("") }
-    var sni by remember { mutableStateOf("") }
-    var publicKey by remember { mutableStateOf("") }
-    var shortId by remember { mutableStateOf("") }
-    var wsPath by remember { mutableStateOf("") }
-    var wsHost by remember { mutableStateOf("") }
-    var grpcService by remember { mutableStateOf("") }
-    var rawJson by remember { mutableStateOf("") }
-
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = HollowInk,
-        unfocusedBorderColor = HollowCreamDivider,
-        focusedLabelColor = HollowInk,
-        unfocusedLabelColor = HollowInkSecondary,
-        cursorColor = HollowOrange,
-        focusedContainerColor = HollowCream,
-        unfocusedContainerColor = HollowCream
-    )
-    val fieldShape = RoundedCornerShape(HollowRadius.Md)
-
-    HollowModalSheet(
+    AlertDialog(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .imePadding()
-                .navigationBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = HollowScreenPadding)
-                .padding(bottom = HollowSpace.Xxl),
-            verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
-        ) {
-            Text(
-                text = "ADD MANUALLY",
-                fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Display,
-                lineHeight = HollowLineHeight.Display,
-                letterSpacing = HollowTracking.Display,
-                color = HollowInk
-            )
-
-            OutlinedTextField(
-                value = country,
-                onValueChange = { country = it },
-                label = { Text("Server Country / Remark") },
-                singleLine = true,
-                colors = fieldColors,
-                shape = fieldShape,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
-                OutlinedTextField(
-                    value = host,
-                    onValueChange = { host = it },
-                    label = { Text("Server Address / Host") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier.weight(0.68f)
-                )
-                OutlinedTextField(
-                    value = port,
-                    onValueChange = { port = it },
-                    label = { Text("Port") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier.weight(0.32f)
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-            ) {
-                MANUAL_PROTOCOL_PRESETS.forEach { preset ->
-                    PresetChip(
-                        label = preset,
-                        selected = protocol.equals(preset, ignoreCase = true)
-                    ) {
-                        protocol = preset
-                        if (preset.equals("Hysteria2", ignoreCase = true)) {
-                            transport = "Hysteria2"
-                        } else if (transport.equals("Hysteria2", ignoreCase = true)) {
-                            transport = "Reality"
-                        }
-                    }
-                }
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
-                OutlinedTextField(
-                    value = protocol,
-                    onValueChange = { protocol = it },
-                    label = { Text("Protocol") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = transport,
-                    onValueChange = { transport = it },
-                    label = { Text("Transport") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-            ) {
-                MANUAL_TRANSPORT_PRESETS.forEach { preset ->
-                    PresetChip(
-                        label = preset,
-                        selected = transport.equals(preset, ignoreCase = true)
-                    ) { transport = preset }
-                }
-            }
-
-            OutlinedTextField(
-                value = uuid,
-                onValueChange = { uuid = it },
-                label = {
-                    Text(
-                        if (protocol.equals("Hysteria2", ignoreCase = true) ||
-                            protocol.equals("Trojan", ignoreCase = true)
-                        ) "Auth Password" else "UUID / Password"
-                    )
-                },
-                singleLine = true,
-                colors = fieldColors,
-                shape = fieldShape,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = sni,
-                onValueChange = { sni = it },
-                label = { Text("SNI / Server Name") },
-                singleLine = true,
-                colors = fieldColors,
-                shape = fieldShape,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (transport.equals("Reality", ignoreCase = true) &&
-                !protocol.equals("Hysteria2", ignoreCase = true)
-            ) {
-                OutlinedTextField(
-                    value = publicKey,
-                    onValueChange = { publicKey = it },
-                    label = { Text("Reality Public Key (pbk)") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("manual_public_key_input")
-                )
-                OutlinedTextField(
-                    value = shortId,
-                    onValueChange = { shortId = it },
-                    label = { Text("Reality Short ID (sid)") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("manual_short_id_input")
-                )
-            }
-
-            if (transport.equals("WS", ignoreCase = true) || transport.equals("WebSocket", ignoreCase = true)) {
-                OutlinedTextField(
-                    value = wsPath,
-                    onValueChange = { wsPath = it },
-                    label = { Text("WebSocket Path (e.g. /ws)") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("manual_ws_path_input")
-                )
-                OutlinedTextField(
-                    value = wsHost,
-                    onValueChange = { wsHost = it },
-                    label = { Text("WebSocket Host Header") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("manual_ws_host_input")
-                )
-            }
-
-            if (transport.equals("gRPC", ignoreCase = true)) {
-                OutlinedTextField(
-                    value = grpcService,
-                    onValueChange = { grpcService = it },
-                    label = { Text("gRPC Service Name") },
-                    singleLine = true,
-                    colors = fieldColors,
-                    shape = fieldShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("manual_grpc_service_input")
-                )
-            }
-
-            OutlinedTextField(
-                value = rawJson,
-                onValueChange = { rawJson = it },
-                label = { Text("Optional Raw Config (JSON)") },
-                textStyle = TextStyle(
-                    fontFamily = DotoDisplayFamily,
-                    fontSize = HollowType.Small,
-                    lineHeight = HollowLineHeight.Small,
-                    letterSpacing = HollowTracking.Small,
-                    color = HollowInk
-                ),
-                colors = fieldColors,
-                shape = fieldShape,
-                minLines = 4,
-                maxLines = 8,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("raw_xray_json_input")
-            )
-
-            Button(
-                onClick = {
-                    val complete = rawJson.trim().startsWith("{") ||
-                        (host.isNotBlank() && uuid.isNotBlank())
-                    onSubmit(
-                        country,
-                        host,
-                        port.toIntOrNull() ?: 443,
-                        protocol,
-                        transport,
-                        uuid,
-                        sni,
-                        rawJson,
-                        publicKey,
-                        shortId,
-                        wsPath,
-                        wsHost,
-                        grpcService
-                    )
-                    // Keep the sheet open when required fields are missing so the entered values survive
-                    // while the view model shows its validation message.
-                    if (complete) onDismiss()
-                },
-                shape = RoundedCornerShape(HollowRadius.Md),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = HollowInk,
-                    contentColor = HollowCream
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(HollowSizes.Button)
-                    .testTag("btn_save_manual_server")
-            ) {
+        containerColor = HollowDialog.containerColor,
+        shape = HollowDialog.Shape,
+        title = { Text("Add manually", style = HollowText.Heading, color = HollowInk) },
+        text = {
+            Column {
                 Text(
-                    text = "Save Custom Server & Ping Test",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = HollowType.BodyStrong,
-                        lineHeight = HollowLineHeight.BodyStrong,
-                        letterSpacing = HollowTracking.BodyStrong,
+                    "Paste a WireGuard .conf or a vless://, trojan://, ss://, vmess://, hysteria2://, tuic://, wireguard://, socks5:// or http://host:port link (one per line).",
+                    style = HollowText.Small,
+                    color = HollowInk
+                )
+                Spacer(Modifier.height(HollowSpace.Md))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it; bad = false },
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 8,
+                    textStyle = HollowText.Body,
+                    shape = RoundedCornerShape(HollowRadius.Md),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = HollowInk,
+                        unfocusedBorderColor = HollowCreamDivider,
+                        cursorColor = HollowOrange,
+                        focusedContainerColor = HollowCream,
+                        unfocusedContainerColor = HollowCream
                     ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    modifier = Modifier.fillMaxWidth().testTag("manual_links_field")
                 )
+                if (bad) {
+                    Text(
+                        "No valid link found",
+                        style = HollowText.Caption,
+                        color = HollowOrange,
+                        modifier = Modifier.padding(top = HollowSpace.Sm)
+                    )
+                }
             }
+        },
+        confirmButton = {
+            TextButton(onClick = { if (text.isBlank()) bad = true else onAdd(text) }) {
+                Text("Add", style = HollowText.ButtonSmall, color = HollowOrange)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk) }
         }
-    }
-}
-
-@Composable
-private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(label) },
-        leadingIcon = if (selected) {
-            {
-                Icon(
-                    imageVector = Icons.Rounded.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                )
-            }
-        } else null,
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = NothingSurface,
-            labelColor = HollowInkSecondary,
-            selectedContainerColor = HollowInk,
-            selectedLabelColor = HollowCream,
-            selectedLeadingIconColor = HollowOrange
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = HollowCreamDivider
-        ),
-        shape = RoundedCornerShape(HollowRadius.Sm)
     )
 }

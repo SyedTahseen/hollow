@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowText
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowRadius
@@ -36,8 +37,18 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PublicOff
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
@@ -130,8 +141,13 @@ fun CountryServerListScreen(
     val addServerState = rememberAddServerState()
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
-    var sortByPingResults by remember { mutableStateOf(true) }
-    var showDeleteAllConfirm by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf(ServerSortMode.Latency) }
+    var searching by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var menuPage by remember { mutableStateOf("main") }
+    var confirmDel by remember { mutableStateOf<ServerDelAction?>(null) }
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searching) { if (searching) runCatching { searchFocus.requestFocus() } }
 
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
@@ -140,12 +156,14 @@ fun CountryServerListScreen(
     val hasFavorites = favoriteKeys.isNotEmpty()
     val favOnly = favoritesOnly && hasFavorites
 
-    val displayedServers = remember(servers, sortByPingResults, favoriteKeys, favOnly) {
-        val pool = if (favOnly) servers.filter { it.favoriteKey() in favoriteKeys } else servers
-        val base = if (sortByPingResults) {
-            pool.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
-        } else {
-            pool
+    val displayedServers = remember(servers, sortMode, favoriteKeys, favOnly, query) {
+        val pool = (if (favOnly) servers.filter { it.favoriteKey() in favoriteKeys } else servers)
+            .filter { query.isBlank() || it.countryName.contains(query, true) || it.host.contains(query, true) }
+        val base = when (sortMode) {
+            ServerSortMode.Default -> pool
+            ServerSortMode.Name -> pool.sortedBy { it.countryName.lowercase() }
+            ServerSortMode.Protocol -> pool.sortedBy { it.protocolCore }
+            ServerSortMode.Latency -> pool.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
         }
         // Starred servers float to the top, keeping the current order inside each group.
         base.sortedByDescending { it.favoriteKey() in favoriteKeys }
@@ -170,8 +188,40 @@ fun CountryServerListScreen(
                 .align(Alignment.TopCenter)
                 .padding(horizontal = HollowScreenPadding)
         ) {
-            // Nothing OS Header: Doto ALL-CAPS SERVERS + monospace count on left, circular hairline action buttons on right
-            Row(
+            // Header: title + Search, Add (+) and More (three dots), same actions and order as Outrun
+            if (searching) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BasicTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        singleLine = true,
+                        textStyle = HollowText.Body.copy(color = NothingOnCanvas),
+                        cursorBrush = SolidColor(HollowOrange),
+                        modifier = Modifier.weight(1f).focusRequester(searchFocus).testTag("server_search_field"),
+                        decorationBox = { inner ->
+                            Box {
+                                if (query.isEmpty()) {
+                                    Text("Search servers", style = HollowText.Body, color = NothingOnCanvas.copy(alpha = 0.5f))
+                                }
+                                inner()
+                            }
+                        }
+                    )
+                    HollowTopSquareButton(
+                        containerColor = NothingTopBtnFill,
+                        contentColor = NothingOnCanvas,
+                        borderColor = NothingTopBtnBorder,
+                        contentDescription = "Close search",
+                        onClick = { searching = false; query = "" },
+                        modifier = Modifier.testTag("server_search_close")
+                    ) { tint ->
+                        Icon(Icons.Rounded.Close, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
+                    }
+                }
+            } else Row(
                 modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -197,16 +247,11 @@ fun CountryServerListScreen(
                         containerColor = NothingTopBtnFill,
                         contentColor = NothingOnCanvas,
                         borderColor = NothingTopBtnBorder,
-                        contentDescription = "Test all saved servers",
-                        onClick = onRepingAll,
-                        modifier = Modifier.testTag("country_reping_all")
+                        contentDescription = "Search servers",
+                        onClick = { searching = true },
+                        modifier = Modifier.testTag("server_search")
                     ) { tint ->
-                        Icon(
-                            imageVector = Icons.Outlined.Speed,
-                            contentDescription = null,
-                            tint = tint,
-                            modifier = Modifier.size(HollowSizes.Icon)
-                        )
+                        Icon(Icons.Rounded.Search, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
                     }
 
                     // "+" opens the add menu: Scan QR, Paste, Import file, Add manually, Add subscription
@@ -218,7 +263,7 @@ fun CountryServerListScreen(
                             contentColor = if (overflowMenuExpanded) NothingOnInvertedSurface else NothingOnCanvas,
                             borderColor = if (overflowMenuExpanded) NothingInvertedSurface else NothingTopBtnBorder,
                             contentDescription = "More server actions",
-                            onClick = { overflowMenuExpanded = true },
+                            onClick = { menuPage = "main"; overflowMenuExpanded = true },
                             modifier = Modifier.testTag("country_more_menu")
                         ) { tint ->
                             Icon(
@@ -229,85 +274,128 @@ fun CountryServerListScreen(
                             )
                         }
 
-                        // Page 7: Nothing Surface Overflow Action Menu
                         DropdownMenu(
                             expanded = overflowMenuExpanded,
                             onDismissRequest = { overflowMenuExpanded = false },
                             offset = DpOffset(x = 0.dp, y = 8.dp),
                             containerColor = NothingSurfaceElevated,
                             shape = RoundedCornerShape(HollowRadius.Lg),
-                            modifier = Modifier.width(212.dp)
+                            modifier = Modifier.widthIn(min = 220.dp)
                         ) {
-                            ServerOverflowMenuItem(
-                                icon = Icons.Outlined.Schedule,
-                                label = "Update all",
-                                color = HollowInk,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    onRefresh()
+                            when (menuPage) {
+                                "sort" -> {
+                                    ServerMenuHeader("Sort") { menuPage = "main" }
+                                    ServerSortMode.values().forEach { m ->
+                                        ServerMenuChoice(m.label, m == sortMode) {
+                                            sortMode = m
+                                            overflowMenuExpanded = false
+                                        }
+                                    }
                                 }
-                            )
-                            ServerOverflowMenuItem(
-                                icon = Icons.Outlined.CheckCircle,
-                                label = "Select several",
-                                color = HollowInk,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    isSelectionMode = true
-                                    selectedIds = emptySet()
+                                "delete" -> {
+                                    ServerMenuHeader("Delete") { menuPage = "main" }
+                                    val invalidCount = servers.count { it.pingMs <= 0 }
+                                    val dupeCount = servers.size - servers
+                                        .distinctBy { "${it.host.lowercase()}:${it.port}:${it.protocolCore.lowercase()}:${it.uuidOrPassword}" }
+                                        .size
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Outlined.DeleteOutline,
+                                        label = "Invalid / unreachable",
+                                        color = HollowOrange,
+                                        enabled = invalidCount > 0,
+                                        trailing = { ServerMenuCount(invalidCount) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            confirmDel = ServerDelAction(
+                                                "Delete $invalidCount invalid server(s)?",
+                                                "These servers failed the last test or can't be turned into a working configuration.",
+                                                onDeleteInvalid
+                                            )
+                                        }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Outlined.DeleteOutline,
+                                        label = "Duplicates",
+                                        color = HollowOrange,
+                                        enabled = dupeCount > 0,
+                                        trailing = { ServerMenuCount(dupeCount) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            confirmDel = ServerDelAction(
+                                                "Delete $dupeCount duplicate(s)?",
+                                                "One copy of each server is kept. The selected server is kept first.",
+                                                onDeleteDuplicates
+                                            )
+                                        }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Outlined.DeleteOutline,
+                                        label = "All servers",
+                                        color = HollowOrange,
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            confirmDel = ServerDelAction(
+                                                "Delete all servers?",
+                                                "All ${servers.size} server(s) will be removed from your device. You can re-fetch from your subscription anytime.",
+                                                onDeleteAllServers
+                                            )
+                                        }
+                                    )
                                 }
-                            )
-                            ServerOverflowMenuItem(
-                                icon = Icons.Rounded.Tune,
-                                label = "Sort by test results",
-                                color = HollowInk,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    sortByPingResults = true
-                                    onRepingAll()
+                                else -> {
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Rounded.Bolt,
+                                        label = if (isTestingFastest) "Testing…" else "Test latency",
+                                        color = HollowInk,
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            if (!isTestingFastest) onRepingAll()
+                                        }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Rounded.Tune,
+                                        label = "Sort",
+                                        color = HollowInk,
+                                        trailing = { ServerMenuChevron() },
+                                        onClick = { menuPage = "sort" }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Rounded.Refresh,
+                                        label = "Update subscription",
+                                        color = HollowInk,
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            onRefresh()
+                                        }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Outlined.CheckCircle,
+                                        label = "Select several",
+                                        color = HollowInk,
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            isSelectionMode = true
+                                            selectedIds = emptySet()
+                                        }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Outlined.FileUpload,
+                                        label = "Export all",
+                                        color = HollowInk,
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            onExportAllServers()
+                                        }
+                                    )
+                                    ServerOverflowMenuItem(
+                                        icon = Icons.Outlined.DeleteOutline,
+                                        label = "Delete",
+                                        color = HollowOrange,
+                                        trailing = { ServerMenuChevron() },
+                                        onClick = { menuPage = "delete" }
+                                    )
                                 }
-                            )
-                            HorizontalDivider(
-                                thickness = 1.dp,
-                                color = NothingBorder,
-                                modifier = Modifier.padding(vertical = HollowSpace.Xs)
-                            )
-                            ServerOverflowMenuItem(
-                                icon = Icons.Outlined.DeleteOutline,
-                                label = "Delete duplicates",
-                                color = HollowOrange,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    onDeleteDuplicates()
-                                }
-                            )
-                            ServerOverflowMenuItem(
-                                icon = Icons.Outlined.DeleteOutline,
-                                label = "Delete invalid",
-                                color = HollowOrange,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    onDeleteInvalid()
-                                }
-                            )
-                            ServerOverflowMenuItem(
-                                icon = Icons.Outlined.FileUpload,
-                                label = "Export all",
-                                color = HollowInk,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    onExportAllServers()
-                                }
-                            )
-                            ServerOverflowMenuItem(
-                                icon = Icons.Outlined.DeleteOutline,
-                                label = "Delete all servers",
-                                color = HollowOrange,
-                                onClick = {
-                                    overflowMenuExpanded = false
-                                    showDeleteAllConfirm = true
-                                }
-                            )
+                            }
                         }
                     }
                 }
@@ -442,6 +530,7 @@ fun CountryServerListScreen(
                                     color = HollowInk
                                 )
                                 val emptyMsg = when {
+                                    query.isNotBlank() -> "No servers match."
                                     isDefaultCategory ->
                                         "Manually added servers, pasted config keys, and scanned QR nodes will show up here."
                                     else ->
@@ -544,47 +633,72 @@ fun CountryServerListScreen(
         }
     }
 
-    if (showDeleteAllConfirm) {
+    confirmDel?.let { d ->
         AlertDialog(
-            onDismissRequest = { showDeleteAllConfirm = false },
+            onDismissRequest = { confirmDel = null },
             containerColor = HollowDialog.containerColor,
             shape = HollowDialog.Shape,
-            title = {
-                Text(
-                    text = "Delete all servers?",
-                    fontFamily = DotoDisplayFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = HollowInk
-                )
-            },
-            text = {
-                Text(
-                    text = "This removes all saved servers from your device. You can re-fetch from your subscription anytime.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = HollowInkSecondary
-                )
-            },
+            title = { Text(text = d.title, style = HollowText.Heading, color = HollowInk) },
+            text = { Text(text = d.text, style = HollowText.Small, color = HollowInkSecondary) },
             confirmButton = {
                 Button(
-                    onClick = {
-                        showDeleteAllConfirm = false
-                        onDeleteAllServers()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = HollowOrange,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Delete all")
-                }
+                    onClick = { confirmDel = null; d.onConfirm() },
+                    colors = ButtonDefaults.buttonColors(containerColor = HollowOrange, contentColor = Color.White)
+                ) { Text("Delete") }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteAllConfirm = false }) {
-                    Text("Cancel", color = HollowInk)
-                }
+                TextButton(onClick = { confirmDel = null }) { Text("Cancel", color = HollowInk) }
             }
         )
     }
+}
+
+enum class ServerSortMode(val label: String) {
+    Default("Default"), Name("Name"), Latency("Latency"), Protocol("Protocol")
+}
+
+private class ServerDelAction(val title: String, val text: String, val onConfirm: () -> Unit)
+
+@Composable
+private fun ServerMenuChevron() {
+    Icon(Icons.Rounded.ChevronRight, null, tint = HollowInkSecondary, modifier = Modifier.size(HollowSizes.Icon))
+}
+
+@Composable
+private fun ServerMenuCount(n: Int) {
+    Text("$n", style = HollowText.Small, color = HollowInkSecondary)
+}
+
+@Composable
+private fun ServerMenuHeader(title: String, onBack: () -> Unit) {
+    DropdownMenuItem(
+        text = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
+            ) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+                Text(title, style = HollowText.BodyMedium, color = HollowInk)
+            }
+        },
+        onClick = onBack
+    )
+}
+
+@Composable
+private fun ServerMenuChoice(label: String, selected: Boolean, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
+            ) {
+                Text(label, style = HollowText.Small, color = HollowInk, modifier = Modifier.weight(1f, fill = false))
+                if (selected) Icon(Icons.Rounded.Check, null, tint = HollowOrange, modifier = Modifier.size(HollowSizes.IconSm))
+            }
+        },
+        onClick = onClick
+    )
 }
 
 /** "Fastest server" entry: tests every listed server, then connects to the quickest one. */
@@ -652,9 +766,12 @@ private fun ServerOverflowMenuItem(
     icon: ImageVector,
     label: String,
     color: Color,
+    enabled: Boolean = true,
+    trailing: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
     DropdownMenuItem(
+        enabled = enabled,
         text = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -675,8 +792,10 @@ private fun ServerOverflowMenuItem(
                         letterSpacing = HollowTracking.BodyStrong,
                         fontWeight = FontWeight.Medium
                     ),
-                    color = color
+                    color = color,
+                    modifier = if (trailing != null) Modifier.weight(1f) else Modifier
                 )
+                trailing?.invoke()
             }
         },
         onClick = onClick
