@@ -321,7 +321,18 @@ class VpnPreferencesStore(context: Context) {
     }
 
     fun loadLastHealthPulseMillis(): Long = prefs.getLong("last_health_pulse_at", 0L)
+
+    /** Favorite servers are keyed by "host:port" so they survive re-fetches and DB resets. */
+    fun loadFavoriteKeys(): Set<String> =
+        prefs.getStringSet("favorite_server_keys", emptySet())?.toSet() ?: emptySet()
+
+    fun saveFavoriteKeys(keys: Set<String>) {
+        prefs.edit().putStringSet("favorite_server_keys", keys).apply()
+    }
 }
+
+/** Stable identity used for the favorites star. */
+fun ServerEntity.favoriteKey(): String = "${host.lowercase()}:$port"
 
 @Dao
 interface VpnDao {

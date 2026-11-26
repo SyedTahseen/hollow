@@ -16,6 +16,7 @@ import com.hollow.vpn.data.categoryLabel
 import com.hollow.vpn.data.SubscriptionEntity
 import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
+import com.hollow.vpn.data.favoriteKey
 import com.hollow.vpn.vpn.HollowJobScheduler
 import com.hollow.vpn.vpn.SecurityPolicy
 import com.hollow.vpn.vpn.V2RayParserAndFletcher
@@ -260,6 +261,60 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private var ipRefreshJob: Job? = null
     private var connectJob: Job? = null
     private var repingJob: Job? = null
+    private var fastestJob: Job? = null
+
+    private val _favoriteKeys = MutableStateFlow(prefsStore.loadFavoriteKeys())
+    val favoriteKeys: StateFlow<Set<String>> = _favoriteKeys.asStateFlow()
+
+    private val _isTestingFastest = MutableStateFlow(false)
+    val isTestingFastest: StateFlow<Boolean> = _isTestingFastest.asStateFlow()
+
+    fun toggleFavorite(server: ServerEntity) {
+        val key = server.favoriteKey()
+        val updated = _favoriteKeys.value.let { if (key in it) it - key else it + key }
+        _favoriteKeys.value = updated
+        prefsStore.saveFavoriteKeys(updated)
+    }
+
+    /**
+     * Tests every given server, saves the fresh pings, and hands the fastest working one to
+     * [onFastest] so the UI can connect to it (the UI owns the VPN-permission flow).
+     */
+    fun testAndPickFastest(candidates: List<ServerEntity>, onFastest: (ServerEntity) -> Unit) {
+        if (fastestJob?.isActive == true) return
+        if (candidates.isEmpty()) {
+            showMessage("No servers to test")
+            return
+        }
+        fastestJob = viewModelScope.launch {
+            _isTestingFastest.value = true
+            try {
+                showMessage("Testing ${candidates.size} server(s)…")
+                val semaphore = Semaphore(8)
+                val tested = coroutineScope {
+                    candidates.map { server ->
+                        async {
+                            semaphore.withPermit {
+                                val ping = verifyServerLatencyOrNull(server) ?: 0
+                                val updated = server.copy(pingMs = ping)
+                                dao.updateServer(updated)
+                                updated
+                            }
+                        }
+                    }.awaitAll()
+                }
+                val fastest = tested.filter { it.pingMs > 0 }.minByOrNull { it.pingMs }
+                if (fastest != null) {
+                    showMessage("Fastest: ${fastest.countryName} (${fastest.pingMs} ms)")
+                    onFastest(fastest)
+                } else {
+                    showMessage("No server passed the connection test")
+                }
+            } finally {
+                _isTestingFastest.value = false
+            }
+        }
+    }
     private var fetchSweepJob: Job? = null
 
     init {

@@ -43,12 +43,14 @@ import androidx.compose.material.icons.outlined.PublicOff
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -82,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.ServerCategory
+import com.hollow.vpn.data.favoriteKey
 import com.hollow.vpn.ui.components.HollowBlinkingDot
 import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDottedDivider
@@ -127,6 +130,10 @@ fun CountryServerListScreen(
     bottomContentPadding: Dp = 0.dp,
     onSelectCategory: (String) -> Unit = {},
     onResetProtocolFilter: () -> Unit = {},
+    favoriteKeys: Set<String> = emptySet(),
+    isTestingFastest: Boolean = false,
+    onToggleFavorite: (ServerEntity) -> Unit = {},
+    onConnectFastest: (List<ServerEntity>) -> Unit = {},
     onSelectServer: (ServerEntity) -> Unit,
     onRefresh: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -155,12 +162,14 @@ fun CountryServerListScreen(
 
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
-    val displayedServers = remember(servers, sortByPingResults) {
-        if (sortByPingResults) {
+    val displayedServers = remember(servers, sortByPingResults, favoriteKeys) {
+        val base = if (sortByPingResults) {
             servers.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
         } else {
             servers
         }
+        // Starred servers float to the top, keeping the current order inside each group.
+        base.sortedByDescending { it.favoriteKey() in favoriteKeys }
     }
 
     val fastestNode = remember(displayedServers) {
@@ -545,6 +554,13 @@ fun CountryServerListScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
+                    item(key = "fastest_server") {
+                        FastestServerRow(
+                            isTesting = isTestingFastest,
+                            onClick = { onConnectFastest(displayedServers) }
+                        )
+                        NothingDottedDivider()
+                    }
                     itemsIndexed(displayedServers, key = { _, server -> server.id }) { idx, server ->
                         val isChecked = server.id in selectedIds
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -582,7 +598,9 @@ fun CountryServerListScreen(
                                             selectedIds + server.id
                                         }
                                     },
-                                    showCountryBadge = true
+                                    showCountryBadge = true,
+                                    isFavorite = server.favoriteKey() in favoriteKeys,
+                                    onToggleFavorite = { onToggleFavorite(server) }
                                 )
                             }
                             if (idx < displayedServers.lastIndex) {
@@ -635,6 +653,63 @@ fun CountryServerListScreen(
                 }
             }
         )
+    }
+}
+
+/** "Fastest server" entry: tests every listed server, then connects to the quickest one. */
+@Composable
+private fun FastestServerRow(
+    isTesting: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isTesting, onClick = onClick)
+            .padding(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 14.dp)
+            .testTag("server_fastest_row"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 38.dp, height = 26.dp)
+                .clip(RoundedCornerShape(7.dp))
+                .background(HollowOrange),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isTesting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(15.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.White
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.Bolt,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(17.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Fastest server",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = HollowInk
+            )
+            if (isTesting) {
+                Text(
+                    text = "Testing all servers…",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = HollowInkSecondary
+                )
+            }
+        }
     }
 }
 

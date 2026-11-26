@@ -77,6 +77,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.ui.AddServerTab
 import com.hollow.vpn.ui.VpnScreen
 import com.hollow.vpn.ui.VpnViewModel
@@ -136,6 +137,8 @@ fun HollowVpnApp(
     val gettingStartedStep by vpnViewModel.gettingStartedStep.collectAsStateWithLifecycle()
     val allServers by vpnViewModel.allServers.collectAsStateWithLifecycle()
     val filteredServers by vpnViewModel.filteredServers.collectAsStateWithLifecycle()
+    val favoriteKeys by vpnViewModel.favoriteKeys.collectAsStateWithLifecycle()
+    val isTestingFastest by vpnViewModel.isTestingFastest.collectAsStateWithLifecycle()
     val serverCategories by vpnViewModel.serverCategories.collectAsStateWithLifecycle()
     val selectedCategory by vpnViewModel.selectedCategory.collectAsStateWithLifecycle()
     val selectedServer by vpnViewModel.selectedServer.collectAsStateWithLifecycle()
@@ -233,6 +236,25 @@ fun HollowVpnApp(
             vpnPermissionLauncher.launch(prepareIntent)
         } else {
             vpnViewModel.toggleConnection()
+        }
+    }
+
+    val connectToServerWithPermission: (ServerEntity) -> Unit = { server ->
+        runWithNotificationPermission {
+            val prepareIntent = try {
+                if (settings.tunMode) VpnService.prepare(context) else null
+            } catch (_: Exception) {
+                null
+            }
+            if (prepareIntent != null && context is Activity) {
+                vpnViewModel.selectServer(server, openConnectedScreen = true)
+                vpnPermissionLauncher.launch(prepareIntent)
+            } else {
+                vpnViewModel.selectAndConnectServer(
+                    server = server,
+                    openConnectedScreen = true
+                )
+            }
         }
     }
 
@@ -550,24 +572,15 @@ fun HollowVpnApp(
                                     onResetProtocolFilter = {
                                         vpnViewModel.updateSettings { it.copy(protocolPreference = "Auto (V2Ray)") }
                                     },
-                                    onSelectServer = { server ->
-                                        runWithNotificationPermission {
-                                            val prepareIntent = try {
-                                                if (settings.tunMode) VpnService.prepare(context) else null
-                                            } catch (_: Exception) {
-                                                null
-                                            }
-                                            if (prepareIntent != null && context is Activity) {
-                                                vpnViewModel.selectServer(server, openConnectedScreen = true)
-                                                vpnPermissionLauncher.launch(prepareIntent)
-                                            } else {
-                                                vpnViewModel.selectAndConnectServer(
-                                                    server = server,
-                                                    openConnectedScreen = true
-                                                )
-                                            }
+                                    favoriteKeys = favoriteKeys,
+                                    isTestingFastest = isTestingFastest,
+                                    onToggleFavorite = vpnViewModel::toggleFavorite,
+                                    onConnectFastest = { candidates ->
+                                        vpnViewModel.testAndPickFastest(candidates) { server ->
+                                            connectToServerWithPermission(server)
                                         }
                                     },
+                                    onSelectServer = { server -> connectToServerWithPermission(server) },
                                     onRefresh = {
                                         vpnViewModel.runFletcherAutoFetchAndPingSweep(
                                             returnScreen = VpnScreen.SERVER_LIST

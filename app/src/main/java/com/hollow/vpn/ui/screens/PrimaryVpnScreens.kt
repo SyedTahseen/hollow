@@ -52,6 +52,8 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -1548,7 +1550,9 @@ fun ServerItemRowContent(
     isSelectionMode: Boolean = false,
     isCheckedForBatch: Boolean = false,
     onToggleBatchCheck: () -> Unit = {},
-    showCountryBadge: Boolean = false
+    showCountryBadge: Boolean = false,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -1582,22 +1586,28 @@ fun ServerItemRowContent(
             Spacer(modifier = Modifier.width(4.dp))
         }
 
+        CountryFlag(
+            countryCode = server.countryCode,
+            width = 38.dp,
+            height = 26.dp
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                CountryFlag(countryCode = server.countryCode, width = 22.dp, height = 15.dp)
                 Text(
-                    text = if (showCountryBadge) {
-                        server.countryName.ifBlank { cleanProtocol }
-                    } else {
-                        cleanProtocol
-                    },
-                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.5.sp),
+                    text = server.countryName.ifBlank { cleanProtocol },
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
                     color = HollowInk,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 if (server.isSelected) {
                     Box(
@@ -1627,34 +1637,43 @@ fun ServerItemRowContent(
             Spacer(modifier = Modifier.height(2.dp))
             val addrText = "${server.resolvedIp.ifBlank { server.host }}:${server.port}"
             Text(
-                text = if (showCountryBadge) "$cleanProtocol · $addrText" else addrText,
-                style = TabularMonoBody.copy(fontSize = 11.sp, fontWeight = FontWeight.Normal),
+                text = addrText,
+                style = TabularMonoBody.copy(fontSize = 13.sp, fontWeight = FontWeight.Normal),
                 color = HollowInkSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = cleanProtocol,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = HollowInkSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Text(
+                    text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
+                    style = TabularMonoBody.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                    color = pingColor,
+                    maxLines = 1
+                )
+            }
         }
 
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            Text(
-                text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
-                style = TabularMonoBody.copy(fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold),
-                color = pingColor
-            )
-            if (server.lastSpeedMbps > 0.0) {
-                Text(
-                    text = String.format(Locale.US, "%.1f MB/s", server.lastSpeedMbps),
-                    style = TabularMonoBody.copy(fontSize = 10.5.sp, fontWeight = FontWeight.Medium),
-                    color = HollowInkSecondary
-                )
-            } else {
-                NothingSignalDots(
-                    pingMs = server.pingMs,
-                    dotSize = 4.5.dp,
-                    dotSpacing = 3.5.dp
+        if (!isSelectionMode) {
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier.minimumInteractiveComponentSize()
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Rounded.Star else Icons.Outlined.StarBorder,
+                    contentDescription = if (isFavorite) "Remove ${server.countryName} from favorites" else "Add ${server.countryName} to favorites",
+                    tint = if (isFavorite) HollowOrange else HollowInkSecondary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -1669,7 +1688,7 @@ fun ServerItemRowContent(
                         imageVector = Icons.Rounded.MoreVert,
                         contentDescription = "Server Options for ${server.countryName}",
                         tint = HollowInkSecondary,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
