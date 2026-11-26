@@ -1,5 +1,9 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowMotion
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSpace
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.animation.animateColorAsState
@@ -221,7 +225,7 @@ fun HollowStatusBrandRow(
         },
         fontFamily = DotoDisplayFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
+        fontSize = HollowType.Display,
         letterSpacing = 0.9.sp,
         maxLines = 1,
         color = textColor,
@@ -242,17 +246,17 @@ fun HollowTopSquareButton(
     val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val animContainer by animateColorAsState(
         targetValue = containerColor,
-        animationSpec = tween(200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "top_btn_container"
     )
     val animBorder by animateColorAsState(
         targetValue = borderColor ?: NothingTopBtnBorder,
-        animationSpec = tween(200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "top_btn_border"
     )
     val animContent by animateColorAsState(
         targetValue = contentColor,
-        animationSpec = tween(200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "top_btn_content"
     )
     Box(
@@ -273,7 +277,7 @@ fun HollowTopSquareButton(
         val btnScale by animateFloatAsState(
             targetValue = if (isPressed) 0.90f else 1f,
             animationSpec = if (isPressed) {
-                tween(80, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)
+                tween(HollowMotion.Quick, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)
             } else {
                 com.hollow.vpn.ui.theme.NothingMotion.tactileSpring()
             },
@@ -288,7 +292,7 @@ fun HollowTopSquareButton(
                 },
             shape = CircleShape,
             color = animContainer,
-            border = BorderStroke(1.dp, animBorder)
+            border = BorderStroke(HollowStroke.Hairline, animBorder)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -384,22 +388,22 @@ fun HollowBottomNavigationBar(
 
     val animBg by animateColorAsState(
         targetValue = backgroundColor,
-        animationSpec = tween(260, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_bar_bg"
     )
     val animCapsuleFill by animateColorAsState(
         targetValue = capsuleFill,
-        animationSpec = tween(260, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_capsule_fill"
     )
     val animCapsuleBorder by animateColorAsState(
         targetValue = capsuleBorder,
-        animationSpec = tween(260, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_capsule_border"
     )
     val animActivePillBg by animateColorAsState(
         targetValue = activePillBg,
-        animationSpec = tween(240, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_active_pill"
     )
 
@@ -424,7 +428,7 @@ fun HollowBottomNavigationBar(
                 .height(58.dp),
             shape = CircleShape,
             color = animCapsuleFill,
-            border = BorderStroke(1.dp, animCapsuleBorder)
+            border = BorderStroke(HollowStroke.Hairline, animCapsuleBorder)
         ) {
             BoxWithConstraints(
                 modifier = Modifier
@@ -535,7 +539,7 @@ private fun HollowBottomNavItem(
     val isPressed by interactionSource.collectIsPressedAsState()
     val iconTint by animateColorAsState(
         targetValue = if (selected) activeIconColor else inactiveContentColor,
-        animationSpec = tween(durationMillis = 200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(durationMillis = HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_pill_tint"
     )
     val iconScale by animateFloatAsState(
@@ -609,9 +613,9 @@ fun HollowSlideActionPill(
         modifier = modifier
             .fillMaxWidth()
             .height(58.dp)
-            .clip(RoundedCornerShape(29.dp))
+            .clip(RoundedCornerShape(HollowRadius.Pill))
             .background(trackColor)
-            .border(1.dp, borderColor, RoundedCornerShape(29.dp))
+            .border(HollowStroke.Hairline, borderColor, RoundedCornerShape(HollowRadius.Pill))
             .clickable(
                 interactionSource = interactionSource,
                 indication = androidx.compose.material3.ripple(),
@@ -634,7 +638,7 @@ fun HollowSlideActionPill(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(with(density) { (offsetX.value + thumbSize.toPx() + trackPadding.toPx() * 2).toDp() })
-                    .clip(RoundedCornerShape(29.dp))
+                    .clip(RoundedCornerShape(HollowRadius.Pill))
                     .background(thumbColor.copy(alpha = 0.14f + progress * 0.22f))
             )
         }
@@ -643,7 +647,7 @@ fun HollowSlideActionPill(
             text = label.uppercase(),
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 12.5.sp,
+            fontSize = HollowType.Small,
             letterSpacing = 0.8.sp,
             color = labelColor,
             maxLines = 1,
@@ -672,7 +676,7 @@ fun HollowSlideActionPill(
                         onDragEnd = {
                             scope.launch {
                                 if (offsetX.value >= maxOffsetPx * 0.65f) {
-                                    offsetX.animateTo(maxOffsetPx, tween(120))
+                                    offsetX.animateTo(maxOffsetPx, tween(HollowMotion.Quick))
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onSlideComplete()
                                     offsetX.snapTo(0f)
@@ -729,17 +733,17 @@ fun HollowSwitch(
     val isPressed by interactionSource.collectIsPressedAsState()
     val trackColor by animateColorAsState(
         targetValue = if (checked) HollowOrange else NothingSwitchOffTrack,
-        animationSpec = tween(200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_track"
     )
     val borderColor by animateColorAsState(
         targetValue = if (checked) HollowOrange else NothingSwitchOffBorder,
-        animationSpec = tween(200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_border"
     )
     val thumbColor by animateColorAsState(
         targetValue = if (checked) Color.White else NothingSwitchOffThumb,
-        animationSpec = tween(200, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_thumb"
     )
     val thumbOffset by animateDpAsState(
@@ -773,9 +777,9 @@ fun HollowSwitch(
             modifier = Modifier
                 .width(50.dp)
                 .height(28.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(HollowRadius.Md))
                 .background(trackColor)
-                .border(1.4.dp, borderColor, RoundedCornerShape(14.dp))
+                .border(HollowStroke.Emphasis, borderColor, RoundedCornerShape(HollowRadius.Md))
                 .padding(horizontal = HollowSpace.Xs),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -854,7 +858,7 @@ fun HollowEditorialRouteCard(
         modifier = modifier
             .fillMaxWidth()
             .height(120.dp),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = cardColor
     ) {
         Box(
@@ -1083,7 +1087,7 @@ fun HollowEditorialRouteCard(
                     text = "You",
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
+                    fontSize = HollowType.Body,
                     color = mutedColor,
                     modifier = Modifier.width(66.dp),
                     maxLines = 1
@@ -1092,7 +1096,7 @@ fun HollowEditorialRouteCard(
                     text = centerLabel,
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
+                    fontSize = HollowType.Body,
                     color = if (phase == HollowRoutePhase.DISCONNECTED) mutedColor else inkColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1101,7 +1105,7 @@ fun HollowEditorialRouteCard(
                     text = rightStatusNote ?: "Internet",
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
+                    fontSize = HollowType.Body,
                     color = mutedColor,
                     maxLines = 1
                 )
@@ -1127,7 +1131,7 @@ fun HollowConnectedSpeedPair(
     ) {
         Surface(
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(HollowRadius.Lg),
             color = HollowForestCard
         ) {
             Column(
@@ -1137,7 +1141,7 @@ fun HollowConnectedSpeedPair(
                     text = "DOWNLOAD",
                     fontFamily = JetBrainsMonoFamily,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
+                    fontSize = HollowType.Small,
                     letterSpacing = 1.2.sp,
                     color = HollowForestMuted,
                     maxLines = 1
@@ -1148,7 +1152,7 @@ fun HollowConnectedSpeedPair(
                         text = downloadNum,
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 26.sp,
+                        fontSize = HollowType.Display,
                         color = HollowDarkInk,
                         maxLines = 1
                     )
@@ -1156,7 +1160,7 @@ fun HollowConnectedSpeedPair(
                     Text(
                         text = downloadUnit,
                         fontFamily = JetBrainsMonoFamily,
-                        fontSize = 13.sp,
+                        fontSize = HollowType.Body,
                         color = HollowForestMuted,
                         modifier = Modifier.padding(bottom = HollowSpace.Xs)
                     )
@@ -1166,7 +1170,7 @@ fun HollowConnectedSpeedPair(
 
         Surface(
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(HollowRadius.Lg),
             color = HollowForestCard
         ) {
             Column(
@@ -1176,7 +1180,7 @@ fun HollowConnectedSpeedPair(
                     text = "UPLOAD",
                     fontFamily = JetBrainsMonoFamily,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
+                    fontSize = HollowType.Small,
                     letterSpacing = 1.2.sp,
                     color = HollowForestMuted,
                     maxLines = 1
@@ -1187,7 +1191,7 @@ fun HollowConnectedSpeedPair(
                         text = uploadNum,
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 26.sp,
+                        fontSize = HollowType.Display,
                         color = HollowDarkInk,
                         maxLines = 1
                     )
@@ -1195,7 +1199,7 @@ fun HollowConnectedSpeedPair(
                     Text(
                         text = uploadUnit,
                         fontFamily = JetBrainsMonoFamily,
-                        fontSize = 13.sp,
+                        fontSize = HollowType.Body,
                         color = HollowForestMuted,
                         modifier = Modifier.padding(bottom = HollowSpace.Xs)
                     )
@@ -1249,7 +1253,7 @@ fun HollowThroughputEqualizer(
         samples.forEachIndexed { index, targetFraction ->
             val animatedHeight by animateFloatAsState(
                 targetValue = targetFraction.coerceIn(0.20f, 1f),
-                animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
+                animationSpec = tween(durationMillis = HollowMotion.Emphasized, easing = FastOutSlowInEasing),
                 label = "eq_bar_$index"
             )
             val t = index / (samples.size - 1).coerceAtLeast(1).toFloat()
@@ -1258,7 +1262,7 @@ fun HollowThroughputEqualizer(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(animatedHeight)
-                    .clip(RoundedCornerShape(3.dp))
+                    .clip(RoundedCornerShape(HollowRadius.Bar))
                     .background(HollowLime.copy(alpha = barAlpha))
             )
         }
@@ -1295,9 +1299,9 @@ fun HollowProtectedTunnelCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = HollowForestCard,
-        border = BorderStroke(1.dp, HollowForestDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowForestDivider)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -1315,7 +1319,7 @@ fun HollowProtectedTunnelCard(
                             .size(44.dp)
                             .clip(CircleShape)
                             .background(HollowForest)
-                            .border(1.2.dp, HollowForestDivider, CircleShape),
+                            .border(HollowStroke.Hairline, HollowForestDivider, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -1328,7 +1332,7 @@ fun HollowProtectedTunnelCard(
                     Spacer(modifier = Modifier.height(HollowSpace.Sm))
                     Text(
                         text = "You",
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Small),
                         color = HollowForestMuted,
                         maxLines = 1
                     )
@@ -1370,13 +1374,13 @@ fun HollowProtectedTunnelCard(
                     Box(
                         modifier = Modifier
                             .background(HollowForestCard)
-                            .padding(horizontal = HollowSpace.Sm, vertical = 2.dp)
+                            .padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xxs)
                     ) {
                         Text(
                             text = "ENCRYPTED",
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp,
+                            fontSize = HollowType.Micro,
                             letterSpacing = 1.2.sp,
                             color = HollowLime,
                             maxLines = 1
@@ -1399,7 +1403,7 @@ fun HollowProtectedTunnelCard(
                             text = badgeCode,
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
+                            fontSize = HollowType.Body,
                             color = HollowForest
                         )
                     }
@@ -1407,7 +1411,7 @@ fun HollowProtectedTunnelCard(
                     Text(
                         text = countryName,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 12.sp,
+                            fontSize = HollowType.Small,
                             fontWeight = FontWeight.Medium
                         ),
                         color = HollowDarkInk,
@@ -1435,7 +1439,7 @@ fun HollowProtectedTunnelCard(
                         text = "YOUR REAL IP",
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 10.sp,
+                        fontSize = HollowType.Micro,
                         letterSpacing = 1.1.sp,
                         color = HollowForestMuted,
                         maxLines = 1
@@ -1445,7 +1449,7 @@ fun HollowProtectedTunnelCard(
                         text = realIp,
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Normal,
-                        fontSize = 13.5.sp,
+                        fontSize = HollowType.Body,
                         color = HollowForestMuted,
                         textDecoration = TextDecoration.LineThrough,
                         maxLines = 1,
@@ -1461,7 +1465,7 @@ fun HollowProtectedTunnelCard(
                         text = "WEBSITES SEE",
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 10.sp,
+                        fontSize = HollowType.Micro,
                         letterSpacing = 1.1.sp,
                         color = HollowForestMuted,
                         maxLines = 1
@@ -1471,7 +1475,7 @@ fun HollowProtectedTunnelCard(
                         text = websitesSeeIp,
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 13.5.sp,
+                        fontSize = HollowType.Body,
                         color = HollowDarkInk,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -1517,9 +1521,9 @@ fun HollowProtectedSpeedChartCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = HollowForestCard,
-        border = BorderStroke(1.dp, HollowForestDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowForestDivider)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -1537,25 +1541,25 @@ fun HollowProtectedSpeedChartCard(
                         Box(
                             modifier = Modifier
                                 .size(7.dp)
-                                .clip(RoundedCornerShape(2.dp))
+                                .clip(RoundedCornerShape(HollowRadius.Bar))
                                 .background(HollowLime)
                         )
                         Text(
                             text = "DOWNLOAD",
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 10.5.sp,
+                            fontSize = HollowType.Micro,
                             letterSpacing = 1.2.sp,
                             color = HollowForestMuted
                         )
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = downloadNum,
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 20.sp,
+                            fontSize = HollowType.Headline,
                             color = HollowDarkInk,
                             maxLines = 1
                         )
@@ -1563,9 +1567,9 @@ fun HollowProtectedSpeedChartCard(
                         Text(
                             text = downloadUnit,
                             fontFamily = JetBrainsMonoFamily,
-                            fontSize = 11.5.sp,
+                            fontSize = HollowType.Caption,
                             color = HollowForestMuted,
-                            modifier = Modifier.padding(bottom = 2.dp)
+                            modifier = Modifier.padding(bottom = HollowSpace.Xxs)
                         )
                     }
                 }
@@ -1581,25 +1585,25 @@ fun HollowProtectedSpeedChartCard(
                         Box(
                             modifier = Modifier
                                 .size(7.dp)
-                                .clip(RoundedCornerShape(2.dp))
+                                .clip(RoundedCornerShape(HollowRadius.Bar))
                                 .background(Color(0xFFC8D5CC))
                         )
                         Text(
                             text = "UPLOAD",
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 10.sp,
+                            fontSize = HollowType.Micro,
                             letterSpacing = 1.1.sp,
                             color = HollowForestMuted
                         )
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = uploadNum,
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 20.sp,
+                            fontSize = HollowType.Headline,
                             color = HollowDarkInk,
                             maxLines = 1
                         )
@@ -1607,9 +1611,9 @@ fun HollowProtectedSpeedChartCard(
                         Text(
                             text = uploadUnit,
                             fontFamily = JetBrainsMonoFamily,
-                            fontSize = 11.5.sp,
+                            fontSize = HollowType.Caption,
                             color = HollowForestMuted,
-                            modifier = Modifier.padding(bottom = 2.dp)
+                            modifier = Modifier.padding(bottom = HollowSpace.Xxs)
                         )
                     }
                 }
@@ -1728,19 +1732,19 @@ fun HollowProtectedSpeedChartCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = HollowSpace.Lg, end = HollowSpace.Lg, top = 2.dp, bottom = HollowSpace.Sm),
+                    .padding(start = HollowSpace.Lg, end = HollowSpace.Lg, top = HollowSpace.Xxs, bottom = HollowSpace.Sm),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "60s ago",
                     fontFamily = JetBrainsMonoFamily,
-                    fontSize = 9.5.sp,
+                    fontSize = HollowType.Micro,
                     color = HollowForestMuted
                 )
                 Text(
                     text = "now",
                     fontFamily = JetBrainsMonoFamily,
-                    fontSize = 9.5.sp,
+                    fontSize = HollowType.Micro,
                     color = HollowForestMuted
                 )
             }
@@ -1844,9 +1848,9 @@ fun HollowDisconnectedExposureCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = HollowCreamSurface,
-        border = BorderStroke(1.dp, HollowCreamDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         Column(modifier = if (fillCanvasHeight) Modifier.fillMaxSize() else Modifier.fillMaxWidth()) {
             Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -1994,17 +1998,17 @@ fun HollowDisconnectedExposureCard(
                         text = "ISP PROVIDER",
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 9.5.sp,
+                        fontSize = HollowType.Micro,
                         letterSpacing = 0.8.sp,
                         color = HollowInkSecondary,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                     Text(
                         text = ispLabel.ifBlank { "Detecting…" },
                         fontFamily = SpaceGroteskFamily,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.5.sp,
+                        fontSize = HollowType.Small,
                         color = HollowInk,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -2028,12 +2032,12 @@ fun HollowDisconnectedExposureCard(
                         text = "YOUR LOCATION",
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 9.5.sp,
+                        fontSize = HollowType.Micro,
                         letterSpacing = 0.8.sp,
                         color = HollowInkSecondary,
                         maxLines = 1
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
@@ -2043,7 +2047,7 @@ fun HollowDisconnectedExposureCard(
                             text = originLocationLabel,
                             fontFamily = SpaceGroteskFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.5.sp,
+                            fontSize = HollowType.Small,
                             color = HollowInk,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -2419,9 +2423,9 @@ fun HollowVpnLogoCard(
 ) {
     Surface(
         modifier = modifier.size(cardSize),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(HollowRadius.Xl),
         color = NothingSurface,
-        border = BorderStroke(1.dp, HollowCreamDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         Box(
             modifier = Modifier
@@ -2495,7 +2499,7 @@ fun FetchingSpinnerRing(
             modifier = Modifier
                 .size(size * 0.34f)
                 .clip(CircleShape)
-                .border(1.5.dp, HollowCreamDivider, CircleShape)
+                .border(HollowStroke.Emphasis, HollowCreamDivider, CircleShape)
                 .background(NothingCanvas),
             contentAlignment = Alignment.Center
         ) {
@@ -2768,7 +2772,7 @@ fun CountryFlag(
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             modifier = modifier
                 .size(width, height)
-                .clip(RoundedCornerShape(2.dp))
+                .clip(RoundedCornerShape(HollowRadius.Bar))
         )
     } else {
         CanvasCountryFlag(countryCode = countryCode, modifier = modifier, width = width, height = height)
@@ -2790,7 +2794,7 @@ private fun CanvasCountryFlag(
     Canvas(
         modifier = modifier
             .size(width, height)
-            .clip(RoundedCornerShape(2.dp))
+            .clip(RoundedCornerShape(HollowRadius.Bar))
     ) {
         val w = size.width
         val h = size.height

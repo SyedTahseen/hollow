@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
  * Use these instead of raw `NN.dp` literals for margins, padding and gaps.
  */
 object HollowSpace {
+    /** Hairline gap between tightly stacked text lines. */
+    val Xxs = 2.dp
     val Xs = 4.dp
     val Sm = 8.dp
     val Md = 12.dp

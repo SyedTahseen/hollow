@@ -1,5 +1,9 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowMotion
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import android.content.ClipData
@@ -342,7 +346,7 @@ private fun SettingsOverview(
             text = "SETTINGS",
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
+            fontSize = HollowType.Display,
             letterSpacing = 0.9.sp,
             maxLines = 1,
             color = NothingOnCanvas,
@@ -503,10 +507,10 @@ private fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
         fontFamily = SpaceGroteskFamily,
-        fontSize = 10.sp,
+        fontSize = HollowType.Micro,
         letterSpacing = 0.9.sp,
         color = HollowOrange,
-        modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = HollowSpace.Sm, start = 2.dp)
+        modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = HollowSpace.Sm, start = HollowSpace.Xxs)
     )
 }
 
@@ -539,7 +543,7 @@ private fun SettingsRow(
                 text = title,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
+                fontSize = HollowType.Small,
                 color = HollowInk
             )
             if (!subtitle.isNullOrBlank()) {
@@ -547,7 +551,7 @@ private fun SettingsRow(
                 Text(
                     text = subtitle,
                     fontFamily = SpaceGroteskFamily,
-                    fontSize = 10.sp,
+                    fontSize = HollowType.Micro,
                     lineHeight = 14.sp,
                     color = HollowInkSecondary,
                     maxLines = 2,
@@ -608,7 +612,7 @@ private fun SettingsDetail(
             text = title.uppercase(),
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
+            fontSize = HollowType.Display,
             letterSpacing = 0.9.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -754,7 +758,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
             text = "Display size",
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
+            fontSize = HollowType.Small,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -778,7 +782,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
                 text = "$percent%",
                 fontFamily = JetBrainsMonoFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
+                fontSize = HollowType.Small,
                 color = HollowInk,
                 maxLines = 1
             )
@@ -806,10 +810,10 @@ private fun DetailDescription(text: String) {
     Text(
         text = text,
         fontFamily = SpaceGroteskFamily,
-        fontSize = 10.sp,
-        lineHeight = 15.sp,
+        fontSize = HollowType.Micro,
+        lineHeight = 16.sp,
         color = HollowInkSecondary,
-        modifier = Modifier.padding(start = 2.dp, bottom = HollowSpace.Sm)
+        modifier = Modifier.padding(start = HollowSpace.Xxs, bottom = HollowSpace.Sm)
     )
 }
 
@@ -833,7 +837,7 @@ private fun DetailToggleRow(
             text = title,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
+            fontSize = HollowType.Small,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -873,14 +877,14 @@ private fun DetailRadioList(
                         text = option.label,
                         fontFamily = SpaceGroteskFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
+                        fontSize = HollowType.Small,
                         color = HollowInk
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = option.subtitle,
                         fontFamily = SpaceGroteskFamily,
-                        fontSize = 10.sp,
+                        fontSize = HollowType.Micro,
                         lineHeight = 14.sp,
                         color = HollowInkSecondary
                     )
@@ -903,9 +907,9 @@ private fun PerAppInlineModeRow(
             .fillMaxWidth()
             .padding(vertical = HollowSpace.Md)
             .testTag("switch_bypass_selected_apps"),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(HollowRadius.Sm),
         color = HollowCreamSurface,
-        border = BorderStroke(1.dp, HollowCreamDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         BoxWithConstraints(
             modifier = Modifier
@@ -925,7 +929,7 @@ private fun PerAppInlineModeRow(
                     .offset(x = pillOffset)
                     .width(slotWidth)
                     .height(HollowSizes.Chip)
-                    .clip(RoundedCornerShape(9.dp))
+                    .clip(RoundedCornerShape(HollowRadius.Xs))
                     .background(NothingPillActiveBg)
             )
             Row(
@@ -969,9 +973,9 @@ private fun ThemeModeInlineSelector(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = HollowSpace.Sm),
-        shape = RoundedCornerShape(13.dp),
+        shape = RoundedCornerShape(HollowRadius.Sm),
         color = HollowCreamSurface,
-        border = BorderStroke(1.dp, HollowCreamDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         BoxWithConstraints(
             modifier = Modifier
@@ -991,7 +995,7 @@ private fun ThemeModeInlineSelector(
                     .offset(x = pillOffset)
                     .width(slotWidth)
                     .height(HollowSizes.Chip)
-                    .clip(RoundedCornerShape(9.dp))
+                    .clip(RoundedCornerShape(HollowRadius.Xs))
                     .background(NothingPillActiveBg)
             )
             Row(
@@ -1040,15 +1044,15 @@ private fun ThemeModeSegment(
 ) {
     val contentTint by animateColorAsState(
         targetValue = if (selected) NothingPillActiveIcon else HollowInkSecondary,
-        animationSpec = tween(200, easing = NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = NothingMotion.FluidEase),
         label = "theme_seg_tint_$label"
     )
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
-            .nothingPressScale(interactionSource, pressedScale = 0.94f)
-            .clip(RoundedCornerShape(9.dp))
+            .nothingPressScale(interactionSource, pressedScale = HollowMotion.PressControl)
+            .clip(RoundedCornerShape(HollowRadius.Xs))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -1076,7 +1080,7 @@ private fun ThemeModeSegment(
                 text = label,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
+                fontSize = HollowType.Caption,
                 maxLines = 1,
                 color = contentTint
             )
@@ -1093,15 +1097,15 @@ private fun InlineModeSegment(
 ) {
     val contentTint by animateColorAsState(
         targetValue = if (selected) NothingPillActiveIcon else HollowInkSecondary,
-        animationSpec = tween(200, easing = NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = NothingMotion.FluidEase),
         label = "inline_seg_tint_$label"
     )
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
-            .nothingPressScale(interactionSource, pressedScale = 0.94f)
-            .clip(RoundedCornerShape(9.dp))
+            .nothingPressScale(interactionSource, pressedScale = HollowMotion.PressControl)
+            .clip(RoundedCornerShape(HollowRadius.Xs))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -1120,7 +1124,7 @@ private fun InlineModeSegment(
                 text = label,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
+                fontSize = HollowType.Caption,
                 color = contentTint
             )
         }

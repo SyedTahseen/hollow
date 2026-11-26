@@ -1,5 +1,11 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowScreenPadding
+import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowModalSheet
+import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import android.content.ClipboardManager
@@ -192,7 +198,7 @@ fun AddServerButton(
             onDismissRequest = { state.menuOpen = false },
             offset = DpOffset(x = 0.dp, y = 8.dp),
             containerColor = NothingSurfaceElevated,
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(HollowRadius.Lg),
             modifier = Modifier.width(244.dp)
         ) {
             AddServerMenuItem(Icons.Outlined.QrCodeScanner, "Scan QR code", "menu_add_scan") {
@@ -233,7 +239,7 @@ private fun AddServerMenuItem(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md),
-                modifier = Modifier.padding(vertical = 2.dp)
+                modifier = Modifier.padding(vertical = HollowSpace.Xxs)
             ) {
                 Icon(
                     imageVector = icon,
@@ -244,7 +250,7 @@ private fun AddServerMenuItem(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
+                        fontSize = HollowType.BodyStrong,
                         fontWeight = FontWeight.Medium
                     ),
                     color = HollowInk
@@ -317,8 +323,8 @@ private fun AddSubscriptionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(24.dp),
+        containerColor = HollowDialog.containerColor,
+        shape = HollowDialog.Shape,
         title = {
             Text(
                 text = "Add subscription link",
@@ -331,7 +337,7 @@ private fun AddSubscriptionDialog(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Servers from this URL are added now and refreshed when you update subscriptions.",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Body),
                     color = HollowInkSecondary
                 )
 
@@ -341,9 +347,9 @@ private fun AddSubscriptionDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(HollowSizes.Field),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(HollowRadius.Md),
                     color = HollowCreamSurface,
-                    border = BorderStroke(1.2.dp, HollowCreamDivider)
+                    border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
                 ) {
                     Box(
                         modifier = Modifier
@@ -355,7 +361,7 @@ private fun AddSubscriptionDialog(
                             Text(
                                 text = "https://example.com/sub",
                                 fontFamily = JetBrainsMonoFamily,
-                                fontSize = 13.5.sp,
+                                fontSize = HollowType.Body,
                                 color = HollowInkMuted
                             )
                         }
@@ -365,7 +371,7 @@ private fun AddSubscriptionDialog(
                             singleLine = true,
                             textStyle = TextStyle(
                                 fontFamily = JetBrainsMonoFamily,
-                                fontSize = 13.5.sp,
+                                fontSize = HollowType.Body,
                                 color = HollowInk
                             ),
                             cursorBrush = SolidColor(HollowOrange),
@@ -402,7 +408,7 @@ private fun AddSubscriptionDialog(
                         Text(
                             text = settings.subUpdateInterval,
                             fontFamily = JetBrainsMonoFamily,
-                            fontSize = 12.5.sp,
+                            fontSize = HollowType.Small,
                             color = HollowInk
                         )
                         Icon(
@@ -430,7 +436,7 @@ private fun AddSubscriptionDialog(
             Button(
                 onClick = { if (url.isNotBlank()) onAdd(url.trim()) },
                 enabled = url.isNotBlank(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -439,7 +445,7 @@ private fun AddSubscriptionDialog(
             ) {
                 Text(
                     text = "Add & fetch",
-                    fontSize = 13.5.sp,
+                    fontSize = HollowType.Body,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
@@ -487,7 +493,7 @@ private fun SubscriptionOptionRow(
             text = label,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Medium,
-                fontSize = 14.5.sp
+                fontSize = HollowType.BodyStrong
             ),
             color = HollowInk,
             modifier = Modifier.weight(1f)
@@ -528,13 +534,11 @@ private fun AddManualServerSheet(
         focusedContainerColor = HollowCream,
         unfocusedContainerColor = HollowCream
     )
-    val fieldShape = RoundedCornerShape(14.dp)
+    val fieldShape = RoundedCornerShape(HollowRadius.Md)
 
-    ModalBottomSheet(
+    HollowModalSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        sheetState = sheetState
     ) {
         Column(
             modifier = Modifier
@@ -542,15 +546,15 @@ private fun AddManualServerSheet(
                 .imePadding()
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = HollowSpace.Xl)
-                .padding(bottom = HollowSpace.Xl),
+                .padding(horizontal = HollowScreenPadding)
+                .padding(bottom = HollowSpace.Xxl),
             verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
         ) {
             Text(
                 text = "ADD MANUALLY",
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
+                fontSize = HollowType.Display,
                 letterSpacing = 0.9.sp,
                 color = HollowInk
             )
@@ -740,7 +744,7 @@ private fun AddManualServerSheet(
                 label = { Text("Optional Raw Config (JSON)") },
                 textStyle = TextStyle(
                     fontFamily = JetBrainsMonoFamily,
-                    fontSize = 12.sp,
+                    fontSize = HollowType.Small,
                     color = HollowInk
                 ),
                 colors = fieldColors,
@@ -775,7 +779,7 @@ private fun AddManualServerSheet(
                     // while the view model shows its validation message.
                     if (complete) onDismiss()
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -789,7 +793,7 @@ private fun AddManualServerSheet(
                     text = "Save Custom Server & Ping Test",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
+                        fontSize = HollowType.BodyStrong
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -826,6 +830,6 @@ private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
             selected = selected,
             borderColor = HollowCreamDivider
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(HollowRadius.Sm)
     )
 }

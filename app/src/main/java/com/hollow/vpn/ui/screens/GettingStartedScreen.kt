@@ -1,5 +1,10 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowModalSheet
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowMotion
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import android.Manifest
@@ -186,7 +191,7 @@ fun GettingStartedScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp))
+                                    .clip(RoundedCornerShape(HollowRadius.Bar))
                                     .background(
                                         if (index <= step) HollowInk else HollowCreamDivider
                                     )
@@ -204,7 +209,7 @@ fun GettingStartedScreen(
                             text = "Skip",
                             fontFamily = SpaceGroteskFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
+                            fontSize = HollowType.Title,
                             color = HollowInkSecondary
                         )
                     }
@@ -213,7 +218,7 @@ fun GettingStartedScreen(
                 AnimatedContent(
                     targetState = step,
                     transitionSpec = {
-                        fadeIn(tween(220)) togetherWith fadeOut(tween(180))
+                        fadeIn(tween(HollowMotion.Standard)) togetherWith fadeOut(tween(HollowMotion.Fast))
                     },
                     modifier = Modifier.weight(1f),
                     label = "getting_started_step"
@@ -413,7 +418,7 @@ private fun GettingStartedWelcomeStep(
         ) {
             Button(
                 onClick = onGetStarted,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -427,7 +432,7 @@ private fun GettingStartedWelcomeStep(
                     text = "Get started",
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.5.sp
+                    fontSize = HollowType.Title
                 )
             }
         }
@@ -476,9 +481,9 @@ private fun GettingStartedServersStep(
             if (serverCount > 0 || isImportingQr) {
                 Spacer(modifier = Modifier.height(HollowSpace.Lg))
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(HollowRadius.Md),
                     color = HollowCreamSurface,
-                    border = BorderStroke(1.dp, HollowCreamDivider)
+                    border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
                 ) {
                     Row(
                         modifier = Modifier
@@ -496,7 +501,7 @@ private fun GettingStartedServersStep(
                             Text(
                                 text = "Verifying scanned server…",
                                 fontFamily = JetBrainsMonoFamily,
-                                fontSize = 13.sp,
+                                fontSize = HollowType.Body,
                                 color = HollowInk
                             )
                         } else {
@@ -517,7 +522,7 @@ private fun GettingStartedServersStep(
                             Text(
                                 text = "$serverCount server(s) ready to connect",
                                 fontFamily = JetBrainsMonoFamily,
-                                fontSize = 13.sp,
+                                fontSize = HollowType.Body,
                                 color = HollowInk
                             )
                         }
@@ -563,7 +568,7 @@ private fun GettingStartedServersStep(
         ) {
             Button(
                 onClick = onContinue,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -577,7 +582,7 @@ private fun GettingStartedServersStep(
                     text = "Continue",
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.5.sp
+                    fontSize = HollowType.Title
                 )
             }
         }
@@ -596,12 +601,12 @@ private fun OnboardingServerOptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(HollowRadius.Lg))
             .clickable(role = Role.Button, onClick = onClick)
             .testTag(testTag),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = HollowCreamSurface,
-        border = BorderStroke(1.dp, HollowCreamDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         Row(
             modifier = Modifier
@@ -612,9 +617,9 @@ private fun OnboardingServerOptionCard(
             Box(
                 modifier = Modifier
                     .size(42.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(HollowRadius.Sm))
                     .background(NothingSurfaceElevated)
-                    .border(1.dp, HollowCreamDivider, RoundedCornerShape(12.dp)),
+                    .border(HollowStroke.Hairline, HollowCreamDivider, RoundedCornerShape(HollowRadius.Sm)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -632,15 +637,15 @@ private fun OnboardingServerOptionCard(
                     text = title,
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                    fontSize = HollowType.Title,
                     letterSpacing = (-0.2).sp,
                     color = HollowInk
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                 Text(
                     text = subtitle,
                     fontFamily = SpaceGroteskFamily,
-                    fontSize = 12.5.sp,
+                    fontSize = HollowType.Small,
                     color = HollowInkSecondary
                 )
             }
@@ -861,9 +866,9 @@ private fun GettingStartedPermissionsStep(
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(HollowRadius.Sm),
                 color = HollowCreamSurface,
-                border = BorderStroke(1.dp, HollowCreamDivider)
+                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
             ) {
                 Row(
                     modifier = Modifier
@@ -890,7 +895,7 @@ private fun GettingStartedPermissionsStep(
                             },
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
+                            fontSize = HollowType.Caption,
                             color = HollowInk
                         )
                     }
@@ -898,7 +903,7 @@ private fun GettingStartedPermissionsStep(
                         text = "$verifiedCount/5",
                         fontFamily = JetBrainsMonoFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
+                        fontSize = HollowType.Caption,
                         color = if (verifiedCount == 5) NothingMatrixGreen else HollowOrange
                     )
                 }
@@ -1011,7 +1016,7 @@ private fun GettingStartedPermissionsStep(
                         onAllowAndContinue()
                     }
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -1030,7 +1035,7 @@ private fun GettingStartedPermissionsStep(
                     text = label,
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.5.sp
+                    fontSize = HollowType.Title
                 )
             }
         }
@@ -1099,11 +1104,9 @@ private fun PermissionGuideModalSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ModalBottomSheet(
+    HollowModalSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
+        sheetState = sheetState
     ) {
         Column(
             modifier = Modifier
@@ -1119,9 +1122,9 @@ private fun PermissionGuideModalSheet(
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(RoundedCornerShape(13.dp))
+                        .clip(RoundedCornerShape(HollowRadius.Sm))
                         .background(HollowCreamSurface)
-                        .border(1.dp, HollowCreamDivider, RoundedCornerShape(13.dp)),
+                        .border(HollowStroke.Hairline, HollowCreamDivider, RoundedCornerShape(HollowRadius.Sm)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -1135,7 +1138,7 @@ private fun PermissionGuideModalSheet(
                     text = title,
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.5.sp,
+                    fontSize = HollowType.Heading,
                     color = HollowInk
                 )
             }
@@ -1144,7 +1147,7 @@ private fun PermissionGuideModalSheet(
 
             Text(
                 text = summary,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp, lineHeight = 18.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = HollowType.Small, lineHeight = 18.sp),
                 color = HollowInkSecondary
             )
 
@@ -1152,9 +1155,9 @@ private fun PermissionGuideModalSheet(
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 color = HollowCreamSurface,
-                border = BorderStroke(1.dp, HollowCreamDivider)
+                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
             ) {
                 Column(
                     modifier = Modifier.padding(HollowSpace.Lg),
@@ -1176,13 +1179,13 @@ private fun PermissionGuideModalSheet(
                                     text = "${idx + 1}",
                                     fontFamily = JetBrainsMonoFamily,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
+                                    fontSize = HollowType.Caption,
                                     color = HollowCream
                                 )
                             }
                             Text(
                                 text = stepText,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp, lineHeight = 18.sp),
+                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = HollowType.Small, lineHeight = 18.sp),
                                 color = HollowInk,
                                 modifier = Modifier.weight(1f)
                             )
@@ -1195,7 +1198,7 @@ private fun PermissionGuideModalSheet(
 
             Button(
                 onClick = onPrimaryAction,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -1214,7 +1217,7 @@ private fun PermissionGuideModalSheet(
                     text = primaryActionLabel,
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp
+                    fontSize = HollowType.Title
                 )
             }
 
@@ -1222,8 +1225,8 @@ private fun PermissionGuideModalSheet(
 
             OutlinedButton(
                 onClick = onSecondaryAction,
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, HollowCreamDivider),
+                shape = RoundedCornerShape(HollowRadius.Md),
+                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = HollowInk),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1233,7 +1236,7 @@ private fun PermissionGuideModalSheet(
                     text = secondaryActionLabel,
                     fontFamily = SpaceGroteskFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.5.sp
+                    fontSize = HollowType.BodyStrong
                 )
             }
         }
@@ -1275,7 +1278,7 @@ private fun PermissionChecklistRow(
                 .size(26.dp)
                 .clip(CircleShape)
                 .background(circleBg)
-                .border(2.dp, circleBorder, CircleShape),
+                .border(HollowStroke.Heavy, circleBorder, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (isChecked) {
@@ -1302,7 +1305,7 @@ private fun PermissionChecklistRow(
                 text = title,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 14.5.sp,
+                fontSize = HollowType.BodyStrong,
                 lineHeight = 18.sp,
                 color = HollowInk
             )
@@ -1310,8 +1313,8 @@ private fun PermissionChecklistRow(
             Text(
                 text = subtitle,
                 fontFamily = SpaceGroteskFamily,
-                fontSize = 12.sp,
-                lineHeight = 15.5.sp,
+                fontSize = HollowType.Small,
+                lineHeight = 16.sp,
                 color = HollowInkSecondary
             )
         }
@@ -1322,7 +1325,7 @@ private fun PermissionChecklistRow(
             text = badgeText,
             fontFamily = JetBrainsMonoFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 10.5.sp,
+            fontSize = HollowType.Micro,
             letterSpacing = 0.7.sp,
             color = badgeColor
         )
@@ -1343,11 +1346,9 @@ private fun OnboardingSubscriptionSheet(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    ModalBottomSheet(
+    HollowModalSheet(
         onDismissRequest = { if (!isLoading) onDismiss() },
-        sheetState = sheetState,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        sheetState = sheetState
     ) {
         Column(
             modifier = Modifier
@@ -1359,7 +1360,7 @@ private fun OnboardingSubscriptionSheet(
                 text = "Subscription link",
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontSize = HollowType.Display,
                 color = HollowInk
             )
             Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -1380,7 +1381,7 @@ private fun OnboardingSubscriptionSheet(
                 placeholder = { Text("https://example.com/sub") },
                 singleLine = true,
                 enabled = !isLoading,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = HollowInk,
                     unfocusedBorderColor = HollowCreamDivider,
@@ -1407,8 +1408,8 @@ private fun OnboardingSubscriptionSheet(
                     }
                 },
                 enabled = !isLoading,
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, HollowCreamDivider)
+                shape = RoundedCornerShape(HollowRadius.Sm),
+                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.ContentPaste,
@@ -1446,7 +1447,7 @@ private fun OnboardingSubscriptionSheet(
                     }
                 },
                 enabled = !isLoading && urlInput.isNotBlank(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -1469,7 +1470,7 @@ private fun OnboardingSubscriptionSheet(
                         text = "Add & fetch",
                         fontFamily = SpaceGroteskFamily,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
+                        fontSize = HollowType.Title
                     )
                 }
             }
@@ -1490,11 +1491,9 @@ private fun OnboardingPasteConfigSheet(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    ModalBottomSheet(
+    HollowModalSheet(
         onDismissRequest = { if (!isLoading) onDismiss() },
-        sheetState = sheetState,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        sheetState = sheetState
     ) {
         Column(
             modifier = Modifier
@@ -1506,7 +1505,7 @@ private fun OnboardingPasteConfigSheet(
                 text = "Paste a config",
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontSize = HollowType.Display,
                 color = HollowInk
             )
             Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -1528,7 +1527,7 @@ private fun OnboardingPasteConfigSheet(
                 minLines = 3,
                 maxLines = 6,
                 enabled = !isLoading,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = HollowInk,
                     unfocusedBorderColor = HollowCreamDivider,
@@ -1555,8 +1554,8 @@ private fun OnboardingPasteConfigSheet(
                     }
                 },
                 enabled = !isLoading,
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, HollowCreamDivider)
+                shape = RoundedCornerShape(HollowRadius.Sm),
+                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.ContentPaste,
@@ -1594,7 +1593,7 @@ private fun OnboardingPasteConfigSheet(
                     }
                 },
                 enabled = !isLoading && configInput.isNotBlank(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(HollowRadius.Md),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HollowInk,
                     contentColor = HollowCream
@@ -1617,7 +1616,7 @@ private fun OnboardingPasteConfigSheet(
                         text = "Verify & import",
                         fontFamily = SpaceGroteskFamily,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
+                        fontSize = HollowType.Title
                     )
                 }
             }

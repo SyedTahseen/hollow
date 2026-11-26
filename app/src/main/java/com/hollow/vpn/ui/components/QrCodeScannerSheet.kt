@@ -1,5 +1,8 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
 import android.Manifest
 import android.content.Context
@@ -130,8 +133,8 @@ fun CameraQrScannerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(24.dp),
+        containerColor = HollowDialog.containerColor,
+        shape = HollowDialog.Shape,
         title = {
             Text(
                 text = "Scan Server QR Code",
@@ -162,7 +165,7 @@ fun CameraQrScannerDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(HollowRadius.Lg))
                             .background(scheme.surfaceContainerHigh),
                         contentAlignment = Alignment.Center
                     ) {
@@ -208,7 +211,7 @@ fun CameraQrScannerDialog(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
-                    border = BorderStroke(1.dp, NothingBorder),
+                    border = BorderStroke(HollowStroke.Hairline, NothingBorder),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = HollowInk),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -258,7 +261,7 @@ private fun CameraQrPreviewBox(
         modifier = Modifier
             .fillMaxWidth()
             .height(240.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(HollowRadius.Lg))
             .background(Color.Black)
     ) {
         AndroidView(
@@ -308,7 +311,7 @@ private fun CameraQrPreviewBox(
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(164.dp)
-                .border(2.5.dp, accentColor.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+                .border(HollowStroke.Heavy, accentColor.copy(alpha = 0.92f), RoundedCornerShape(HollowRadius.Lg))
         )
     }
 }
@@ -432,8 +435,8 @@ fun ServerQrShareDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = NothingSurfaceElevated,
-        shape = RoundedCornerShape(24.dp),
+        containerColor = HollowDialog.containerColor,
+        shape = HollowDialog.Shape,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -462,7 +465,7 @@ fun ServerQrShareDialog(
             ) {
                 if (qrBitmap != null) {
                     Surface(
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(HollowRadius.Lg),
                         color = Color.White,
                         tonalElevation = 0.dp
                     ) {

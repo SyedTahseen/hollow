@@ -1,5 +1,9 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowMotion
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSpace
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -198,7 +202,7 @@ fun NothingSignalDots(
             }
             val dotColor by animateColorAsState(
                 targetValue = targetDotColor,
-                animationSpec = tween(durationMillis = 220, easing = NothingMotion.FluidEase),
+                animationSpec = tween(durationMillis = HollowMotion.Standard, easing = NothingMotion.FluidEase),
                 label = "signal_dot_$i"
             )
             Box(
@@ -237,24 +241,24 @@ fun NothingPillTabRow(
             val interactionSource = remember { MutableInteractionSource() }
             val containerColor by animateColorAsState(
                 targetValue = if (isSelected) NothingPillActiveBg else Color.Transparent,
-                animationSpec = tween(durationMillis = 210, easing = NothingMotion.FluidEase),
+                animationSpec = tween(durationMillis = HollowMotion.Fast, easing = NothingMotion.FluidEase),
                 label = "pill_tab_bg_$index"
             )
             val borderColor by animateColorAsState(
                 targetValue = if (isSelected) NothingPillActiveBg else NothingTopBtnBorder,
-                animationSpec = tween(durationMillis = 210, easing = NothingMotion.FluidEase),
+                animationSpec = tween(durationMillis = HollowMotion.Fast, easing = NothingMotion.FluidEase),
                 label = "pill_tab_border_$index"
             )
             val contentColor by animateColorAsState(
                 targetValue = if (isSelected) NothingPillActiveIcon else HollowInk,
-                animationSpec = tween(durationMillis = 190, easing = NothingMotion.FluidEase),
+                animationSpec = tween(durationMillis = HollowMotion.Fast, easing = NothingMotion.FluidEase),
                 label = "pill_tab_text_$index"
             )
             Box(
                 modifier = Modifier
                     .minimumInteractiveComponentSize()
                     .then(if (tag != null) Modifier.testTag(tag) else Modifier)
-                    .nothingPressScale(interactionSource, pressedScale = 0.93f)
+                    .nothingPressScale(interactionSource, pressedScale = HollowMotion.PressControl)
                     .clip(CircleShape)
                     .clickable(
                         interactionSource = interactionSource,
@@ -266,7 +270,7 @@ fun NothingPillTabRow(
                 Surface(
                     shape = CircleShape,
                     color = containerColor,
-                    border = BorderStroke(1.dp, borderColor)
+                    border = BorderStroke(HollowStroke.Hairline, borderColor)
                 ) {
                     Text(
                         text = title.uppercase(),
@@ -357,9 +361,9 @@ fun HollowRouteCard(
             .semantics(mergeDescendants = true) {
                 contentDescription = "Route: You to $midLabel to Internet"
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = cardBg,
-        border = BorderStroke(1.dp, lineColor)
+        border = BorderStroke(HollowStroke.Hairline, lineColor)
     ) {
         Column(
             modifier = Modifier
@@ -482,7 +486,7 @@ fun HollowRouteCard(
                         withStyle(SpanStyle(color = accent, fontWeight = FontWeight.SemiBold)) { append(exitIp) }
                     },
                     fontFamily = JetBrainsMonoFamily,
-                    fontSize = 12.sp,
+                    fontSize = HollowType.Small,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
@@ -512,7 +516,7 @@ private fun RouteNode(
                 .size(nodeSize)
                 .clip(CircleShape)
                 .background(fill)
-                .border(1.5.dp, stroke, CircleShape),
+                .border(HollowStroke.Emphasis, stroke, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(21.dp))
@@ -521,7 +525,7 @@ private fun RouteNode(
             text = label,
             fontFamily = JetBrainsMonoFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp,
+            fontSize = HollowType.Caption,
             letterSpacing = 0.6.sp,
             color = labelColor,
             maxLines = 1,
@@ -599,9 +603,9 @@ fun HollowSpeedBarsCard(
 private fun SpeedCell(label: String, value: String, unit: String, modifier: Modifier) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(HollowRadius.Lg),
         color = HollowForestCard,
-        border = BorderStroke(1.dp, HollowForestDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowForestDivider)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md)
@@ -610,7 +614,7 @@ private fun SpeedCell(label: String, value: String, unit: String, modifier: Modi
                 text = label,
                 fontFamily = JetBrainsMonoFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 9.5.sp,
+                fontSize = HollowType.Micro,
                 letterSpacing = 1.1.sp,
                 color = HollowForestMuted,
                 maxLines = 1
@@ -620,17 +624,17 @@ private fun SpeedCell(label: String, value: String, unit: String, modifier: Modi
                     text = value,
                     fontFamily = DotoDisplayFamily,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                    fontSize = HollowType.Headline,
                     color = HollowDarkInk,
                     maxLines = 1
                 )
                 Text(
                     text = " $unit",
                     fontFamily = JetBrainsMonoFamily,
-                    fontSize = 10.5.sp,
+                    fontSize = HollowType.Micro,
                     color = HollowForestMuted,
                     maxLines = 1,
-                    modifier = Modifier.padding(bottom = 2.dp)
+                    modifier = Modifier.padding(bottom = HollowSpace.Xxs)
                 )
             }
         }

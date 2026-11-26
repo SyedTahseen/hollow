@@ -1,5 +1,9 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import androidx.activity.compose.BackHandler
@@ -236,7 +240,7 @@ fun CountryServerListScreen(
                         text = "SERVERS",
                         fontFamily = DotoDisplayFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
+                        fontSize = HollowType.Display,
                         letterSpacing = 0.9.sp,
                         maxLines = 1,
                         color = NothingOnCanvas
@@ -289,7 +293,7 @@ fun CountryServerListScreen(
                             onDismissRequest = { overflowMenuExpanded = false },
                             offset = DpOffset(x = 0.dp, y = 8.dp),
                             containerColor = NothingSurfaceElevated,
-                            shape = RoundedCornerShape(18.dp),
+                            shape = RoundedCornerShape(HollowRadius.Lg),
                             modifier = Modifier.width(212.dp)
                         ) {
                             ServerOverflowMenuItem(
@@ -429,9 +433,9 @@ fun CountryServerListScreen(
                 Spacer(modifier = Modifier.height(HollowSpace.Md))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(HollowRadius.Md),
                     color = NothingSurfaceElevated,
-                    border = BorderStroke(1.dp, NothingBorder)
+                    border = BorderStroke(HollowStroke.Hairline, NothingBorder)
                 ) {
                     Row(
                         modifier = Modifier
@@ -498,9 +502,9 @@ fun CountryServerListScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = HollowSpace.Md),
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(HollowRadius.Lg),
                             color = HollowCreamSurface,
-                            border = BorderStroke(1.dp, HollowCreamDivider)
+                            border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -519,7 +523,7 @@ fun CountryServerListScreen(
                                     text = if (isDefaultCategory) "No default servers" else "No matching servers",
                                     fontFamily = SpaceGroteskFamily,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
+                                    fontSize = HollowType.Heading,
                                     color = HollowInk
                                 )
                                 val emptyMsg = when {
@@ -547,7 +551,7 @@ fun CountryServerListScreen(
                                             if (isDefaultCategory) addServerState.showManual = true
                                             else addServerState.menuOpen = true
                                         },
-                                        shape = RoundedCornerShape(14.dp),
+                                        shape = RoundedCornerShape(HollowRadius.Md),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = HollowInk,
                                             contentColor = HollowCream
@@ -566,7 +570,7 @@ fun CountryServerListScreen(
                             text = "$listTitle (${displayedServers.size})",
                             fontFamily = JetBrainsMonoFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp,
+                            fontSize = HollowType.Caption,
                             letterSpacing = 1.2.sp,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
@@ -634,8 +638,8 @@ fun CountryServerListScreen(
     if (showDeleteAllConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteAllConfirm = false },
-            containerColor = NothingSurfaceElevated,
-            shape = RoundedCornerShape(24.dp),
+            containerColor = HollowDialog.containerColor,
+            shape = HollowDialog.Shape,
             title = {
                 Text(
                     text = "Delete all servers?",
@@ -691,7 +695,7 @@ private fun FastestServerRow(
         Box(
             modifier = Modifier
                 .size(width = 38.dp, height = 26.dp)
-                .clip(RoundedCornerShape(7.dp))
+                .clip(RoundedCornerShape(HollowRadius.Xs))
                 .background(HollowOrange),
             contentAlignment = Alignment.Center
         ) {
@@ -715,7 +719,7 @@ private fun FastestServerRow(
             Text(
                 text = "Fastest server",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 16.sp,
+                    fontSize = HollowType.Title,
                     fontWeight = FontWeight.Medium
                 ),
                 color = HollowInk
@@ -723,7 +727,7 @@ private fun FastestServerRow(
             if (isTesting) {
                 Text(
                     text = "Testing all servers…",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Small),
                     color = HollowInkSecondary
                 )
             }
@@ -743,7 +747,7 @@ private fun ServerOverflowMenuItem(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md),
-                modifier = Modifier.padding(vertical = 2.dp)
+                modifier = Modifier.padding(vertical = HollowSpace.Xxs)
             ) {
                 Icon(
                     imageVector = icon,
@@ -754,7 +758,7 @@ private fun ServerOverflowMenuItem(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
+                        fontSize = HollowType.BodyStrong,
                         fontWeight = FontWeight.Medium
                     ),
                     color = color

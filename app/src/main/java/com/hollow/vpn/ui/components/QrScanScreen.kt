@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import android.Manifest
@@ -174,7 +176,7 @@ fun QrScanScreen(
                 text = "SCAN QR",
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontSize = HollowType.Display,
                 letterSpacing = 0.9.sp,
                 maxLines = 1,
                 color = NothingOnCanvas,
@@ -249,7 +251,7 @@ fun QrScanScreen(
                     Text(
                         text = "Scan a QR code",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp,
+                        fontSize = HollowType.Headline,
                         color = HollowInk
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -259,7 +261,7 @@ fun QrScanScreen(
                         } else {
                             "Allow camera access to scan live"
                         },
-                        fontSize = 13.sp,
+                        fontSize = HollowType.Body,
                         color = HollowInkSecondary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = HollowSpace.Xxxl)
@@ -267,7 +269,7 @@ fun QrScanScreen(
                     Spacer(modifier = Modifier.height(HollowSpace.Xxl))
                     Button(
                         onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(HollowRadius.Md),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = HollowInk,
                             contentColor = HollowCream
@@ -278,7 +280,7 @@ fun QrScanScreen(
                     ) {
                         Text(
                             text = if (permissionDenied) "Allow camera" else "Start scanning",
-                            fontSize = 13.5.sp,
+                            fontSize = HollowType.Body,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -289,7 +291,7 @@ fun QrScanScreen(
                 Text(
                     text = msg,
                     fontFamily = JetBrainsMonoFamily,
-                    fontSize = 12.sp,
+                    fontSize = HollowType.Small,
                     color = NothingRed,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -412,7 +414,7 @@ private fun ScanCameraArea(
         Text(
             text = "Align the QR code within the frame",
             fontFamily = JetBrainsMonoFamily,
-            fontSize = 12.sp,
+            fontSize = HollowType.Small,
             color = NothingOnCanvas,
             modifier = Modifier
                 .align(Alignment.TopCenter)

@@ -1,6 +1,11 @@
 package com.hollow.vpn
 
+import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowMotion
+import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowTransitions
 import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
@@ -380,7 +385,7 @@ fun HollowVpnApp(
                     SnackbarHost(hostState = snackbarHostState) { data ->
                         Snackbar(
                             snackbarData = data,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(HollowRadius.Md),
                             containerColor = NothingSurfaceElevated,
                             contentColor = HollowInk,
                             actionColor = HollowOrange
@@ -403,9 +408,9 @@ fun HollowVpnApp(
                                 exit = fadeOut() + slideOutVertically { it / 2 }
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(999.dp),
+                                    shape = RoundedCornerShape(HollowRadius.Pill),
                                     color = NothingSurfaceElevated,
-                                    border = BorderStroke(1.dp, NothingBorder),
+                                    border = BorderStroke(HollowStroke.Hairline, NothingBorder),
                                     shadowElevation = 6.dp,
                                     modifier = Modifier
                                         .padding(
@@ -416,7 +421,7 @@ fun HollowVpnApp(
                                         )
                                         .then(if (!renderNavBar) Modifier.navigationBarsPadding() else Modifier)
                                         .minimumInteractiveComponentSize()
-                                        .clip(RoundedCornerShape(999.dp))
+                                        .clip(RoundedCornerShape(HollowRadius.Pill))
                                         .clickable(role = Role.Button) {
                                             vpnViewModel.reopenFetchingScreen()
                                         }
@@ -433,18 +438,18 @@ fun HollowVpnApp(
                                             text = "Fetching · ${fetchingProgress.workingCount} ready",
                                             fontFamily = JetBrainsMonoFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 12.sp,
+                                            fontSize = HollowType.Small,
                                             color = HollowInk
                                         )
                                         Surface(
-                                            shape = RoundedCornerShape(999.dp),
+                                            shape = RoundedCornerShape(HollowRadius.Pill),
                                             color = HollowOrange
                                         ) {
                                             Text(
                                                 text = "SHOW",
                                                 fontFamily = JetBrainsMonoFamily,
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 10.5.sp,
+                                                fontSize = HollowType.Micro,
                                                 letterSpacing = 0.8.sp,
                                                 color = Color.White,
                                                 modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
@@ -457,11 +462,11 @@ fun HollowVpnApp(
                             AnimatedVisibility(
                                 visible = renderNavBar,
                                 enter = slideInVertically(
-                                    animationSpec = tween(260, easing = NothingMotion.FluidEase)
-                                ) { it } + fadeIn(tween(180)),
+                                    animationSpec = tween(HollowMotion.Standard, easing = NothingMotion.FluidEase)
+                                ) { it } + fadeIn(tween(HollowMotion.Fast)),
                                 exit = slideOutVertically(
-                                    animationSpec = tween(220, easing = NothingMotion.FluidEase)
-                                ) { it } + fadeOut(tween(150))
+                                    animationSpec = tween(HollowMotion.Standard, easing = NothingMotion.FluidEase)
+                                ) { it } + fadeOut(tween(HollowMotion.Fast))
                             ) {
                                 HollowBottomNavigationBar(
                                     selectedTab = selectedBottomTab,
@@ -484,63 +489,20 @@ fun HollowVpnApp(
                     AnimatedContent(
                         targetState = currentScreen,
                         transitionSpec = {
-                            val ease = NothingMotion.FluidEase
-                            val isSubscreenPush = targetState == VpnScreen.SETTINGS
-                            val isSubscreenPop = initialState == VpnScreen.SETTINGS
                             val isModalFlow = targetState == VpnScreen.SPLASH_FETCHING ||
                                 initialState == VpnScreen.SPLASH_FETCHING ||
                                 targetState == VpnScreen.GETTING_STARTED ||
                                 initialState == VpnScreen.GETTING_STARTED
+                            val isPush = targetState == VpnScreen.SETTINGS ||
+                                (targetState == VpnScreen.SERVER_LIST && initialState == VpnScreen.CONNECTED_HOME)
+                            val isPop = initialState == VpnScreen.SETTINGS ||
+                                (targetState == VpnScreen.CONNECTED_HOME && initialState == VpnScreen.SERVER_LIST)
 
                             when {
-                                isModalFlow -> {
-                                    (fadeIn(tween(260, easing = ease)) +
-                                        slideInVertically(tween(280, easing = ease)) { it / 16 } +
-                                        scaleIn(tween(280, easing = ease), initialScale = 0.97f))
-                                        .togetherWith(
-                                            fadeOut(tween(200, easing = ease)) +
-                                                scaleOut(tween(200, easing = ease), targetScale = 0.98f)
-                                        )
-                                }
-                                isSubscreenPush && !isSubscreenPop -> {
-                                    (slideInHorizontally(tween(280, easing = ease)) { (it * 0.24f).toInt() } +
-                                        fadeIn(tween(220, easing = ease)))
-                                        .togetherWith(
-                                            slideOutHorizontally(tween(260, easing = ease)) { -(it * 0.08f).toInt() } +
-                                                scaleOut(tween(260, easing = ease), targetScale = 0.96f) +
-                                                fadeOut(tween(180))
-                                        )
-                                }
-                                isSubscreenPop && !isSubscreenPush -> {
-                                    (slideInHorizontally(tween(280, easing = ease)) { -(it * 0.10f).toInt() } +
-                                        scaleIn(tween(280, easing = ease), initialScale = 0.96f) +
-                                        fadeIn(tween(220, easing = ease)))
-                                        .togetherWith(
-                                            slideOutHorizontally(tween(240, easing = ease)) { (it * 0.22f).toInt() } +
-                                                fadeOut(tween(180))
-                                        )
-                                }
-                                targetState == VpnScreen.SERVER_LIST && initialState == VpnScreen.CONNECTED_HOME -> {
-                                    (slideInHorizontally(tween(260, easing = ease)) { (it * 0.12f).toInt() } +
-                                        fadeIn(tween(220, easing = ease)))
-                                        .togetherWith(
-                                            slideOutHorizontally(tween(240, easing = ease)) { -(it * 0.10f).toInt() } +
-                                                fadeOut(tween(170))
-                                        )
-                                }
-                                targetState == VpnScreen.CONNECTED_HOME && initialState == VpnScreen.SERVER_LIST -> {
-                                    (slideInHorizontally(tween(260, easing = ease)) { -(it * 0.12f).toInt() } +
-                                        fadeIn(tween(220, easing = ease)))
-                                        .togetherWith(
-                                            slideOutHorizontally(tween(240, easing = ease)) { (it * 0.10f).toInt() } +
-                                                fadeOut(tween(170))
-                                        )
-                                }
-                                else -> {
-                                    (fadeIn(tween(220, easing = ease)) +
-                                        scaleIn(tween(240, easing = ease), initialScale = 0.98f))
-                                        .togetherWith(fadeOut(tween(170)))
-                                }
+                                isModalFlow -> HollowTransitions.Modal
+                                isPush && !isPop -> HollowTransitions.Push
+                                isPop && !isPush -> HollowTransitions.Pop
+                                else -> HollowTransitions.Fade
                             }
                         },
                         label = "vpn_screen_motion"
