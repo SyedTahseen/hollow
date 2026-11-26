@@ -909,6 +909,9 @@ private fun HomeContent(
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
+                    } else {
+                        CountryFlag(countryCode = selectedServer.countryCode)
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
@@ -1184,11 +1187,7 @@ fun ServerItemRowContent(
             Spacer(modifier = Modifier.width(4.dp))
         }
 
-        CountryFlag(
-            countryCode = server.countryCode,
-            width = 38.dp,
-            height = 26.dp
-        )
+        CountryFlag(countryCode = server.countryCode)
         Spacer(modifier = Modifier.width(14.dp))
 
         Column(modifier = Modifier.weight(1f)) {

@@ -163,11 +163,17 @@ fun CountryServerListScreen(
 
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
-    val displayedServers = remember(servers, sortByPingResults, favoriteKeys) {
+    // "Favorites" pill: only offered once something is starred; shows starred servers from every category.
+    var favoritesOnly by remember { mutableStateOf(false) }
+    val hasFavorites = favoriteKeys.isNotEmpty()
+    val favOnly = favoritesOnly && hasFavorites
+
+    val displayedServers = remember(servers, sortByPingResults, favoriteKeys, favOnly) {
+        val pool = if (favOnly) servers.filter { it.favoriteKey() in favoriteKeys } else servers
         val base = if (sortByPingResults) {
-            servers.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
+            pool.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
         } else {
-            servers
+            pool
         }
         // Starred servers float to the top, keeping the current order inside each group.
         base.sortedByDescending { it.favoriteKey() in favoriteKeys }
@@ -363,11 +369,28 @@ fun CountryServerListScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Category pills: All, Default (manually added), then one per subscription
+            val favTabKey = "__favorites__"
+            val tabEntries = remember(categories, hasFavorites) {
+                val base = categories.map { it.key to it.label }
+                if (hasFavorites) base.toMutableList().apply { add(minOf(1, size), favTabKey to "Favorites") } else base
+            }
+            val pillIndex = if (favOnly) tabEntries.indexOfFirst { it.first == favTabKey }.coerceAtLeast(0)
+            else tabEntries.indexOfFirst { it.first == selectedCategoryKey }.coerceAtLeast(0)
             NothingPillTabRow(
-                tabs = categories.map { it.label },
-                selectedIndex = selectedTabIndex,
-                onSelectTab = { idx -> categories.getOrNull(idx)?.let { onSelectCategory(it.key) } },
-                tabTestTags = categories.map { "server_category_${it.key.hashCode()}" },
+                tabs = tabEntries.map { it.second },
+                selectedIndex = pillIndex,
+                onSelectTab = { idx ->
+                    val key = tabEntries.getOrNull(idx)?.first
+                    if (key == favTabKey) {
+                        favoritesOnly = true
+                        // Starred servers can live in any category, so look across all of them.
+                        if (selectedCategoryKey != ServerCategory.ALL_KEY) onSelectCategory(ServerCategory.ALL_KEY)
+                    } else if (key != null) {
+                        favoritesOnly = false
+                        onSelectCategory(key)
+                    }
+                },
+                tabTestTags = tabEntries.map { if (it.first == favTabKey) "server_category_favorites" else "server_category_${it.first.hashCode()}" },
                 fontSizeSp = 10.5f
             )
 
@@ -455,6 +478,7 @@ fun CountryServerListScreen(
 
             val isDefaultCategory = selectedCategoryKey == ServerCategory.DEFAULT_KEY
             val listTitle = when {
+                favOnly -> "Favorite servers"
                 selectedCategoryKey == ServerCategory.ALL_KEY || activeCategory == null -> "All servers"
                 isDefaultCategory -> "Default servers"
                 else -> "${activeCategory.label} servers"

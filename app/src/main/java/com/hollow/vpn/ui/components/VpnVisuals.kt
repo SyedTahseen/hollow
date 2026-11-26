@@ -2756,8 +2756,8 @@ private fun DrawScope.nordicCross(bg: Long, cross: Long, inner: Long? = null) {
 fun CountryFlag(
     countryCode: String?,
     modifier: Modifier = Modifier,
-    width: Dp = 24.dp,
-    height: Dp = 16.dp
+    width: Dp = 38.dp,
+    height: Dp = 26.dp
 ) {
     val res = countryCode?.trim()?.uppercase()?.let { FLAG_RES[it] }
     if (res != null) {
