@@ -288,9 +288,10 @@ fun HollowVpnApp(
         }
     }
 
-    // Floating Nothing OS capsule navigation dock shows on primary top-level tabs only (hidden on Settings & Add Server)
+    // Floating Nothing OS capsule navigation dock shows on primary top-level tabs only 
     val showBottomNav = currentScreen == VpnScreen.CONNECTED_HOME ||
-        currentScreen == VpnScreen.SERVER_LIST
+        currentScreen == VpnScreen.SERVER_LIST ||
+        currentScreen == VpnScreen.SETTINGS
 
     val selectedBottomTab = when (currentScreen) {
         VpnScreen.CONNECTED_HOME -> HollowBottomTab.CONNECT

@@ -10,16 +10,13 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +34,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CloudQueue
 import androidx.compose.material.icons.outlined.DarkMode
@@ -57,7 +53,8 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.AccountTree
 import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -69,9 +66,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -84,38 +78,45 @@ import androidx.compose.ui.unit.sp
 import com.hollow.vpn.BuildConfig
 import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.AppUpdateState
-import com.hollow.vpn.ui.components.HollowBrandShieldLogo
 import com.hollow.vpn.ui.components.HollowSwitch
 import com.hollow.vpn.ui.components.HollowTopSquareButton
-import com.hollow.vpn.ui.components.NothingDottedDivider
-import com.hollow.vpn.ui.theme.HollowScreenPadding
-import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowCreamSurface
 import com.hollow.vpn.ui.theme.HollowInk
 import com.hollow.vpn.ui.theme.HollowInkSecondary
 import com.hollow.vpn.ui.theme.HollowOrange
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
+import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.NothingMotion
 import com.hollow.vpn.ui.theme.NothingOnCanvas
 import com.hollow.vpn.ui.theme.NothingPillActiveBg
 import com.hollow.vpn.ui.theme.NothingPillActiveIcon
-import com.hollow.vpn.ui.theme.NothingRed
-import com.hollow.vpn.ui.theme.NothingSurfaceElevated
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
 import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 import com.hollow.vpn.ui.theme.nothingPressScale
 
+/** Dialogs that still open on top of the settings list (log viewer, about sheet, update check). */
 private enum class ActiveSettingDialog {
-    UPDATE_INTERVAL,
-    PROTOCOL,
-    ROUTING_MODE,
-    DNS_PROVIDER,
     XRAY_LOGS,
     ABOUT,
     CHECK_UPDATE
+}
+
+/** Every setting that has its own page where the value is changed. */
+private enum class SettingsPage {
+    SPLIT_TUNNELING,
+    KILL_SWITCH,
+    PRIVATE_DNS,
+    IPV6,
+    PROTOCOL,
+    ROUTING_MODE,
+    SMART_SWITCH,
+    STRICT_TLS,
+    START_ON_OPEN,
+    AUTO_UPDATE,
+    APPEARANCE,
+    HIDE_RECENTS
 }
 
 private val PROTOCOL_OPTIONS = listOf(
@@ -152,15 +153,18 @@ private fun formatRoutingSummary(mode: String): String = when {
 
 private fun formatDnsSummary(dns: String): String = when {
     dns.startsWith("Auto", ignoreCase = true) -> "Auto (DoH)"
-    dns.contains("Cloudflare", ignoreCase = true) -> "1.1.1.1"
-    dns.contains("Google", ignoreCase = true) -> "8.8.8.8"
-    dns.contains("Quad9", ignoreCase = true) -> "9.9.9.9"
+    dns.contains("Cloudflare", ignoreCase = true) -> "Cloudflare 1.1.1.1"
+    dns.contains("Google", ignoreCase = true) -> "Google 8.8.8.8"
+    dns.contains("Quad9", ignoreCase = true) -> "Quad9 9.9.9.9"
     dns.contains("AdGuard", ignoreCase = true) -> "AdGuard"
     else -> dns
 }
 
+private fun onOff(value: Boolean) = if (value) "On" else "Off"
+
 /**
- * PAGE 6: Hollow Settings Screen (Compact inline header, clean single-line rows, no bottom nav bar)
+ * Settings: a clean sectioned list (icon, title, current value). Tapping a setting opens its own
+ * page where the value is changed; actions (guide, logs, export, updates, about) run directly.
  */
 @Composable
 fun SettingsScreen(
@@ -178,7 +182,9 @@ fun SettingsScreen(
     onShowMessage: (String) -> Unit = {},
     onBack: () -> Unit
 ) {
-    BackHandler { onBack() }
+    var page by remember { mutableStateOf<SettingsPage?>(null) }
+    BackHandler { if (page != null) page = null else onBack() }
+
     val context = LocalContext.current
     var activeDialog by remember { mutableStateOf<ActiveSettingDialog?>(null) }
     var showPerAppPicker by remember { mutableStateOf(false) }
@@ -197,416 +203,44 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = HollowScreenPadding)
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Compact inline header: Back button + SETTINGS on the same row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HollowTopSquareButton(
-                    containerColor = NothingTopBtnFill,
-                    contentColor = NothingOnCanvas,
-                    borderColor = NothingTopBtnBorder,
-                    contentDescription = "Back",
-                    onClick = onBack,
-                    modifier = Modifier.testTag("btn_navigate_back")
-                ) { tint ->
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(21.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = "SETTINGS",
-                    fontFamily = DotoDisplayFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    letterSpacing = 0.9.sp,
-                    maxLines = 1,
-                    color = NothingOnCanvas
+            val current = page
+            if (current == null) {
+                SettingsOverview(
+                    settings = settings,
+                    serverCount = serverCount,
+                    xrayLogs = xrayLogs,
+                    appUpdateState = appUpdateState,
+                    onOpenPage = { page = it },
+                    onOpenAddSubscription = onOpenAddSubscription,
+                    onOpenGettingStarted = onOpenGettingStarted,
+                    onOpenLogs = { activeDialog = ActiveSettingDialog.XRAY_LOGS },
+                    onExportServers = onExportServers,
+                    onCheckUpdates = {
+                        activeDialog = ActiveSettingDialog.CHECK_UPDATE
+                        onCheckForUpdates()
+                    },
+                    onOpenAbout = { activeDialog = ActiveSettingDialog.ABOUT }
                 )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // 0. APPEARANCE
-            SettingsSectionHeader(title = "APPEARANCE")
-
-            ThemeModeInlineSelector(
-                selectedMode = settings.themeMode,
-                onSelectMode = { mode ->
-                    onUpdateSettings { it.copy(themeMode = mode) }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 1. SUBSCRIPTIONS
-            SettingsSectionHeader(title = "SUBSCRIPTIONS")
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.Link,
-                title = "Servers & subscriptions",
-                valueText = if (serverCount > 0) "$serverCount saved" else "Add",
-                onClick = onOpenAddSubscription,
-                testTag = "row_custom_subscription"
-            )
-            NothingDottedDivider()
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.CloudQueue,
-                title = "Auto-update servers",
-                checked = settings.autoConfigure,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings { it.copy(autoConfigure = enabled) }
-                },
-                testTag = "switch_auto_configure"
-            )
-            if (settings.autoConfigure) {
-                NothingDottedDivider()
-                SettingsValueNavigationRow(
-                    icon = Icons.Outlined.Refresh,
-                    title = "Update interval",
-                    valueText = settings.updateIntervalLabel,
-                    onClick = { activeDialog = ActiveSettingDialog.UPDATE_INTERVAL },
-                    testTag = "row_update_interval"
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 2. PER-APP ROUTING
-            SettingsSectionHeader(title = "PER-APP ROUTING")
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.Apps,
-                title = "Per-app routing",
-                checked = settings.perAppProxyEnabled,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings {
-                        it.copy(
-                            perAppProxyEnabled = enabled,
-                            bypassSelectedApps = if (enabled && !it.perAppProxyEnabled) true else it.bypassSelectedApps
-                        )
-                    }
-                },
-                testTag = "switch_per_app_proxy"
-            )
-            NothingDottedDivider()
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.Apps,
-                title = if (!settings.perAppProxyEnabled || settings.bypassSelectedApps) {
-                    "Apps skipping VPN"
-                } else {
-                    "Apps using VPN"
-                },
-                valueText = if (settings.selectedAppPackages.isEmpty()) {
-                    "None"
-                } else {
-                    "${settings.selectedAppPackages.size} apps"
-                },
-                onClick = { showPerAppPicker = true },
-                testTag = "row_per_app_selection"
-            )
-
-            if (settings.perAppProxyEnabled) {
-                NothingDottedDivider()
-                PerAppInlineModeRow(
-                    bypassSelectedApps = settings.bypassSelectedApps,
-                    onSelectBypass = { bypass ->
-                        onUpdateSettings { it.copy(bypassSelectedApps = bypass) }
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 3. CONNECTION
-            SettingsSectionHeader(title = "CONNECTION")
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.PlayArrow,
-                title = "Start on app open",
-                checked = settings.startOnAppOpen,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings { it.copy(startOnAppOpen = enabled) }
-                },
-                testTag = "switch_start_on_open"
-            )
-            NothingDottedDivider()
-
-            SettingsValueNavigationRow(
-                icon = Icons.Rounded.AccountTree,
-                title = "Protocol",
-                valueText = formatConsumerProtocol(settings.protocolPreference),
-                onClick = { activeDialog = ActiveSettingDialog.PROTOCOL },
-                testTag = "row_protocol"
-            )
-            NothingDottedDivider()
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.Refresh,
-                title = "Auto-switch slow servers",
-                checked = settings.smartSwitchEnabled,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings { it.copy(smartSwitchEnabled = enabled) }
-                },
-                testTag = "switch_smart_switch"
-            )
-            NothingDottedDivider()
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.Lock,
-                title = "Strict TLS verification",
-                checked = settings.strictTlsEnabled,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings { it.copy(strictTlsEnabled = enabled) }
-                },
-                testTag = "switch_strict_tls"
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 4. ROUTING
-            SettingsSectionHeader(title = "ROUTING")
-
-            SettingsValueNavigationRow(
-                icon = Icons.Rounded.Route,
-                title = "Routing mode",
-                valueText = formatRoutingSummary(settings.routingMode),
-                onClick = { activeDialog = ActiveSettingDialog.ROUTING_MODE },
-                testTag = "row_routing_mode"
-            )
-            NothingDottedDivider()
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.Dns,
-                title = "Private DNS",
-                valueText = formatDnsSummary(settings.dnsMode),
-                onClick = { activeDialog = ActiveSettingDialog.DNS_PROVIDER },
-                testTag = "row_dns"
-            )
-            NothingDottedDivider()
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.Language,
-                title = "IPv6 routing",
-                checked = settings.ipv6Enabled,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings { it.copy(ipv6Enabled = enabled) }
-                },
-                testTag = "switch_ipv6"
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 5. SYSTEM & PRIVACY
-            SettingsSectionHeader(title = "SYSTEM & PRIVACY")
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.Lock,
-                title = "Always-on VPN & kill switch",
-                valueText = "System",
-                onClick = {
-                    try {
-                        context.startActivity(
-                            Intent(Settings.ACTION_VPN_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        )
-                    } catch (_: Exception) {
-                    }
-                },
-                testTag = "row_system_vpn_settings"
-            )
-            NothingDottedDivider()
-
-            SettingsToggleRow(
-                icon = Icons.Outlined.VisibilityOff,
-                title = "Hide from recent apps",
-                checked = settings.hideFromRecentApps,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings { it.copy(hideFromRecentApps = enabled) }
-                },
-                testTag = "switch_hide_recents"
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 6. DIAGNOSTICS & BACKUP
-            SettingsSectionHeader(title = "DIAGNOSTICS & BACKUP")
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.Info,
-                title = "Setup & permissions guide",
-                valueText = null,
-                onClick = onOpenGettingStarted,
-                testTag = "row_getting_started"
-            )
-            NothingDottedDivider()
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.Terminal,
-                title = "Xray diagnostic logs",
-                valueText = if (xrayLogs.isEmpty()) "Empty" else "${xrayLogs.size} lines",
-                onClick = { activeDialog = ActiveSettingDialog.XRAY_LOGS },
-                testTag = "row_xray_logs"
-            )
-            NothingDottedDivider()
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.FileUpload,
-                title = "Export server backup",
-                valueText = "$serverCount",
-                onClick = onExportServers,
-                testTag = "row_export_servers"
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 7. ABOUT
-            SettingsSectionHeader(title = "ABOUT")
-
-            val updateBadge = when (appUpdateState) {
-                AppUpdateState.Idle -> "Check"
-                AppUpdateState.Checking -> "Checking"
-                is AppUpdateState.UpToDate -> "Latest"
-                is AppUpdateState.UpdateAvailable -> appUpdateState.latestVersion
-                is AppUpdateState.Error -> "Retry"
-            }
-
-            SettingsValueNavigationRow(
-                icon = Icons.Outlined.SystemUpdate,
-                title = "Check for updates",
-                valueText = updateBadge,
-                onClick = {
-                    activeDialog = ActiveSettingDialog.CHECK_UPDATE
-                    onCheckForUpdates()
-                },
-                testTag = "row_check_updates"
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            val aboutInteraction = remember { MutableInteractionSource() }
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .nothingPressScale(aboutInteraction, pressedScale = 0.97f)
-                    .clip(RoundedCornerShape(20.dp))
-                    .clickable(
-                        interactionSource = aboutInteraction,
-                        indication = androidx.compose.material3.ripple(),
-                        role = Role.Button
-                    ) { activeDialog = ActiveSettingDialog.ABOUT }
-                    .testTag("card_about_hollow"),
-                shape = RoundedCornerShape(20.dp),
-                color = HollowCreamSurface,
-                border = BorderStroke(1.dp, HollowCreamDivider)
-            ) {
-                val aboutRingInk = HollowInk
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Canvas(modifier = Modifier.matchParentSize()) {
-                        val center = Offset(size.width * 0.88f, size.height * 0.24f)
-                        drawCircle(
-                            color = NothingRed.copy(alpha = 0.22f),
-                            radius = 52.dp.toPx(),
-                            center = center,
-                            style = Stroke(width = 1.dp.toPx())
-                        )
-                        drawCircle(
-                            color = aboutRingInk.copy(alpha = 0.08f),
-                            radius = 84.dp.toPx(),
-                            center = center,
-                            style = Stroke(width = 1.dp.toPx())
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(11.dp))
-                                    .background(NothingSurfaceElevated)
-                                    .border(1.dp, HollowCreamDivider, RoundedCornerShape(11.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                HollowBrandShieldLogo(
-                                    backgroundColor = NothingSurfaceElevated,
-                                    strokeColor = HollowInk,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "HOLLOW VPN",
-                                    fontFamily = DotoDisplayFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.5.sp,
-                                    letterSpacing = 0.6.sp,
-                                    color = HollowInk
-                                )
-                                Text(
-                                    text = "Xray Multi-Protocol Tunnel",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
-                                    color = HollowInkSecondary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = HollowOrange
-                            ) {
-                                Text(
-                                    text = "v${BuildConfig.VERSION_NAME}",
-                                    fontFamily = JetBrainsMonoFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.5.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-                        NothingDottedDivider()
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AboutCardStat(label = "ENGINE", value = "Xray Core")
-                            AboutCardStat(label = "BUILD", value = "#${BuildConfig.VERSION_CODE}")
-                            AboutCardStat(label = "PROTOCOLS", value = "Reality · HY2")
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                                contentDescription = "Open About Hollow",
-                                tint = HollowInkSecondary,
-                                modifier = Modifier.size(18.dp)
+            } else {
+                SettingsDetail(
+                    page = current,
+                    settings = settings,
+                    onUpdateSettings = onUpdateSettings,
+                    onBack = { page = null },
+                    onOpenPerAppPicker = { showPerAppPicker = true },
+                    onOpenSystemVpnSettings = {
+                        try {
+                            context.startActivity(
+                                Intent(Settings.ACTION_VPN_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             )
+                        } catch (_: Exception) {
+                            onShowMessage("Couldn't open Android VPN settings")
                         }
                     }
-                }
+                )
             }
 
-            Spacer(modifier = Modifier.height(22.dp + bottomContentPadding))
+            Spacer(modifier = Modifier.height(24.dp + bottomContentPadding))
             if (bottomContentPadding == 0.dp) {
                 Spacer(modifier = Modifier.navigationBarsPadding())
             }
@@ -614,60 +248,6 @@ fun SettingsScreen(
     }
 
     when (activeDialog) {
-        ActiveSettingDialog.UPDATE_INTERVAL -> {
-            SettingOptionPickerDialog(
-                title = "Update interval",
-                options = UPDATE_INTERVAL_OPTIONS,
-                selectedValue = settings.updateIntervalLabel,
-                onSelect = { chosen ->
-                    onUpdateSettings {
-                        it.copy(updateIntervalLabel = chosen, subUpdateInterval = chosen)
-                    }
-                    activeDialog = null
-                },
-                onDismiss = { activeDialog = null }
-            )
-        }
-
-        ActiveSettingDialog.PROTOCOL -> {
-            SettingOptionPickerDialog(
-                title = "Protocol",
-                options = PROTOCOL_OPTIONS,
-                selectedValue = settings.protocolPreference,
-                onSelect = { chosen ->
-                    onUpdateSettings { it.copy(protocolPreference = chosen) }
-                    activeDialog = null
-                },
-                onDismiss = { activeDialog = null }
-            )
-        }
-
-        ActiveSettingDialog.ROUTING_MODE -> {
-            SettingOptionPickerDialog(
-                title = "Routing mode",
-                options = ROUTING_MODE_OPTIONS,
-                selectedValue = settings.routingMode,
-                onSelect = { chosen ->
-                    onUpdateSettings { it.copy(routingMode = chosen) }
-                    activeDialog = null
-                },
-                onDismiss = { activeDialog = null }
-            )
-        }
-
-        ActiveSettingDialog.DNS_PROVIDER -> {
-            SettingOptionPickerDialog(
-                title = "Private DNS",
-                options = DNS_PROVIDER_OPTIONS,
-                selectedValue = settings.dnsMode,
-                onSelect = { chosen ->
-                    onUpdateSettings { it.copy(dnsMode = chosen) }
-                    activeDialog = null
-                },
-                onDismiss = { activeDialog = null }
-            )
-        }
-
         ActiveSettingDialog.XRAY_LOGS -> {
             XrayDiagnosticLogsDialog(
                 logs = xrayLogs,
@@ -712,8 +292,8 @@ fun SettingsScreen(
             bypassSelectedApps = !settings.perAppProxyEnabled || settings.bypassSelectedApps,
             onSave = { packages, bypassMode ->
                 onShowMessage(
-                    if (packages.isEmpty()) "Per-app routing disabled (all apps use VPN)"
-                    else "Per-app routing saved for ${packages.size} app(s)"
+                    if (packages.isEmpty()) "Split tunneling disabled (all apps use VPN)"
+                    else "Split tunneling saved for ${packages.size} app(s)"
                 )
                 onUpdateSettings {
                     it.copy(
@@ -729,36 +309,424 @@ fun SettingsScreen(
     }
 }
 
+// ─────────────────────────────── Overview list ───────────────────────────────
+
 @Composable
-private fun SettingsSectionHeader(title: String) {
+private fun SettingsOverview(
+    settings: AppSettingsState,
+    serverCount: Int,
+    xrayLogs: List<String>,
+    appUpdateState: AppUpdateState,
+    onOpenPage: (SettingsPage) -> Unit,
+    onOpenAddSubscription: () -> Unit,
+    onOpenGettingStarted: () -> Unit,
+    onOpenLogs: () -> Unit,
+    onExportServers: () -> Unit,
+    onCheckUpdates: () -> Unit,
+    onOpenAbout: () -> Unit
+) {
+    Spacer(modifier = Modifier.height(40.dp))
     Text(
-        text = title,
-        fontFamily = JetBrainsMonoFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 10.5.sp,
-        letterSpacing = 1.3.sp,
-        color = HollowOrange,
-        modifier = Modifier.padding(bottom = 6.dp)
+        text = "Settings",
+        fontFamily = SpaceGroteskFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 32.sp,
+        color = HollowInk,
+        modifier = Modifier.testTag("settings_title")
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+
+    SettingsSectionHeader("Features")
+    SettingsRow(
+        icon = Icons.Outlined.Apps,
+        title = "Split tunneling",
+        subtitle = if (settings.perAppProxyEnabled) {
+            "On · ${settings.selectedAppPackages.size} apps"
+        } else "Off",
+        onClick = { onOpenPage(SettingsPage.SPLIT_TUNNELING) },
+        testTag = "row_per_app_selection"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Lock,
+        title = "Kill switch",
+        subtitle = "Always-on VPN is managed by Android",
+        onClick = { onOpenPage(SettingsPage.KILL_SWITCH) },
+        testTag = "row_system_vpn_settings"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Dns,
+        title = "Private DNS",
+        subtitle = formatDnsSummary(settings.dnsMode),
+        onClick = { onOpenPage(SettingsPage.PRIVATE_DNS) },
+        testTag = "row_dns"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Language,
+        title = "IPv6 routing",
+        subtitle = onOff(settings.ipv6Enabled),
+        onClick = { onOpenPage(SettingsPage.IPV6) },
+        testTag = "row_ipv6"
+    )
+
+    SettingsSectionHeader("Connection")
+    SettingsRow(
+        icon = Icons.Rounded.AccountTree,
+        title = "Protocol",
+        subtitle = formatConsumerProtocol(settings.protocolPreference),
+        onClick = { onOpenPage(SettingsPage.PROTOCOL) },
+        testTag = "row_protocol"
+    )
+    SettingsRow(
+        icon = Icons.Rounded.Route,
+        title = "Routing mode",
+        subtitle = formatRoutingSummary(settings.routingMode),
+        onClick = { onOpenPage(SettingsPage.ROUTING_MODE) },
+        testTag = "row_routing_mode"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Refresh,
+        title = "Auto-switch slow servers",
+        subtitle = onOff(settings.smartSwitchEnabled),
+        onClick = { onOpenPage(SettingsPage.SMART_SWITCH) },
+        testTag = "row_smart_switch"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Lock,
+        title = "Strict TLS verification",
+        subtitle = onOff(settings.strictTlsEnabled),
+        onClick = { onOpenPage(SettingsPage.STRICT_TLS) },
+        testTag = "row_strict_tls"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.PlayArrow,
+        title = "Start on app open",
+        subtitle = onOff(settings.startOnAppOpen),
+        onClick = { onOpenPage(SettingsPage.START_ON_OPEN) },
+        testTag = "row_start_on_open"
+    )
+
+    SettingsSectionHeader("Servers")
+    SettingsRow(
+        icon = Icons.Outlined.Link,
+        title = "Servers & subscriptions",
+        subtitle = if (serverCount > 0) "$serverCount saved" else "Add servers or a subscription",
+        onClick = onOpenAddSubscription,
+        testTag = "row_custom_subscription"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.CloudQueue,
+        title = "Auto-update subscriptions",
+        subtitle = if (settings.autoConfigure) "On · every ${settings.updateIntervalLabel}" else "Off",
+        onClick = { onOpenPage(SettingsPage.AUTO_UPDATE) },
+        testTag = "row_update_interval"
+    )
+
+    SettingsSectionHeader("General")
+    SettingsRow(
+        icon = Icons.Outlined.SettingsBrightness,
+        title = "Appearance",
+        subtitle = settings.themeMode,
+        onClick = { onOpenPage(SettingsPage.APPEARANCE) },
+        testTag = "row_appearance"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.VisibilityOff,
+        title = "Hide from recent apps",
+        subtitle = onOff(settings.hideFromRecentApps),
+        onClick = { onOpenPage(SettingsPage.HIDE_RECENTS) },
+        testTag = "row_hide_recents"
+    )
+
+    SettingsSectionHeader("Support")
+    SettingsRow(
+        icon = Icons.Outlined.Info,
+        title = "Setup & permissions guide",
+        subtitle = null,
+        onClick = onOpenGettingStarted,
+        testTag = "row_getting_started"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Terminal,
+        title = "Diagnostic logs",
+        subtitle = if (xrayLogs.isEmpty()) "Empty" else "${xrayLogs.size} lines",
+        onClick = onOpenLogs,
+        testTag = "row_xray_logs"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.FileUpload,
+        title = "Export server backup",
+        subtitle = "$serverCount servers to clipboard",
+        onClick = onExportServers,
+        testTag = "row_export_servers"
+    )
+
+    SettingsSectionHeader("About")
+    val updateSubtitle = when (appUpdateState) {
+        AppUpdateState.Idle -> "Tap to check"
+        AppUpdateState.Checking -> "Checking…"
+        is AppUpdateState.UpToDate -> "You're on the latest version"
+        is AppUpdateState.UpdateAvailable -> "Update available · ${appUpdateState.latestVersion}"
+        is AppUpdateState.Error -> "Couldn't check · tap to retry"
+    }
+    SettingsRow(
+        icon = Icons.Outlined.SystemUpdate,
+        title = "Check for updates",
+        subtitle = updateSubtitle,
+        onClick = onCheckUpdates,
+        testTag = "row_check_updates"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Info,
+        title = "About Hollow VPN",
+        subtitle = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+        onClick = onOpenAbout,
+        testTag = "card_about_hollow"
     )
 }
 
 @Composable
-internal fun SettingsGroupCard(
-    sectionTitle: String,
-    content: @Composable ColumnScope.() -> Unit
+private fun SettingsSectionHeader(title: String) {
+    Text(
+        text = title,
+        fontFamily = SpaceGroteskFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 16.sp,
+        color = HollowOrange,
+        modifier = Modifier.padding(top = 26.dp, bottom = 4.dp)
+    )
+}
+
+@Composable
+private fun SettingsRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String?,
+    onClick: () -> Unit,
+    testTag: String
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        SettingsSectionHeader(title = sectionTitle.uppercase())
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            content = content
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .minimumInteractiveComponentSize()
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = 14.dp)
+            .testTag(testTag),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = HollowInk,
+            modifier = Modifier.size(24.dp)
         )
+        Spacer(modifier = Modifier.width(20.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                color = HollowInk
+            )
+            if (!subtitle.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontFamily = SpaceGroteskFamily,
+                    fontSize = 14.sp,
+                    color = HollowInkSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────── Detail pages ───────────────────────────────
+
+@Composable
+private fun SettingsDetail(
+    page: SettingsPage,
+    settings: AppSettingsState,
+    onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
+    onBack: () -> Unit,
+    onOpenPerAppPicker: () -> Unit,
+    onOpenSystemVpnSettings: () -> Unit
+) {
+    val title = when (page) {
+        SettingsPage.SPLIT_TUNNELING -> "Split tunneling"
+        SettingsPage.KILL_SWITCH -> "Kill switch"
+        SettingsPage.PRIVATE_DNS -> "Private DNS"
+        SettingsPage.IPV6 -> "IPv6 routing"
+        SettingsPage.PROTOCOL -> "Protocol"
+        SettingsPage.ROUTING_MODE -> "Routing mode"
+        SettingsPage.SMART_SWITCH -> "Auto-switch slow servers"
+        SettingsPage.STRICT_TLS -> "Strict TLS verification"
+        SettingsPage.START_ON_OPEN -> "Start on app open"
+        SettingsPage.AUTO_UPDATE -> "Auto-update subscriptions"
+        SettingsPage.APPEARANCE -> "Appearance"
+        SettingsPage.HIDE_RECENTS -> "Hide from recent apps"
+    }
+
+    Spacer(modifier = Modifier.height(12.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        HollowTopSquareButton(
+            containerColor = NothingTopBtnFill,
+            contentColor = NothingOnCanvas,
+            borderColor = NothingTopBtnBorder,
+            contentDescription = "Back",
+            onClick = onBack,
+            modifier = Modifier.testTag("btn_navigate_back")
+        ) { tint ->
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(21.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = title,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            color = HollowInk,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+
+    when (page) {
+        SettingsPage.SPLIT_TUNNELING -> {
+            DetailDescription("Choose which apps skip the VPN, or which apps are the only ones to use it.")
+            DetailToggleRow(
+                title = "Split tunneling",
+                checked = settings.perAppProxyEnabled,
+                onCheckedChange = { enabled ->
+                    onUpdateSettings {
+                        it.copy(
+                            perAppProxyEnabled = enabled,
+                            bypassSelectedApps = if (enabled && !it.perAppProxyEnabled) true else it.bypassSelectedApps
+                        )
+                    }
+                },
+                testTag = "switch_per_app_proxy"
+            )
+            if (settings.perAppProxyEnabled) {
+                PerAppInlineModeRow(
+                    bypassSelectedApps = settings.bypassSelectedApps,
+                    onSelectBypass = { bypass -> onUpdateSettings { it.copy(bypassSelectedApps = bypass) } }
+                )
+            }
+            SettingsRow(
+                icon = Icons.Outlined.Apps,
+                title = if (!settings.perAppProxyEnabled || settings.bypassSelectedApps) "Apps skipping VPN" else "Apps using VPN",
+                subtitle = if (settings.selectedAppPackages.isEmpty()) "None selected"
+                else "${settings.selectedAppPackages.size} apps",
+                onClick = onOpenPerAppPicker,
+                testTag = "row_per_app_selection_picker"
+            )
+        }
+
+        SettingsPage.KILL_SWITCH -> {
+            DetailDescription(
+                "Android's Always-on VPN with “Block connections without VPN” stops all traffic if the " +
+                    "tunnel drops, so your real IP is never exposed. It is a system setting, so you turn it on in Android."
+            )
+            SettingsRow(
+                icon = Icons.Outlined.Lock,
+                title = "Open Android VPN settings",
+                subtitle = "Enable Always-on VPN for Hollow",
+                onClick = onOpenSystemVpnSettings,
+                testTag = "row_open_system_vpn"
+            )
+        }
+
+        SettingsPage.PRIVATE_DNS -> {
+            DetailDescription("The DNS provider used to look up websites while connected.")
+            DetailRadioList(DNS_PROVIDER_OPTIONS, settings.dnsMode) { chosen ->
+                onUpdateSettings { it.copy(dnsMode = chosen) }
+            }
+        }
+
+        SettingsPage.IPV6 -> {
+            DetailDescription("Send IPv6 traffic through the VPN as well. Turn off if some sites fail to load.")
+            DetailToggleRow("IPv6 routing", settings.ipv6Enabled, { v -> onUpdateSettings { it.copy(ipv6Enabled = v) } }, "switch_ipv6")
+        }
+
+        SettingsPage.PROTOCOL -> {
+            DetailDescription("The protocol used to build the tunnel. Auto picks the best one for your network.")
+            DetailRadioList(PROTOCOL_OPTIONS, settings.protocolPreference) { chosen ->
+                onUpdateSettings { it.copy(protocolPreference = chosen) }
+            }
+        }
+
+        SettingsPage.ROUTING_MODE -> {
+            DetailDescription("Decide which traffic goes through the VPN.")
+            DetailRadioList(ROUTING_MODE_OPTIONS, formatRoutingSummary(settings.routingMode)) { chosen ->
+                onUpdateSettings { it.copy(routingMode = chosen) }
+            }
+        }
+
+        SettingsPage.SMART_SWITCH -> {
+            DetailDescription("Automatically move to a faster server when the current one becomes slow or unresponsive.")
+            DetailToggleRow("Auto-switch slow servers", settings.smartSwitchEnabled, { v -> onUpdateSettings { it.copy(smartSwitchEnabled = v) } }, "switch_smart_switch")
+        }
+
+        SettingsPage.STRICT_TLS -> {
+            DetailDescription("Reject servers whose TLS certificate can't be verified. Safer, but some free servers may stop working.")
+            DetailToggleRow("Strict TLS verification", settings.strictTlsEnabled, { v -> onUpdateSettings { it.copy(strictTlsEnabled = v) } }, "switch_strict_tls")
+        }
+
+        SettingsPage.START_ON_OPEN -> {
+            DetailDescription("Connect automatically as soon as you open the app.")
+            DetailToggleRow("Start on app open", settings.startOnAppOpen, { v -> onUpdateSettings { it.copy(startOnAppOpen = v) } }, "switch_start_on_open")
+        }
+
+        SettingsPage.AUTO_UPDATE -> {
+            DetailDescription("Keep your server list fresh by refreshing subscriptions in the background.")
+            DetailToggleRow("Auto-update subscriptions", settings.autoConfigure, { v -> onUpdateSettings { it.copy(autoConfigure = v) } }, "switch_auto_configure")
+            if (settings.autoConfigure) {
+                Spacer(modifier = Modifier.height(8.dp))
+                SettingsSectionHeader("Update interval")
+                DetailRadioList(UPDATE_INTERVAL_OPTIONS, settings.updateIntervalLabel) { chosen ->
+                    onUpdateSettings { it.copy(updateIntervalLabel = chosen, subUpdateInterval = chosen) }
+                }
+            }
+        }
+
+        SettingsPage.APPEARANCE -> {
+            DetailDescription("Choose how Hollow looks.")
+            ThemeModeInlineSelector(
+                selectedMode = settings.themeMode,
+                onSelectMode = { mode -> onUpdateSettings { it.copy(themeMode = mode) } }
+            )
+        }
+
+        SettingsPage.HIDE_RECENTS -> {
+            DetailDescription("Hide the app preview in Android's recent apps screen.")
+            DetailToggleRow("Hide from recent apps", settings.hideFromRecentApps, { v -> onUpdateSettings { it.copy(hideFromRecentApps = v) } }, "switch_hide_recents")
+        }
     }
 }
 
 @Composable
-private fun SettingsToggleRow(
-    icon: ImageVector,
+private fun DetailDescription(text: String) {
+    Text(
+        text = text,
+        fontFamily = SpaceGroteskFamily,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        color = HollowInkSecondary,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun DetailToggleRow(
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -769,101 +737,71 @@ private fun SettingsToggleRow(
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
             .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 11.dp)
+            .padding(vertical = 14.dp)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = HollowInkSecondary,
-            modifier = Modifier.size(19.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.5.sp
-            ),
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
             color = HollowInk,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.width(10.dp))
-        HollowSwitch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
+        Spacer(modifier = Modifier.width(12.dp))
+        HollowSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
 @Composable
-private fun SettingsValueNavigationRow(
-    icon: ImageVector,
-    title: String,
-    valueText: String?,
-    onClick: () -> Unit,
-    testTag: String
+private fun DetailRadioList(
+    options: List<SettingChoiceOption>,
+    selectedValue: String,
+    onSelect: (String) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .minimumInteractiveComponentSize()
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(vertical = 11.dp)
-            .testTag(testTag),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = HollowInkSecondary,
-            modifier = Modifier.size(19.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.5.sp
-            ),
-            color = HollowInk,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        if (!valueText.isNullOrBlank()) {
-            Spacer(modifier = Modifier.width(10.dp))
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = HollowCreamSurface,
-                border = BorderStroke(1.dp, HollowCreamDivider)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        options.forEach { option ->
+            val selected = option.value.equals(selectedValue, ignoreCase = true)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .minimumInteractiveComponentSize()
+                    .clickable(role = Role.RadioButton) { onSelect(option.value) }
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = valueText,
-                    fontFamily = JetBrainsMonoFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.5.sp,
-                    color = HollowInk,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                RadioButton(
+                    selected = selected,
+                    onClick = null,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = HollowOrange,
+                        unselectedColor = HollowInkSecondary
+                    )
                 )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = option.label,
+                        fontFamily = SpaceGroteskFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        color = HollowInk
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = option.subtitle,
+                        fontFamily = SpaceGroteskFamily,
+                        fontSize = 13.sp,
+                        color = HollowInkSecondary
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(6.dp))
-        } else {
-            Spacer(modifier = Modifier.width(6.dp))
         }
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-            contentDescription = null,
-            tint = HollowInkSecondary,
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
+
+// ─────────────────────────────── Segmented selectors ───────────────────────────────
 
 @Composable
 private fun PerAppInlineModeRow(
@@ -1097,30 +1035,5 @@ private fun InlineModeSegment(
                 color = contentTint
             )
         }
-    }
-}
-
-@Composable
-private fun AboutCardStat(
-    label: String,
-    value: String
-) {
-    Column {
-        Text(
-            text = label,
-            fontFamily = JetBrainsMonoFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 9.sp,
-            letterSpacing = 0.9.sp,
-            color = HollowInkSecondary
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = value,
-            fontFamily = JetBrainsMonoFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.5.sp,
-            color = HollowInk
-        )
     }
 }
