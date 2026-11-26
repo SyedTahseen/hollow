@@ -32,13 +32,9 @@ android {
     targetSdk = 36
     // Release artifacts are split like v2rayNG: 32-bit ARM, 64-bit ARM, and universal ARM.
     // Debug builds keep all ABIs (including x86_64) and output standard app-debug.apk for preview.
-    if (isReleaseOrBundleTask) {
-      ndk {
-        abiFilters += listOf("armeabi-v7a", "arm64-v8a")
-      }
-    } else {
-      // Debug/CI builds: ship only 64-bit ARM (all modern phones). The Xray/Go core is ~15-20 MB per
-      // ABI, so bundling x86/x86_64/armeabi-v7a is what made the debug APK ~75 MB.
+    // Release: ABI splits (see `splits` below) control the ABIs, so ndk abiFilters must NOT be set
+    // (AGP errors on the conflict). Debug/CI: ship only 64-bit ARM to keep the APK small.
+    if (!isReleaseOrBundleTask) {
       ndk {
         abiFilters += listOf("arm64-v8a")
       }
