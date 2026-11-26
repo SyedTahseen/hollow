@@ -26,7 +26,7 @@ class BootReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                if (settings.tunMode && VpnService.prepare(app) != null) {
+                if (settings.tunMode && !settings.rootMode && VpnService.prepare(app) != null) {
                     XrayVpnService.appendLog("Boot auto-connect skipped: VPN permission not granted yet (connect once from the app)")
                     return@launch
                 }

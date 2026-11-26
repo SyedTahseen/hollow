@@ -58,7 +58,9 @@ class HollowTileService : TileService() {
         }
 
         val snapshot = VpnPreferencesStore(applicationContext).loadActiveTunnelSnapshot()
-        val needsConsent = (snapshot?.tunMode ?: true) && VpnService.prepare(this) != null
+        val needsConsent = (snapshot?.tunMode ?: true) &&
+            !VpnPreferencesStore(applicationContext).loadSettings().rootMode &&
+            VpnService.prepare(this) != null
         if (snapshot == null || needsConsent) {
             val launchIntent = Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

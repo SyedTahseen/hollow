@@ -247,6 +247,31 @@ class V2RayParserTest {
     }
 
     @Test
+    fun `root mode config names the TUN, marks and binds proxy and direct outbounds but not block`() {
+        val uri = "vless://11111111-2222-3333-4444-555555555555@de.example.com:443?security=tls&type=tcp#Germany"
+        val baseJson = parser.parseImportPayload(uri).first().rawConfigJson
+        val runtime = parser.applyRuntimeSettingsToXrayJson(baseJson, AppSettingsState(mtu = 1420))
+        val root = JSONObject(com.hollow.vpn.vpn.RootXrayCore.buildConfig(runtime, "wlan0", 1420))
+
+        val inbounds = root.getJSONArray("inbounds")
+        val tun = (0 until inbounds.length()).map { inbounds.getJSONObject(it) }.first { it.getString("protocol") == "tun" }
+        assertEquals("hollow0", tun.getJSONObject("settings").getString("name"))
+        assertEquals(1420, tun.getJSONObject("settings").getInt("MTU"))
+
+        val outbounds = root.getJSONArray("outbounds")
+        for (i in 0 until outbounds.length()) {
+            val ob = outbounds.getJSONObject(i)
+            val sock = ob.optJSONObject("streamSettings")?.optJSONObject("sockopt")
+            if (ob.getString("protocol") == "blackhole") {
+                assertTrue(sock == null)
+            } else {
+                assertEquals("wlan0", sock!!.getString("interface"))
+                assertEquals(com.hollow.vpn.vpn.RootXrayCore.MARK, sock.getInt("mark"))
+            }
+        }
+    }
+
+    @Test
     fun `NetShield still wins over custom DNS`() {
         val uri = "vless://11111111-2222-3333-4444-555555555555@de.example.com:443?security=tls&type=tcp#Germany"
         val baseJson = parser.parseImportPayload(uri).first().rawConfigJson

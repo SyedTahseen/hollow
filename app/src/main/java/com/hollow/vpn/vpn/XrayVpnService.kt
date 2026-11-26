@@ -97,6 +97,9 @@ class XrayVpnService : VpnService() {
     @Volatile
     private var networkMonitor: NetworkMonitor? = null
 
+    /** Root mode: the standalone Xray core running as root (null in normal VPN-service mode). */
+    @Volatile private var rootCore: RootXrayCore? = null
+
     @Volatile
     private var activeHost: String = ""
 
@@ -196,7 +199,8 @@ class XrayVpnService : VpnService() {
             ?: fallbackSnapshot?.splitIncludeIps
             ?: emptyList()
 
-        if (tunMode && prepare(this) != null) {
+        val rootModeOn = VpnPreferencesStore(applicationContext).loadSettings().rootMode
+        if (tunMode && !rootModeOn && prepare(this) != null) {
             fail("VPN permission not granted by Android OS")
             stopSelf()
             return START_NOT_STICKY
@@ -280,6 +284,35 @@ class XrayVpnService : VpnService() {
         if (commandGeneration.get() != gen) return
         teardownActiveResources()
         if (commandGeneration.get() != gen) return
+
+        val rootSettings = VpnPreferencesStore(applicationContext).loadSettings()
+        if (rootSettings.rootMode && tunMode) {
+            startRootTunnel(
+                gen = gen,
+                mtu = rootSettings.mtu,
+                snapshot = ActiveTunnelSnapshot(
+                    country = country,
+                    host = host,
+                    port = port,
+                    protocol = protocol,
+                    xrayJson = xrayJson,
+                    tunMode = tunMode,
+                    enableIpv6 = enableIpv6,
+                    dnsMode = dnsMode,
+                    routingMode = routingMode,
+                    perAppProxyEnabled = perAppProxyEnabled,
+                    bypassSelectedApps = bypassSelectedApps,
+                    selectedAppPackages = selectedAppPackages,
+                    smartSwitchEnabled = smartSwitchEnabled,
+                    serverSpeedMbps = serverSpeedMbps,
+                    netShieldEnabled = netShieldEnabled,
+                    blockAdultContent = blockAdultContent,
+                    splitExcludeIps = splitExcludeIps,
+                    splitIncludeIps = splitIncludeIps
+                )
+            )
+            return
+        }
 
         try {
             setConnectStage(2)
@@ -421,6 +454,121 @@ class XrayVpnService : VpnService() {
                 stopSelf()
             }
         }
+    }
+
+    /**
+     * Root mode: no Android VPN service. A standalone Xray core runs as root with its own TUN device
+     * (see [RootXrayCore]); this service stays up as the foreground notification and the owner of the
+     * session. Per-app split tunneling is not available here; IP split rules still apply through Xray.
+     */
+    private fun startRootTunnel(gen: Int, mtu: Int, snapshot: ActiveTunnelSnapshot) {
+        teardownActiveResources()
+        if (commandGeneration.get() != gen) return
+        try {
+            setConnectStage(2)
+            if (!RootXrayCore.isAvailable(this)) {
+                error("Root mode needs the Xray binary (libxray.so), which is not bundled in this build")
+            }
+            if (!RootShell.granted(20_000)) {
+                error("Root access was not granted. Allow root for Hollow VPN or turn Root mode off")
+            }
+            val iface = RootXrayCore.activeInterface(this) ?: error("No active network to tunnel through")
+            val core = RootXrayCore(applicationContext)
+            rootCore = core
+            appendLog("Root mode: starting Xray as root on $iface (MTU=$mtu)")
+            core.start(RootXrayCore.buildConfig(snapshot.xrayJson, iface, mtu), iface, mtu, snapshot.enableIpv6)
+            if (commandGeneration.get() != gen) {
+                teardownActiveResources()
+                return
+            }
+            setConnectStage(3)
+            appendLog("Root mode: TUN ${RootXrayCore.IFACE} is up")
+
+            VpnPreferencesStore(applicationContext).saveActiveTunnelSnapshot(snapshot)
+            activeHost = snapshot.host
+            activePort = snapshot.port
+            activeIncludeDirectStats = false
+            smartSwitch = null
+            _lastError.value = null
+            _trafficSnapshot.value = TunnelTrafficSnapshot()
+            setConnectStage(0)
+            _isServiceRunning.value = true
+            beginUsageSession(snapshot.country)
+            HollowTileService.requestTileUpdate(applicationContext)
+            startRootStatsPolling(gen, core)
+            startRootNetworkMonitor(gen, core, snapshot, mtu, iface)
+            updateForegroundNotification(snapshot.country, "Root mode · ${snapshot.host}")
+        } catch (e: Throwable) {
+            if (commandGeneration.get() == gen) {
+                fail("Root mode failed: ${e.message ?: e.javaClass.simpleName}")
+                teardownActiveResources()
+                try {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } catch (_: Exception) {
+                }
+                stopSelf()
+            }
+        }
+    }
+
+    private fun startRootStatsPolling(gen: Int, core: RootXrayCore) {
+        statsTask?.cancel(false)
+        var lastUp = -1L
+        var lastDown = -1L
+        statsTask = statsScheduler.scheduleAtFixedRate(
+            {
+                if (commandGeneration.get() != gen || !_isServiceRunning.value) return@scheduleAtFixedRate
+                val (up, down) = core.totals()
+                if (lastUp >= 0L) {
+                    val upDelta = (up - lastUp).coerceAtLeast(0L)
+                    val downDelta = (down - lastDown).coerceAtLeast(0L)
+                    recordUsage(upDelta, downDelta)
+                    val prev = _trafficSnapshot.value
+                    _trafficSnapshot.value = TunnelTrafficSnapshot(
+                        uploadBytes = prev.uploadBytes + upDelta,
+                        downloadBytes = prev.downloadBytes + downDelta,
+                        uploadBytesPerSec = upDelta,
+                        downloadBytesPerSec = downDelta,
+                        elapsedSeconds = prev.elapsedSeconds + 1L
+                    )
+                }
+                lastUp = up
+                lastDown = down
+            },
+            1L,
+            1L,
+            TimeUnit.SECONDS
+        )
+    }
+
+    /** On a network switch (Wi-Fi <-> mobile data) the core must be rebound to the new interface. */
+    private fun startRootNetworkMonitor(
+        gen: Int,
+        core: RootXrayCore,
+        snapshot: ActiveTunnelSnapshot,
+        mtu: Int,
+        startIface: String
+    ) {
+        networkMonitor?.stop()
+        val cm = getSystemService(ConnectivityManager::class.java) ?: return
+        var currentIface = startIface
+        val monitor = NetworkMonitor(cm) { reason ->
+            if (commandGeneration.get() != gen || !_isServiceRunning.value) return@NetworkMonitor
+            val newIface = RootXrayCore.activeInterface(applicationContext) ?: return@NetworkMonitor
+            if (newIface == currentIface) return@NetworkMonitor
+            appendLog("Root mode: network changed ($reason) $currentIface -> $newIface, rebinding")
+            worker.execute {
+                if (commandGeneration.get() != gen) return@execute
+                try {
+                    core.start(RootXrayCore.buildConfig(snapshot.xrayJson, newIface, mtu), newIface, mtu, snapshot.enableIpv6)
+                    currentIface = newIface
+                } catch (e: Throwable) {
+                    fail("Root mode lost the connection: ${e.message ?: e.javaClass.simpleName}")
+                }
+            }
+        }
+        networkMonitor = monitor
+        monitor.start()
     }
 
     private fun startNetworkMonitor(gen: Int) {
@@ -618,6 +766,12 @@ class XrayVpnService : VpnService() {
         coreController = null
         if (coreToStop != null) {
             stopCoreWithGrace(coreToStop)
+        }
+        val rootToStop = rootCore
+        rootCore = null
+        if (rootToStop != null) {
+            val t = Thread({ runCatching { rootToStop.stop() } }, "xray-root-stop").apply { isDaemon = true; start() }
+            runCatching { t.join(STOP_GRACE_MILLIS * 2) }
         }
         val fdToClose = vpnInterface
         vpnInterface = null

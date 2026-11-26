@@ -189,6 +189,7 @@ private fun advancedSummary(settings: AppSettingsState): String {
         if (!settings.blockQuic) add("QUIC allowed")
         if (settings.mtu != AppSettingsState.DEFAULT_MTU) add("MTU ${settings.mtu}")
         if (settings.autoConnectBoot) add("Boot connect")
+        if (settings.rootMode) add("Root")
     }
     return if (parts.isEmpty()) "DNS, IPv6, QUIC, MTU and more" else parts.joinToString(" · ")
 }
@@ -272,6 +273,7 @@ fun SettingsScreen(
                         }
                     },
                     onOpenPage = { page = it },
+                    onShowMessage = onShowMessage,
                     onOpenSplitIps = { page = SettingsPage.SPLIT_IPS },
                     onOpenPerAppPicker = { showPerAppPicker = true },
                     onOpenSystemVpnSettings = {
@@ -631,6 +633,7 @@ private fun SettingsDetail(
     onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
     onBack: () -> Unit,
     onOpenPage: (SettingsPage) -> Unit,
+    onShowMessage: (String) -> Unit,
     onOpenSplitIps: () -> Unit,
     onOpenPerAppPicker: () -> Unit,
     onOpenSystemVpnSettings: () -> Unit
@@ -765,7 +768,8 @@ private fun SettingsDetail(
             settings = settings,
             onUpdateSettings = onUpdateSettings,
             onOpenCustomDns = { onOpenPage(SettingsPage.CUSTOM_DNS) },
-            onOpenMtu = { onOpenPage(SettingsPage.MTU) }
+            onOpenMtu = { onOpenPage(SettingsPage.MTU) },
+            onShowMessage = onShowMessage
         )
 
         SettingsPage.CUSTOM_DNS -> CustomDnsPage(settings, onUpdateSettings)

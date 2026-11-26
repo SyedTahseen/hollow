@@ -28,10 +28,12 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +57,11 @@ import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 import com.hollow.vpn.vpn.IpRoutes
+import com.hollow.vpn.vpn.RootShell
+import com.hollow.vpn.vpn.RootXrayCore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /*
  * Settings > Connection pages ported from Outrun: Latency test, Advanced settings (LAN connections,
@@ -97,8 +104,11 @@ internal fun AdvancedSettingsPage(
     settings: AppSettingsState,
     onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
     onOpenCustomDns: () -> Unit,
-    onOpenMtu: () -> Unit
+    onOpenMtu: () -> Unit,
+    onShowMessage: (String) -> Unit
 ) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
     val directOnly = settings.routingMode.contains("Direct", ignoreCase = true)
 
     AdvancedValueItem(
@@ -146,6 +156,29 @@ internal fun AdvancedSettingsPage(
             "On some phones you must also allow auto-start and unrestricted battery use for this app.",
         testTag = "switch_auto_connect_boot"
     ) { on -> onUpdateSettings { it.copy(autoConnectBoot = on) } }
+    AdvancedToggleItem(
+        title = "Root mode",
+        checked = settings.rootMode,
+        description = "Needs a rooted device. Sends all traffic through the VPN using root instead of Android's " +
+            "VPN service, so there is no VPN permission prompt or key icon. Per-app split tunneling is not " +
+            "available in this mode.",
+        testTag = "switch_root_mode"
+    ) { on ->
+        if (!on) {
+            onUpdateSettings { it.copy(rootMode = false) }
+        } else {
+            scope.launch {
+                if (!RootXrayCore.isAvailable(ctx)) {
+                    onShowMessage("Root mode needs the Xray binary (libxray.so), which is not bundled in this build")
+                } else if (withContext(Dispatchers.IO) { RootShell.granted() }) {
+                    onUpdateSettings { it.copy(rootMode = true) }
+                    onShowMessage("Root access granted")
+                } else {
+                    onShowMessage("Root access wasn't granted")
+                }
+            }
+        }
+    }
     FeatureCaption("Changes apply the next time you connect.")
 }
 

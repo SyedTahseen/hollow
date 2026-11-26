@@ -168,7 +168,9 @@ data class AppSettingsState(
     val customDnsEnabled: Boolean = false,
     val customDnsList: List<String> = emptyList(),
     /** Advanced: connect the selected server when the phone starts. */
-    val autoConnectBoot: Boolean = false
+    val autoConnectBoot: Boolean = false,
+    /** Advanced: send all traffic through the VPN using root instead of Android's VPN service. */
+    val rootMode: Boolean = false
 ) {
     companion object {
         const val DEFAULT_TEST_URL_ID = "google"
@@ -273,7 +275,8 @@ class VpnPreferencesStore(context: Context) {
             mtu = prefs.getInt("mtu", AppSettingsState.DEFAULT_MTU).coerceIn(1280, 1500),
             customDnsEnabled = prefs.getBoolean("custom_dns_enabled", false),
             customDnsList = loadLines("custom_dns_list"),
-            autoConnectBoot = prefs.getBoolean("auto_connect_boot", false)
+            autoConnectBoot = prefs.getBoolean("auto_connect_boot", false),
+            rootMode = prefs.getBoolean("root_mode", false)
         )
     }
 
@@ -315,6 +318,7 @@ class VpnPreferencesStore(context: Context) {
             .putBoolean("custom_dns_enabled", state.customDnsEnabled)
             .putString("custom_dns_list", state.customDnsList.joinToString("\n"))
             .putBoolean("auto_connect_boot", state.autoConnectBoot)
+            .putBoolean("root_mode", state.rootMode)
             .apply()
     }
 

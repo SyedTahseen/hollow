@@ -237,7 +237,7 @@ fun HollowVpnApp(
 
     val startOrToggleVpnConsent = {
         val prepareIntent = try {
-            if (settings.tunMode && !telemetry.isConnected && !telemetry.isConnecting) {
+            if (settings.tunMode && !settings.rootMode && !telemetry.isConnected && !telemetry.isConnecting) {
                 VpnService.prepare(context)
             } else {
                 null
@@ -255,7 +255,7 @@ fun HollowVpnApp(
     val connectToServerWithPermission: (ServerEntity) -> Unit = { server ->
         runWithNotificationPermission {
             val prepareIntent = try {
-                if (settings.tunMode) VpnService.prepare(context) else null
+                if (settings.tunMode && !settings.rootMode) VpnService.prepare(context) else null
             } catch (_: Exception) {
                 null
             }

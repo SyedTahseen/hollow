@@ -436,7 +436,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val canAutoConnect = _settings.value.startOnAppOpen &&
-                (!_settings.value.tunMode || android.net.VpnService.prepare(getApplication()) == null)
+                (!_settings.value.tunMode || _settings.value.rootMode || android.net.VpnService.prepare(getApplication()) == null)
 
             _screenStack.value = listOf(VpnScreen.CONNECTED_HOME)
             _currentScreen.value = VpnScreen.CONNECTED_HOME
@@ -472,7 +472,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 val servers = dao.getAllServersOnce()
                 val active = servers.firstOrNull { it.isSelected } ?: servers.firstOrNull()
                 if (active != null &&
-                    (!_settings.value.tunMode || android.net.VpnService.prepare(getApplication()) == null)
+                    (!_settings.value.tunMode || _settings.value.rootMode || android.net.VpnService.prepare(getApplication()) == null)
                 ) {
                     connectToServer(active)
                 }
@@ -757,7 +757,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun connectToServer(server: ServerEntity) {
         // Never claim Connected if Android OS VPN consent hasn't been granted yet (when TUN Mode is on)
-        if (_settings.value.tunMode && android.net.VpnService.prepare(getApplication()) != null) {
+        if (_settings.value.tunMode && !_settings.value.rootMode && android.net.VpnService.prepare(getApplication()) != null) {
             _telemetry.update { it.copy(isConnecting = false, isConnected = false) }
             showMessage("Tap Connect and accept the Android VPN prompt to start the tunnel")
             return
