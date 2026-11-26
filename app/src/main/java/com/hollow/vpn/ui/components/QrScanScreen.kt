@@ -311,6 +311,8 @@ private fun ScanCameraArea(
     val lifecycleOwner = LocalLifecycleOwner.current
     val analyzerExecutor = remember { Executors.newSingleThreadExecutor() }
     val alreadyDecoded = remember { AtomicBoolean(false) }
+    // Theme colors are composable getters, so read them here rather than inside the draw lambda.
+    val scrimColor = NothingCanvas.copy(alpha = 0.6f)
 
     DisposableEffect(Unit) {
         onDispose {
@@ -386,7 +388,7 @@ private fun ScanCameraArea(
                 addRect(Rect(0f, 0f, size.width, size.height))
                 addRoundRect(RoundRect(Rect(l, t, r, b), CornerRadius(radius)))
             }
-            drawPath(scrim, NothingCanvas.copy(alpha = 0.6f))
+            drawPath(scrim, scrimColor)
 
             val corners = Path().apply {
                 moveTo(l, t + len); lineTo(l, t + radius)
