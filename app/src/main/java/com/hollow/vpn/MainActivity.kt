@@ -24,13 +24,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -98,7 +93,6 @@ import com.hollow.vpn.ui.screens.GettingStartedScreen
 import com.hollow.vpn.ui.screens.RawXrayJsonEditorDialog
 import com.hollow.vpn.ui.screens.SettingsScreen
 import com.hollow.vpn.ui.screens.SplashFetchingScreen
-import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowAmber
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
@@ -119,7 +113,6 @@ import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingMatrixGreen
 import com.hollow.vpn.ui.theme.NothingMotion
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
-import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 import com.hollow.vpn.ui.theme.detectOledDisplay
 import com.hollow.vpn.vpn.XrayVpnService
 
@@ -561,7 +554,7 @@ fun HollowVpnApp(
                                     },
                                     onSelectServer = { server -> connectToServerWithPermission(server) },
                                     onRefresh = {
-                                        vpnViewModel.runFletcherAutoFetchAndPingSweep(
+                                        vpnViewModel.runFetcherAutoFetchAndPingSweep(
                                             returnScreen = VpnScreen.SERVER_LIST
                                         )
                                     },

@@ -1,6 +1,13 @@
 package com.hollow.vpn.vpn
 
 import android.content.Context
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
+import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.random.Random
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -11,12 +18,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.BufferedReader
-import java.io.File
-import java.io.InputStreamReader
-import java.security.MessageDigest
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.random.Random
 
 /**
  * Censorship-resistant subscription fetcher & local atomic disk cache:
@@ -32,17 +33,6 @@ class ResilientFetcher(
         val body: String,
         val routeLabel: String,
         val fromCache: Boolean
-    )
-
-    suspend fun fetchSubscriptionText(
-        url: String,
-        context: Context?,
-        mirrorsEnabled: Boolean
-    ): Result<FetchOutcome> = fetchSubscriptionStreaming(
-        url = url,
-        context = context,
-        mirrorsEnabled = mirrorsEnabled,
-        onBatchText = {}
     )
 
     /**
@@ -216,6 +206,8 @@ class ResilientFetcher(
 
                 fullText
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             null
         }

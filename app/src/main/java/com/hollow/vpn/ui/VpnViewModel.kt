@@ -11,7 +11,6 @@ import com.hollow.vpn.data.FetchingProgressState
 import com.hollow.vpn.data.FetchingStage
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.ServerCategory
-import com.hollow.vpn.data.ServerFilter
 import com.hollow.vpn.data.categoryLabel
 import com.hollow.vpn.data.SubscriptionEntity
 import com.hollow.vpn.data.VpnDatabase
@@ -19,7 +18,7 @@ import com.hollow.vpn.data.VpnPreferencesStore
 import com.hollow.vpn.data.favoriteKey
 import com.hollow.vpn.vpn.HollowJobScheduler
 import com.hollow.vpn.vpn.SecurityPolicy
-import com.hollow.vpn.vpn.V2RayParserAndFletcher
+import com.hollow.vpn.vpn.V2RayParserAndFetcher
 import com.hollow.vpn.vpn.XrayProbeResult
 import com.hollow.vpn.vpn.XrayVpnService
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +43,6 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Locale
 import kotlin.math.max
 
 enum class VpnScreen {
@@ -75,45 +73,13 @@ data class ConnectionTelemetryState(
     val realPublicLon: Double? = null,
     val realIspLabel: String = "Detecting…",
     val preConnectionIp: String = ""
-) {
-    val formattedTimer: String
-        get() {
-            val hours = elapsedSeconds / 3600
-            val minutes = (elapsedSeconds % 3600) / 60
-            val seconds = elapsedSeconds % 60
-            return String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
-        }
-
-    val formattedUpload: String
-        get() = formatByteCount(uploadBytes)
-
-    val formattedDownload: String
-        get() = formatByteCount(downloadBytes)
-
-    val formattedUploadSpeed: String
-        get() = "${formatByteCount(uploadBytesPerSec)}/s"
-
-    val formattedDownloadSpeed: String
-        get() = "${formatByteCount(downloadBytesPerSec)}/s"
-
-    companion object {
-        fun formatByteCount(bytes: Long): String {
-            val safe = max(0L, bytes)
-            return when {
-                safe < 1024L -> "$safe B"
-                safe < 1024L * 1024L -> String.format(Locale.US, "%.1f KB", safe / 1024.0)
-                safe < 1024L * 1024L * 1024L -> String.format(Locale.US, "%.2f MB", safe / (1024.0 * 1024.0))
-                else -> String.format(Locale.US, "%.2f GB", safe / (1024.0 * 1024.0 * 1024.0))
-            }
-        }
-    }
-}
+)
 
 class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = VpnDatabase.getInstance(application).vpnDao()
     private val prefsStore = VpnPreferencesStore(application)
-    private val fletcher = V2RayParserAndFletcher()
+    private val fetcher = V2RayParserAndFetcher()
 
     private val _settings = MutableStateFlow(prefsStore.loadSettings())
     val settings: StateFlow<AppSettingsState> = _settings.asStateFlow()
@@ -130,9 +96,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _gettingStartedStep = MutableStateFlow(0)
     val gettingStartedStep: StateFlow<Int> = _gettingStartedStep.asStateFlow()
-
-    private val _selectedFilter = MutableStateFlow(ServerFilter.FASTEST)
-    val selectedFilter: StateFlow<ServerFilter> = _selectedFilter.asStateFlow()
 
     private val _selectedCategory = MutableStateFlow(ServerCategory.ALL_KEY)
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
@@ -333,7 +296,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             XrayVpnService.isServiceRunning.collect { running ->
                 if (running) {
                     wasRunning = true
-                    fletcher.evictConnectionPools()
+                    fetcher.evictConnectionPools()
                     _telemetry.update {
                         it.copy(
                             isConnected = true,
@@ -364,7 +327,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     if (wasRunning) {
                         wasRunning = false
-                        fletcher.evictConnectionPools()
+                        fetcher.evictConnectionPools()
                         ipRefreshJob?.cancel()
                         ipRefreshJob = viewModelScope.launch {
                             delay(600L)
@@ -428,13 +391,13 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun loadServerIpDetails(ip: String): com.hollow.vpn.vpn.ServerIpDetails? =
-        fletcher.fetchServerIpDetails(ip)
+        fetcher.fetchServerIpDetails(ip)
 
     fun refreshRealPublicIp() {
         viewModelScope.launch {
             val wasTunnelActive = _telemetry.value.isConnected || _telemetry.value.isConnecting
             val proxyPort = if (_telemetry.value.isConnected && !_settings.value.tunMode) 10808 else null
-            val info = fletcher.fetchDevicePublicIpInfo(socksProxyPort = proxyPort)
+            val info = fetcher.fetchDevicePublicIpInfo(socksProxyPort = proxyPort)
             _telemetry.update { prev ->
                 val savedPreIp = if (!wasTunnelActive && info.ip.isNotBlank() && !info.ip.equals("Detecting…", ignoreCase = true)) {
                     info.ip
@@ -479,7 +442,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             _currentScreen.value = VpnScreen.CONNECTED_HOME
 
             if (configuredSubUrl.isNotBlank() && (existing.isEmpty() || _settings.value.autoConfigure)) {
-                runFletcherAutoFetchAndPingSweep(
+                runFetcherAutoFetchAndPingSweep(
                     returnScreen = VpnScreen.CONNECTED_HOME,
                     autoConnectAfterFetch = canAutoConnect,
                     showLoadingScreen = false
@@ -545,7 +508,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     replaceExisting = _settings.value.subReplaceExisting
                 )
             )
-            val result = fletcher.fetchSubscriptionAndRankTop15(
+            val result = fetcher.fetchSubscriptionAndRankTop15(
                 subscriptionUrl = input,
                 context = getApplication(),
                 settings = _settings.value
@@ -559,7 +522,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     val marked = top15Nodes.mapIndexed { idx, srv -> srv.copy(isSelected = idx == 0) }
                     dao.insertServers(marked)
                     marked.firstOrNull()?.let { fastest ->
-                        val ip = fletcher.resolveServerIpAddress(fastest.host)
+                        val ip = fetcher.resolveServerIpAddress(fastest.host)
                         _telemetry.update { it.copy(serverIpLabel = ip) }
                     }
                     onResult(Result.success(marked.size))
@@ -581,12 +544,12 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
-            val parsed = fletcher.parseImportPayload(trimmed, isCustom = true)
+            val parsed = fetcher.parseImportPayload(trimmed, isCustom = true)
             if (parsed.isEmpty()) {
                 onResult(Result.failure(IllegalArgumentException("No valid server link or JSON config found")))
                 return@launch
             }
-            val benchmarked = fletcher.benchmarkAndRankTop15(
+            val benchmarked = fetcher.benchmarkAndRankTop15(
                 servers = parsed,
                 context = getApplication(),
                 settings = _settings.value
@@ -599,7 +562,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             val toInsert = benchmarked.mapIndexed { idx, srv -> srv.copy(isSelected = idx == 0) }
             dao.insertServers(toInsert)
             toInsert.firstOrNull()?.let { fastest ->
-                val ip = fletcher.resolveServerIpAddress(fastest.host)
+                val ip = fetcher.resolveServerIpAddress(fastest.host)
                 _telemetry.update { it.copy(serverIpLabel = ip) }
             }
             onResult(Result.success(toInsert.size))
@@ -625,7 +588,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 if (lastFetched > 0L && System.currentTimeMillis() - lastFetched >= intervalMs &&
                     (enabledSubs.isNotEmpty() || fallbackUrls.isNotEmpty())
                 ) {
-                    val result = fletcher.fetchMultipleSubscriptionsAndRankTop15(
+                    val result = fetcher.fetchMultipleSubscriptionsAndRankTop15(
                         subscriptions = enabledSubs,
                         fallbackUrls = fallbackUrls,
                         context = getApplication(),
@@ -702,10 +665,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         return false
     }
 
-    fun setFilter(filter: ServerFilter) {
-        _selectedFilter.value = filter
-    }
-
     fun setCategory(key: String) {
         _selectedCategory.value = key
     }
@@ -714,7 +673,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         if (_appUpdateState.value is AppUpdateState.Checking) return
         viewModelScope.launch {
             _appUpdateState.value = AppUpdateState.Checking
-            _appUpdateState.value = fletcher.checkAppUpdate(BuildConfig.VERSION_NAME)
+            _appUpdateState.value = fetcher.checkAppUpdate(BuildConfig.VERSION_NAME)
         }
     }
 
@@ -779,7 +738,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 val configuredSub = _settings.value.activeSubscriptionUrl.trim()
                 if (configuredSub.isNotBlank()) {
                     showMessage("Fetching servers from your subscription…")
-                    runFletcherAutoFetchAndPingSweep(
+                    runFetcherAutoFetchAndPingSweep(
                         returnScreen = VpnScreen.CONNECTED_HOME,
                         autoConnectAfterFetch = true
                     )
@@ -817,10 +776,10 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         val livePing: Int? = if (isDirectOnly) {
             server.pingMs
         } else {
-            when (val probe = fletcher.measureRealXrayDelayOrNull(getApplication(), server, _settings.value)) {
+            when (val probe = fetcher.measureRealXrayDelayOrNull(getApplication(), server, _settings.value)) {
                 is XrayProbeResult.Success -> probe.delayMs
                 XrayProbeResult.NativeUnavailable -> withContext(Dispatchers.IO) {
-                    fletcher.measureRealTcpLatencyOrNull(server.host, server.port, timeoutMs = 2200)
+                    fetcher.measureRealTcpLatencyOrNull(server.host, server.port, timeoutMs = 2200)
                 }
                 XrayProbeResult.Unreachable -> null
             }
@@ -834,7 +793,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        val resolvedIp = server.resolvedIp.ifBlank { fletcher.resolveServerIpAddress(server.host) }
+        val resolvedIp = server.resolvedIp.ifBlank { fetcher.resolveServerIpAddress(server.host) }
         val updatedServer = server.copy(
             pingMs = livePing,
             resolvedIp = resolvedIp,
@@ -856,10 +815,10 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Runs the real Fletcher Auto-Fetcher & Concurrent Xray Ping Ranker, saving the Top 15
+     * Runs the real Fetcher Auto-Fetcher & Concurrent Xray Ping Ranker, saving the Top 15
      * fastest verified servers to the Room database.
      */
-    fun runFletcherAutoFetchAndPingSweep(
+    fun runFetcherAutoFetchAndPingSweep(
         returnScreen: VpnScreen = VpnScreen.SERVER_LIST,
         autoConnectAfterFetch: Boolean = false,
         showLoadingScreen: Boolean = false
@@ -895,7 +854,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     detail = "Fetching your subscription…"
                 )
 
-                val subResult = fletcher.fetchMultipleSubscriptionsAndRankTop15(
+                val subResult = fetcher.fetchMultipleSubscriptionsAndRankTop15(
                     subscriptions = subs,
                     fallbackUrls = fallbackUrls,
                     context = getApplication(),
@@ -940,7 +899,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             val savedFirst = dao.getAllServersOnce().firstOrNull { it.isSelected } ?: fastest
                             connectToServer(savedFirst)
                         } else if (fastest != null) {
-                            val ip = fletcher.resolveServerIpAddress(fastest.host)
+                            val ip = fetcher.resolveServerIpAddress(fastest.host)
                             _telemetry.update { it.copy(serverIpLabel = ip) }
                             val countryCount = withSelected.map { it.countryName }.distinct().size
                             showMessage(
@@ -952,7 +911,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         val existing = dao.getAllServersOnce()
                         if (existing.isNotEmpty()) {
                             _fetchingStatusMessage.value = "Re-testing saved servers…"
-                            val reRanked = fletcher.benchmarkAndRankTop15(
+                            val reRanked = fetcher.benchmarkAndRankTop15(
                                 servers = existing,
                                 context = getApplication(),
                                 settings = _settings.value
@@ -1023,7 +982,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
 
-                val fetchResult = fletcher.fetchSubscriptionAndRankTop15(
+                val fetchResult = fetcher.fetchSubscriptionAndRankTop15(
                     subscriptionUrl = input,
                     context = getApplication(),
                     settings = _settings.value,
@@ -1048,7 +1007,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         dao.insertServers(marked)
                         val fastest = marked.firstOrNull()
                         if (fastest != null) {
-                            val ip = fletcher.resolveServerIpAddress(fastest.host)
+                            val ip = fetcher.resolveServerIpAddress(fastest.host)
                             _telemetry.update { it.copy(serverIpLabel = ip) }
                         }
                         if (_currentScreen.value == VpnScreen.SPLASH_FETCHING) {
@@ -1084,14 +1043,14 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
-            val parsed = fletcher.parseImportPayload(trimmed, isCustom = true)
+            val parsed = fetcher.parseImportPayload(trimmed, isCustom = true)
             if (parsed.isEmpty()) {
                 showMessage("No valid supported server link or JSON config found")
                 return@launch
             }
-            val candidatePool = fletcher.selectDiverseCandidatePool(parsed, maxCandidates = 360)
+            val candidatePool = fetcher.selectDiverseCandidatePool(parsed, maxCandidates = 360)
             showMessage("Verifying latency for ${candidatePool.size} imported server(s)…")
-            val benchmarked = fletcher.benchmarkAndRankTop15(
+            val benchmarked = fetcher.benchmarkAndRankTop15(
                 servers = candidatePool,
                 context = getApplication(),
                 settings = _settings.value
@@ -1131,7 +1090,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             if (rawJsonInput.trim().startsWith("{")) {
-                val parsedFromJson = fletcher.parseRawXrayJson(rawJsonInput.trim(), isCustom = true)
+                val parsedFromJson = fetcher.parseRawXrayJson(rawJsonInput.trim(), isCustom = true)
                 if (parsedFromJson.isEmpty()) {
                     showMessage("Invalid JSON configuration — check outbounds syntax")
                     return@launch
@@ -1191,7 +1150,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 isSelected = true,
                 isCustom = true
             )
-            val generatedJson = fletcher.generateXrayJsonForServer(
+            val generatedJson = fetcher.generateXrayJsonForServer(
                 server = baseServer,
                 wsPath = wsPath.trim(),
                 wsHost = wsHost.trim(),
@@ -1207,7 +1166,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
-            val enriched = fletcher.enrichServerWithIpAndCountry(
+            val enriched = fetcher.enrichServerWithIpAndCountry(
                 testableServer.copy(pingMs = verifiedPing),
                 rank = 1
             )
@@ -1275,10 +1234,10 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun verifyServerLatencyOrNull(server: ServerEntity): Int? {
-        return when (val probe = fletcher.measureRealXrayDelayOrNull(getApplication(), server, _settings.value)) {
+        return when (val probe = fetcher.measureRealXrayDelayOrNull(getApplication(), server, _settings.value)) {
             is XrayProbeResult.Success -> probe.delayMs
             XrayProbeResult.NativeUnavailable -> withContext(Dispatchers.IO) {
-                fletcher.measureRealTcpLatencyOrNull(server.host, server.port, 1800)
+                fetcher.measureRealTcpLatencyOrNull(server.host, server.port, 1800)
             }
             XrayProbeResult.Unreachable -> null
         }
@@ -1333,7 +1292,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openQrShare(server: ServerEntity) {
-        val raw = server.rawConfigJson.ifBlank { fletcher.generateXrayJsonForServer(server) }
+        val raw = fetcher.resolveConfigJson(server)
         _sharingQrServer.value = server.copy(rawConfigJson = raw)
     }
 
@@ -1342,12 +1301,12 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun buildExportBackupPayload(servers: List<ServerEntity> = allServers.value): String =
-        Companion.buildExportBackupPayload(servers, fletcher)
+        Companion.buildExportBackupPayload(servers, fetcher)
 
     companion object {
         fun buildExportBackupPayload(
             servers: List<ServerEntity>,
-            fletcher: V2RayParserAndFletcher = V2RayParserAndFletcher()
+            fetcher: V2RayParserAndFetcher = V2RayParserAndFetcher()
         ): String {
             if (servers.isEmpty()) return ""
             val uris = servers.mapNotNull { it.shareUri.trim().takeIf { u -> u.isNotEmpty() } }
@@ -1359,7 +1318,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             }
             val outbounds = JSONArray()
             servers.forEach { server ->
-                val raw = server.rawConfigJson.ifBlank { fletcher.generateXrayJsonForServer(server) }
+                val raw = fetcher.resolveConfigJson(server)
                 try {
                     val root = JSONObject(raw)
                     val obs = root.optJSONArray("outbounds")
@@ -1384,7 +1343,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openJsonInspector(server: ServerEntity) {
-        val json = server.rawConfigJson.ifBlank { fletcher.generateXrayJsonForServer(server) }
+        val json = fetcher.resolveConfigJson(server)
         _inspectingJsonServer.value = server.copy(rawConfigJson = json)
     }
 
@@ -1461,54 +1420,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun cycleUpdateInterval() {
-        val intervals = listOf("15 min", "30 min", "1 hour", "6 hours", "12 hours", "24 hours")
-        updateSettings { current ->
-            val nextIdx = (intervals.indexOf(current.updateIntervalLabel) + 1) % intervals.size
-            val next = intervals[nextIdx]
-            current.copy(updateIntervalLabel = next, subUpdateInterval = next)
-        }
-    }
-
-    fun cycleProtocolPreference() {
-        val options = listOf(
-            "Auto (V2Ray)",
-            "VLESS (Reality)",
-            "VLESS (WS / TCP)",
-            "VMess (WebSocket)",
-            "Trojan (TLS)",
-            "Hysteria2",
-            "gRPC",
-            "Shadowsocks"
-        )
-        updateSettings { current ->
-            val nextIdx = (options.indexOf(current.protocolPreference) + 1) % options.size
-            current.copy(protocolPreference = options[nextIdx])
-        }
-    }
-
-    fun cycleRoutingMode() {
-        val options = listOf("Global", "Bypass LAN", "Bypass LAN & Domestic", "Direct Only")
-        updateSettings { current ->
-            val nextIdx = (options.indexOf(current.routingMode) + 1) % options.size
-            current.copy(routingMode = options[nextIdx])
-        }
-    }
-
-    fun cycleDnsMode() {
-        val options = listOf(
-            "Auto (DoH)",
-            "Cloudflare 1.1.1.1",
-            "Google 8.8.8.8",
-            "Quad9 9.9.9.9",
-            "AdGuard 94.140.14.14"
-        )
-        updateSettings { current ->
-            val nextIdx = (options.indexOf(current.dnsMode) + 1) % options.size
-            current.copy(dnsMode = options[nextIdx])
-        }
-    }
-
     fun clearServerCacheAndReset() {
         connectJob?.cancel()
         connectJob = null
@@ -1533,8 +1444,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val ctx = getApplication<Application>()
             val currentSettings = _settings.value
-            val baseJson = server.rawConfigJson.ifBlank { fletcher.generateXrayJsonForServer(server) }
-            val xrayJson = fletcher.applyRuntimeSettingsToXrayJson(baseJson, currentSettings)
+            val baseJson = fetcher.resolveConfigJson(server)
+            val xrayJson = fetcher.applyRuntimeSettingsToXrayJson(baseJson, currentSettings)
             val intent = Intent(ctx, XrayVpnService::class.java).apply {
                 action = XrayVpnService.ACTION_CONNECT
                 putExtra(XrayVpnService.EXTRA_SERVER_COUNTRY, server.countryName)

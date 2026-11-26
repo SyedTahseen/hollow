@@ -7,28 +7,15 @@ import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,17 +29,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PublicOff
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
@@ -67,7 +51,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -77,14 +60,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -92,39 +72,27 @@ import androidx.compose.ui.unit.sp
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.ServerCategory
 import com.hollow.vpn.data.favoriteKey
-import com.hollow.vpn.ui.components.HollowBlinkingDot
 import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.NothingPillTabRow
-import com.hollow.vpn.ui.components.NothingSignalDots
-import com.hollow.vpn.ui.components.CountryFlag
 import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowCreamSurface
 import com.hollow.vpn.ui.theme.HollowInk
-import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowInkSecondary
-import com.hollow.vpn.ui.theme.HollowObsidianDivider
 import com.hollow.vpn.ui.theme.HollowOrange
 import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
-import com.hollow.vpn.ui.theme.NothingBlack
 import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingCanvas
-import com.hollow.vpn.ui.theme.NothingCardSurface
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
-import com.hollow.vpn.ui.theme.NothingMotion
 import com.hollow.vpn.ui.theme.NothingOnCanvas
-import com.hollow.vpn.ui.theme.NothingOnInvertedMuted
-import com.hollow.vpn.ui.theme.NothingOnInvertedSecondary
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
-import com.hollow.vpn.ui.theme.NothingRed
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
 import com.hollow.vpn.ui.theme.SpaceGroteskFamily
-import com.hollow.vpn.ui.theme.nothingPressScale
 
 @Composable
 fun CountryServerListScreen(
@@ -184,30 +152,6 @@ fun CountryServerListScreen(
         }
         // Starred servers float to the top, keeping the current order inside each group.
         base.sortedByDescending { it.favoriteKey() in favoriteKeys }
-    }
-
-    val fastestNode = remember(displayedServers) {
-        displayedServers.filter { it.pingMs > 0 }.minByOrNull { it.pingMs }
-            ?: displayedServers.firstOrNull()
-    }
-
-    val rawGroups = remember(displayedServers) {
-        displayedServers.groupBy { it.countryName.ifBlank { "Unknown" } }
-    }
-
-    val orderedGroups = remember(rawGroups, sortByPingResults) {
-        val entries = rawGroups.entries.toList()
-        if (sortByPingResults) {
-            entries.sortedBy { (_, list) ->
-                list.filter { it.pingMs > 0 }.minOfOrNull { it.pingMs } ?: Int.MAX_VALUE
-            }
-        } else {
-            entries.sortedBy { it.key.lowercase() }
-        }
-    }
-
-    val topFastestServers = remember(displayedServers) {
-        displayedServers.take(6)
     }
 
     val selectedTabIndex = categories.indexOfFirst { it.key == selectedCategoryKey }.let { if (it >= 0) it else 0 }

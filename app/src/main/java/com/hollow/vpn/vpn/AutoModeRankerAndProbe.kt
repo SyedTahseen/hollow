@@ -210,11 +210,11 @@ object ThroughputProbe {
     fun measureServerThroughputMbps(
         context: Context,
         server: ServerEntity,
-        parser: V2RayParserAndFletcher,
+        parser: V2RayParserAndFetcher,
         settings: AppSettingsState
     ): Double {
         val socksPort = findFreePort() ?: return 0.0
-        val baseJson = server.rawConfigJson.ifBlank { parser.generateXrayJsonForServer(server) }
+        val baseJson = parser.resolveConfigJson(server)
         val socksConfig = buildSocksProbeConfig(
             baseJson = parser.applyRuntimeSettingsToXrayJson(baseJson, settings.copy(tunMode = false)),
             socksPort = socksPort

@@ -2,65 +2,36 @@ package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowDialog
 import com.hollow.vpn.ui.theme.HollowRadius
-import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Size
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -70,12 +41,6 @@ import androidx.compose.ui.graphics.FilterQuality
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowInk
-import com.hollow.vpn.ui.theme.NothingBorder
-import com.hollow.vpn.ui.theme.NothingRed
-import com.hollow.vpn.ui.theme.NothingSurfaceElevated
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.material3.ButtonDefaults
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
@@ -85,236 +50,6 @@ import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeWriter
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
-
-@Composable
-fun CameraQrScannerDialog(
-    onQrDecoded: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val scheme = MaterialTheme.colorScheme
-    val context = LocalContext.current
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED
-        )
-    }
-    var scanError by remember { mutableStateOf<String?>(null) }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        hasCameraPermission = granted
-        if (!granted) {
-            scanError = "Camera permission is required for live QR scanning. You can still pick a QR image from your gallery."
-        }
-    }
-
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) {
-            val decoded = decodeQrFromUri(context, uri)
-            if (!decoded.isNullOrBlank()) {
-                onQrDecoded(decoded)
-            } else {
-                scanError = "No QR code detected in the selected image."
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = HollowDialog.containerColor,
-        shape = HollowDialog.Shape,
-        title = {
-            Text(
-                text = "Scan Server QR Code",
-                style = MaterialTheme.typography.titleLarge.copy(fontFamily = DotoDisplayFamily),
-                color = HollowInk
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
-            ) {
-                if (hasCameraPermission) {
-                    CameraQrPreviewBox(
-                        accentColor = NothingRed,
-                        onDecoded = onQrDecoded,
-                        onCameraError = { msg -> scanError = msg }
-                    )
-                    Text(
-                        text = "Point camera at a vless://, vmess://, trojan://, or ss:// QR code",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = scheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                            .clip(RoundedCornerShape(HollowRadius.Lg))
-                            .background(scheme.surfaceContainerHigh),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(HollowSpace.Lg),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.QrCodeScanner,
-                                contentDescription = null,
-                                tint = scheme.primary,
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Text(
-                                text = scanError ?: "Allow camera access to scan QR codes live.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = scheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                            Button(
-                                onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                                modifier = Modifier.testTag("btn_grant_camera_permission")
-                            ) {
-                                Text("Enable Camera")
-                            }
-                        }
-                    }
-                }
-
-                if (scanError != null && hasCameraPermission) {
-                    Text(
-                        text = scanError.orEmpty(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = scheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    border = BorderStroke(HollowStroke.Hairline, NothingBorder),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = HollowInk),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("btn_pick_qr_from_gallery")
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PhotoLibrary,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.size(HollowSpace.Sm))
-                    Text("Pick QR Image from Gallery")
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = scheme.onSurfaceVariant)
-            }
-        }
-    )
-}
-
-@Composable
-private fun CameraQrPreviewBox(
-    accentColor: Color,
-    onDecoded: (String) -> Unit,
-    onCameraError: (String) -> Unit
-) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val analyzerExecutor = remember { Executors.newSingleThreadExecutor() }
-    val alreadyDecoded = remember { AtomicBoolean(false) }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            try {
-                ProcessCameraProvider.getInstance(context).get().unbindAll()
-            } catch (_: Exception) {
-            }
-            analyzerExecutor.shutdown()
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp)
-            .clip(RoundedCornerShape(HollowRadius.Lg))
-            .background(Color.Black)
-    ) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx ->
-                val previewView = PreviewView(ctx)
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                cameraProviderFuture.addListener({
-                    try {
-                        val cameraProvider = cameraProviderFuture.get()
-                        val preview = Preview.Builder().build().also {
-                            it.surfaceProvider = previewView.surfaceProvider
-                        }
-                        val analysis = ImageAnalysis.Builder()
-                            .setTargetResolution(Size(960, 720))
-                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .build()
-                            .also { imageAnalysis ->
-                                imageAnalysis.setAnalyzer(analyzerExecutor) { imageProxy ->
-                                    if (!alreadyDecoded.get()) {
-                                        val decoded = decodeQrFromImageProxy(imageProxy)
-                                        if (!decoded.isNullOrBlank() && alreadyDecoded.compareAndSet(false, true)) {
-                                            ContextCompat.getMainExecutor(ctx).execute {
-                                                onDecoded(decoded)
-                                            }
-                                        }
-                                    }
-                                    imageProxy.close()
-                                }
-                            }
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            CameraSelector.DEFAULT_BACK_CAMERA,
-                            preview,
-                            analysis
-                        )
-                    } catch (e: Exception) {
-                        onCameraError("Camera unavailable: ${e.message ?: "use gallery image"}")
-                    }
-                }, ContextCompat.getMainExecutor(ctx))
-                previewView
-            }
-        )
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(164.dp)
-                .border(HollowStroke.Heavy, accentColor.copy(alpha = 0.92f), RoundedCornerShape(HollowRadius.Lg))
-        )
-    }
-}
 
 private val qrReaderHints = mapOf(
     DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),

@@ -17,19 +17,10 @@ import androidx.core.app.NotificationCompat
 import com.hollow.vpn.MainActivity
 import com.hollow.vpn.R
 import com.hollow.vpn.data.ActiveTunnelSnapshot
+import com.hollow.vpn.data.ProbeUrls
 import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
 import go.Seq
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import libv2ray.CoreCallbackHandler
-import libv2ray.CoreController
-import libv2ray.Libv2ray
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.ArrayDeque
@@ -41,6 +32,17 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import libv2ray.CoreCallbackHandler
+import libv2ray.CoreController
+import libv2ray.Libv2ray
 
 data class TunnelTrafficSnapshot(
     val uploadBytes: Long = 0L,
@@ -410,7 +412,7 @@ class XrayVpnService : VpnService() {
                             .thenBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
                     )
 
-                val parser = V2RayParserAndFletcher()
+                val parser = V2RayParserAndFetcher()
                 var chosen: com.hollow.vpn.data.ServerEntity? = null
                 for (candidate in candidates.take(6)) {
                     val probe = parser.measureRealXrayDelayOrNull(applicationContext, candidate, settings)
@@ -431,7 +433,7 @@ class XrayVpnService : VpnService() {
 
                 dao.clearSelection()
                 dao.updateServer(chosen.copy(isSelected = true))
-                val baseJson = chosen.rawConfigJson.ifBlank { parser.generateXrayJsonForServer(chosen) }
+                val baseJson = parser.resolveConfigJson(chosen)
                 val runtimeJson = parser.applyRuntimeSettingsToXrayJson(baseJson, settings)
                 val nextGen = commandGeneration.incrementAndGet()
                 appendLog("Smart failover -> ${chosen.countryName} (${chosen.host}:${chosen.port}) [$reason]")
@@ -456,6 +458,8 @@ class XrayVpnService : VpnService() {
                         serverSpeedMbps = chosen.lastSpeedMbps
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 appendLog("Failover skipped: ${e.message}")
             } finally {
@@ -777,8 +781,8 @@ class XrayVpnService : VpnService() {
         private const val NOTIFICATION_ID = 2048
         private const val VPN_MTU = 1500
         private const val STOP_GRACE_MILLIS = 5_000L
-        private const val VERIFY_URL_PRIMARY = "https://www.gstatic.com/generate_204"
-        private const val VERIFY_URL_BACKUP = "https://cp.cloudflare.com/generate_204"
+        private const val VERIFY_URL_PRIMARY = ProbeUrls.PRIMARY
+        private const val VERIFY_URL_BACKUP = ProbeUrls.BACKUP
         private const val TAG = "XrayVpnService"
         private const val MAX_LOG_ENTRIES = 250
 

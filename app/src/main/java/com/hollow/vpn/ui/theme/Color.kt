@@ -18,7 +18,6 @@ val HollowDarkInk = Color(0xFFF5F5F7)
 private val DarkCanvas = Color(0xFF000000)
 private val DarkSurface = Color(0xFF121214)
 private val DarkSurfaceElevated = Color(0xFF1A1A1E)
-private val DarkCardSurface = Color(0xFF0E0E10)
 private val DarkBorder = Color(0xFF27272A)
 private val DarkInk = Color(0xFFF5F5F7)
 private val DarkInkSecondary = Color(0xFF98989F)
@@ -30,7 +29,6 @@ private val DarkOrangeContainer = Color(0xFF2D0B0D)
 private val CarbonCanvas = Color(0xFF121212)
 private val CarbonSurface = Color(0xFF1B1B1B)
 private val CarbonSurfaceElevated = Color(0xFF242424)
-private val CarbonCardSurface = Color(0xFF191919)
 private val CarbonBorder = Color(0xFF2E2E2E)
 private val CarbonInk = Color(0xFFF4F4F4)
 private val CarbonInkSecondary = Color(0xFF9E9E9E)
@@ -40,7 +38,6 @@ private val CarbonOrangeContainer = Color(0xFF331416)
 private val LightCanvas = Color(0xFFF4F4F2)
 private val LightSurface = Color(0xFFFFFFFF)
 private val LightSurfaceElevated = Color(0xFFEAEAE6)
-private val LightCardSurface = Color(0xFFFFFFFF)
 private val LightBorder = Color(0xFFD8D8D3)
 private val LightInk = Color(0xFF0E0E10)
 private val LightInkSecondary = Color(0xFF5D5D65)
@@ -54,17 +51,13 @@ data class HollowPalette(
     val onCanvas: Color,
     val surface: Color,
     val surfaceElevated: Color,
-    val cardSurface: Color,
     val border: Color,
     val ink: Color,
     val inkSecondary: Color,
     val inkMuted: Color,
-    val orangeContainer: Color,
     val matrixGreen: Color,
     val invertedSurface: Color,
     val onInvertedSurface: Color,
-    val onInvertedSecondary: Color,
-    val onInvertedMuted: Color,
     val pillNavFill: Color,
     val pillNavBorder: Color,
     val pillActiveBg: Color,
@@ -76,7 +69,6 @@ data class HollowPalette(
     val switchOffTrack: Color,
     val switchOffBorder: Color,
     val switchOffThumb: Color,
-    val mapDotMuted: Color,
     val backdropDot: Color
 )
 
@@ -85,17 +77,13 @@ val DarkHollowPalette = HollowPalette(
     onCanvas = Color.White,
     surface = DarkSurface,
     surfaceElevated = DarkSurfaceElevated,
-    cardSurface = DarkCardSurface,
     border = DarkBorder,
     ink = DarkInk,
     inkSecondary = DarkInkSecondary,
     inkMuted = DarkInkMuted,
-    orangeContainer = DarkOrangeContainer,
     matrixGreen = DarkMatrixGreen,
     invertedSurface = Color.White,
     onInvertedSurface = NothingBlack,
-    onInvertedSecondary = Color(0xFF3A3A3F),
-    onInvertedMuted = Color(0xFF636369),
     pillNavFill = Color(0xFF141417),
     pillNavBorder = Color(0xFF26262C),
     pillActiveBg = Color.White,
@@ -107,7 +95,6 @@ val DarkHollowPalette = HollowPalette(
     switchOffTrack = NothingBlack,
     switchOffBorder = Color(0xFF424249),
     switchOffThumb = Color(0xFF8A8A94),
-    mapDotMuted = Color(0xFF2D2D33),
     backdropDot = Color.White.copy(alpha = 0.028f)
 )
 
@@ -116,17 +103,13 @@ val CarbonDarkHollowPalette = HollowPalette(
     onCanvas = CarbonInk,
     surface = CarbonSurface,
     surfaceElevated = CarbonSurfaceElevated,
-    cardSurface = CarbonCardSurface,
     border = CarbonBorder,
     ink = CarbonInk,
     inkSecondary = CarbonInkSecondary,
     inkMuted = CarbonInkMuted,
-    orangeContainer = CarbonOrangeContainer,
     matrixGreen = DarkMatrixGreen,
     invertedSurface = Color(0xFFF4F4F4),
     onInvertedSurface = CarbonCanvas,
-    onInvertedSecondary = Color(0xFF3D3D3D),
-    onInvertedMuted = Color(0xFF6B6B6B),
     pillNavFill = Color(0xFF1D1D1D),
     pillNavBorder = Color(0xFF303030),
     pillActiveBg = Color(0xFFF4F4F4),
@@ -138,7 +121,6 @@ val CarbonDarkHollowPalette = HollowPalette(
     switchOffTrack = CarbonSurface,
     switchOffBorder = Color(0xFF474747),
     switchOffThumb = CarbonInkSecondary,
-    mapDotMuted = Color(0xFF3A3A3A),
     backdropDot = Color.White.copy(alpha = 0.030f)
 )
 
@@ -147,17 +129,13 @@ val LightHollowPalette = HollowPalette(
     onCanvas = LightInk,
     surface = LightSurface,
     surfaceElevated = LightSurfaceElevated,
-    cardSurface = LightCardSurface,
     border = LightBorder,
     ink = LightInk,
     inkSecondary = LightInkSecondary,
     inkMuted = LightInkMuted,
-    orangeContainer = LightOrangeContainer,
     matrixGreen = LightMatrixGreen,
     invertedSurface = LightInk,
     onInvertedSurface = Color.White,
-    onInvertedSecondary = Color(0xFFD0D0D6),
-    onInvertedMuted = Color(0xFF9898A0),
     pillNavFill = Color.White,
     pillNavBorder = LightBorder,
     pillActiveBg = LightInk,
@@ -169,7 +147,6 @@ val LightHollowPalette = HollowPalette(
     switchOffTrack = Color(0xFFE6E6E2),
     switchOffBorder = Color(0xFFB5B5AF),
     switchOffThumb = Color(0xFF6B6B73),
-    mapDotMuted = Color(0xFFC8C8CE),
     backdropDot = Color.Black.copy(alpha = 0.045f)
 )
 
@@ -190,9 +167,6 @@ val NothingSurface: Color
 val NothingSurfaceElevated: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.surfaceElevated
 
-val NothingCardSurface: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.cardSurface
-
 val NothingBorder: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.border
 
@@ -204,12 +178,6 @@ val NothingInvertedSurface: Color
 
 val NothingOnInvertedSurface: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.onInvertedSurface
-
-val NothingOnInvertedSecondary: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.onInvertedSecondary
-
-val NothingOnInvertedMuted: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.onInvertedMuted
 
 val NothingPillNavFill: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.pillNavFill
@@ -244,21 +212,15 @@ val NothingSwitchOffBorder: Color
 val NothingSwitchOffThumb: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.switchOffThumb
 
-val NothingMapDotMuted: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.mapDotMuted
-
 val NothingBackdropDot: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.backdropDot
 
-// Legacy semantic aliases mapped dynamically to active HollowPalette
+// Semantic accessors mapped dynamically to the active HollowPalette
 val HollowCream: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.canvas
 
 val HollowCreamSurface: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.surface
-
-val HollowCreamSurfaceHigh: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.surfaceElevated
 
 val HollowCreamDivider: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.border
@@ -271,9 +233,6 @@ val HollowInkSecondary: Color
 
 val HollowInkMuted: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.inkMuted
-
-val HollowOrangeContainer: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.orangeContainer
 
 // Connecting Phase (.busy — Pure OLED Black + Glyph Amber)
 val HollowObsidian = Color(0xFF000000)
@@ -288,7 +247,6 @@ val HollowForestCard = Color(0xFF0E1B13)
 val HollowForestDivider = Color(0xFF1E3728)
 val HollowForestMuted = Color(0xFF8FB8A0)
 val HollowLime = Color(0xFFB8F85C)
-val HollowLimeBarMuted = Color(0xFF2E5438)
 
 val ExpressiveLightColorScheme = lightColorScheme(
     primary = LightInk,
@@ -391,12 +349,3 @@ val ExpressiveCarbonDarkColorScheme = darkColorScheme(
     inverseSurface = CarbonInk,
     inverseOnSurface = CarbonCanvas
 )
-
-// Semantic signal quality accents
-val SignalStrongLight = LightMatrixGreen
-val SignalMediumLight = Color(0xFFD98600)
-val SignalWeakLight = NothingRed
-
-val SignalStrongDark = HollowLime
-val SignalMediumDark = Color(0xFFFFB020)
-val SignalWeakDark = NothingRed

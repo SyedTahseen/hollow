@@ -10,7 +10,7 @@ import com.hollow.vpn.data.VpnPreferencesStore
 import com.hollow.vpn.ui.VpnViewModel
 import com.hollow.vpn.ui.components.decodeQrFromBitmap
 import com.hollow.vpn.ui.components.generateQrBitmap
-import com.hollow.vpn.vpn.V2RayParserAndFletcher
+import com.hollow.vpn.vpn.V2RayParserAndFetcher
 import com.hollow.vpn.vpn.XrayVpnService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -160,7 +160,7 @@ class HollowVpnRobolectricTest {
 
     @Test
     fun `buildExportBackupPayload exports URI-backed servers cleanly for re-import`() {
-        val parser = V2RayParserAndFletcher()
+        val parser = V2RayParserAndFetcher()
         val uri1 = "vless://11111111-2222-3333-4444-555555555555@de.example.com:443?security=tls&type=tcp#Germany"
         val uri2 = "trojan://secretpass@nl.example.org:8443?security=tls&type=ws#Netherlands"
         val servers = parser.parseImportPayload("$uri1\n$uri2")
@@ -292,7 +292,7 @@ class HollowVpnRobolectricTest {
 
     @Test
     fun `protocol ranker and security policy enforce DPI tiers and strict TLS rules`() {
-        val parser = V2RayParserAndFletcher()
+        val parser = V2RayParserAndFetcher()
         val reality = parser.parseImportPayload("vless://11111111-1111-1111-1111-111111111111@1.1.1.1:443?security=reality&pbk=PK&sni=cf.com#R").first()
         val hy2 = parser.parseImportPayload("hy2://pass@2.2.2.2:443?insecure=1#H").first()
         val trojan = parser.parseImportPayload("trojan://pass@3.3.3.3:443?security=tls#T").first()

@@ -53,7 +53,6 @@ val FiraCodeFamily = FontFamily(
 )
 
 val SpaceGroteskFamily = FiraCodeFamily
-val PlusJakartaSansFamily = FiraCodeFamily
 val JetBrainsMonoFamily = FiraCodeFamily
 
 val TabularMonoBody = TextStyle(
@@ -61,14 +60,6 @@ val TabularMonoBody = TextStyle(
     fontWeight = FontWeight.Medium,
     fontSize = 12.sp,
     lineHeight = 16.sp,
-    fontFeatureSettings = "tnum"
-)
-
-val TabularMonoLarge = TextStyle(
-    fontFamily = JetBrainsMonoFamily,
-    fontWeight = FontWeight.SemiBold,
-    fontSize = 16.sp,
-    lineHeight = 22.sp,
     fontFeatureSettings = "tnum"
 )
 

@@ -22,7 +22,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -38,7 +37,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,10 +54,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Checkbox
@@ -114,15 +110,10 @@ import com.hollow.vpn.ui.ConnectionTelemetryState
 import com.hollow.vpn.ui.components.FetchingSpinnerRing
 import com.hollow.vpn.ui.components.HollowBlinkingDot
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
-import com.hollow.vpn.ui.components.HollowDisconnectedExposureCard
 import com.hollow.vpn.ui.components.HollowIndeterminateBar
-import com.hollow.vpn.ui.components.HollowRouteState
 import com.hollow.vpn.ui.components.HollowSlideActionPill
 import com.hollow.vpn.ui.components.HollowStatusBrandRow
-import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDotMatrixBackdrop
-import com.hollow.vpn.ui.components.NothingDottedDivider
-import com.hollow.vpn.ui.components.NothingSignalDots
 import com.hollow.vpn.ui.map.GeoPoint
 import com.hollow.vpn.ui.map.MapColors
 import com.hollow.vpn.ui.map.MapPin
@@ -145,12 +136,10 @@ import com.hollow.vpn.ui.theme.HollowInkSecondary
 import com.hollow.vpn.ui.theme.HollowLime
 import com.hollow.vpn.ui.theme.HollowObsidian
 import com.hollow.vpn.ui.theme.HollowObsidianDivider
-import com.hollow.vpn.ui.theme.HollowObsidianMuted
 import com.hollow.vpn.ui.theme.HollowObsidianSurface
 import com.hollow.vpn.ui.theme.HollowOrange
 import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBackdropDot
-import com.hollow.vpn.ui.theme.NothingBlack
 import com.hollow.vpn.ui.theme.NothingCanvas
 import com.hollow.vpn.ui.theme.NothingMatrixGreen
 import com.hollow.vpn.ui.theme.NothingMotion
@@ -812,7 +801,6 @@ private fun HomeContent(
     val infoLine = if (phase == 0) ipLocationLine else vpnLocationLine
 
     val protectedPhase = phase == 2
-    val connectingPhase = phase == 1
     val titleText = when (phase) { 2 -> "YOU ARE PROTECTED."; 1 -> "CONNECTING."; else -> "YOU ARE UNPROTECTED." }
     val pc = hollowPhaseColors(phase)
     val titleColor = pc.accent

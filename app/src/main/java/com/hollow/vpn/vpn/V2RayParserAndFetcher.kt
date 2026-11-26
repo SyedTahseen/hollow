@@ -3,29 +3,15 @@ package com.hollow.vpn.vpn
 import android.content.Context
 import android.provider.Settings
 import android.util.Base64
+import com.hollow.vpn.data.AppLinks
 import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.FetchingProgressState
 import com.hollow.vpn.data.FetchingStage
+import com.hollow.vpn.data.ProbeUrls
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.SubscriptionEntity
 import go.Seq
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
-import libv2ray.Libv2ray
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
-import org.json.JSONObject
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -39,8 +25,22 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.abs
 import kotlin.system.measureTimeMillis
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
+import libv2ray.Libv2ray
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
 
 sealed class XrayProbeResult {
     data class Success(val delayMs: Int) : XrayProbeResult()
@@ -75,12 +75,12 @@ data class ServerIpDetails(
 )
 
 /**
- * Production V2Ray / Xray multi-protocol parser and Fletcher Auto-Fetcher.
+ * Production V2Ray / Xray multi-protocol parser and Fetcher Auto-Fetcher.
  * Uses ResilientFetcher (direct -> optional CDN mirrors -> disk cache), Beta source scoring,
  * TCP reachability filtering (drop-only, never ranked), DPI-resilient protocol tier ranking,
  * real Xray delay + serialized single-stream throughput probing, and HTTPS-only GeoIP enrichment.
  */
-class V2RayParserAndFletcher {
+class V2RayParserAndFetcher {
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(8, TimeUnit.SECONDS)
@@ -131,6 +131,8 @@ class V2RayParserAndFletcher {
                 onProgressState = onProgressState,
                 onProgress = onProgress
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -159,6 +161,8 @@ class V2RayParserAndFletcher {
                 onProgress = onProgress,
                 onSubscriptionStats = onSubscriptionStats
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -883,7 +887,7 @@ class V2RayParserAndFletcher {
                     val speed = ThroughputProbe.measureServerThroughputMbps(
                         context = context,
                         server = candidate,
-                        parser = this@V2RayParserAndFletcher,
+                        parser = this@V2RayParserAndFetcher,
                         settings = settings
                     )
                     val key = "${candidate.host}:${candidate.port}:${candidate.uuidOrPassword}"
@@ -1073,7 +1077,7 @@ class V2RayParserAndFletcher {
         val cleanCurrent = currentVersion.trim().ifBlank { "1.0" }
         try {
             val releaseReq = Request.Builder()
-                .url("https://api.github.com/repos/irexanon/V2ray/releases/latest")
+                .url(AppLinks.LATEST_RELEASE_API)
                 .header("Accept", "application/vnd.github+json")
                 .header("User-Agent", "HollowVPN/$cleanCurrent")
                 .build()
@@ -1081,7 +1085,7 @@ class V2RayParserAndFletcher {
                 if (resp.isSuccessful) {
                     val json = JSONObject(resp.body?.string().orEmpty())
                     val tagName = json.optString("tag_name", "").trim()
-                    val htmlUrl = json.optString("html_url", "https://github.com/irexanon/V2ray/releases")
+                    val htmlUrl = json.optString("html_url", AppLinks.RELEASES_URL)
                     val body = json.optString("body", "").trim()
                     val assets = json.optJSONArray("assets")
                     var apkUrl: String? = null
@@ -1116,7 +1120,7 @@ class V2RayParserAndFletcher {
                 } else if (resp.code == 404) {
                     // Fallback to repository tags if no formal GitHub Release has been published yet
                     val tagsReq = Request.Builder()
-                        .url("https://api.github.com/repos/irexanon/V2ray/tags?per_page=1")
+                        .url(AppLinks.LATEST_TAG_API)
                         .header("Accept", "application/vnd.github+json")
                         .header("User-Agent", "HollowVPN/$cleanCurrent")
                         .build()
@@ -1129,19 +1133,21 @@ class V2RayParserAndFletcher {
                                     currentVersion = cleanCurrent,
                                     latestVersion = firstTag,
                                     releaseNotes = "New tag $firstTag published on repository.",
-                                    releaseUrl = "https://github.com/irexanon/V2ray/releases"
+                                    releaseUrl = AppLinks.RELEASES_URL
                                 )
                             }
                             return@withContext AppUpdateState.UpToDate(
                                 currentVersion = cleanCurrent,
                                 latestVersion = firstTag.ifBlank { "v$cleanCurrent" },
-                                releaseUrl = "https://github.com/irexanon/V2ray/releases"
+                                releaseUrl = AppLinks.RELEASES_URL
                             )
                         }
                     }
                 }
                 AppUpdateState.Error("Update server returned HTTP ${resp.code}. Please try again later.")
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             AppUpdateState.Error("Unable to reach update server. Check your internet connection and retry.")
         }
@@ -1393,7 +1399,7 @@ class V2RayParserAndFletcher {
     ): XrayProbeResult = withContext(Dispatchers.IO) {
         try {
             ensureCoreEnvInitialized(context)
-            val baseConfig = server.rawConfigJson.ifBlank { generateXrayJsonForServer(server) }
+            val baseConfig = resolveConfigJson(server)
             val testConfig = applyRuntimeSettingsToXrayJson(baseConfig, settings.copy(tunMode = false))
             val primaryDelay = try {
                 Libv2ray.measureOutboundDelay(testConfig, DELAY_PROBE_PRIMARY)
@@ -1460,6 +1466,8 @@ class V2RayParserAndFletcher {
                 resolvedIpCache[trimmed] = resolved
             }
             resolved
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             trimmed
         }
@@ -2183,6 +2191,10 @@ class V2RayParserAndFletcher {
         return config
     }
 
+    /** The server's saved Xray config, or a freshly generated one when none is stored. */
+    fun resolveConfigJson(server: ServerEntity): String =
+        server.rawConfigJson.ifBlank { generateXrayJsonForServer(server) }
+
     fun generateXrayJsonForServer(server: ServerEntity): String {
         return generateXrayJsonForServer(server, params = null)
     }
@@ -2820,8 +2832,7 @@ class V2RayParserAndFletcher {
     }
 
     companion object {
-        const val DEFAULT_PUBLIC_V2RAY_SUB_URL = AppSettingsState.DEFAULT_SUBSCRIPTION_URL
-        private const val DELAY_PROBE_PRIMARY = "https://www.gstatic.com/generate_204"
-        private const val DELAY_PROBE_BACKUP = "https://cp.cloudflare.com/generate_204"
+        private const val DELAY_PROBE_PRIMARY = ProbeUrls.PRIMARY
+        private const val DELAY_PROBE_BACKUP = ProbeUrls.BACKUP
     }
 }

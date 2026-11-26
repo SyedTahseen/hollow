@@ -61,9 +61,7 @@ object HollowRadius {
 
 /** Ready-made shapes built from [HollowRadius]. */
 object HollowShapes {
-    val IconTile: Shape = RoundedCornerShape(HollowRadius.Sm)
     val Control: Shape = RoundedCornerShape(HollowRadius.Md)
-    val Card: Shape = RoundedCornerShape(HollowRadius.Lg)
     val Dialog: Shape = RoundedCornerShape(HollowRadius.Xl)
     val Sheet: Shape = RoundedCornerShape(topStart = HollowRadius.Xl, topEnd = HollowRadius.Xl)
     val Pill: Shape = RoundedCornerShape(HollowRadius.Pill)

@@ -3,7 +3,7 @@ package com.hollow.vpn
 import android.util.Base64
 import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.ServerEntity
-import com.hollow.vpn.vpn.V2RayParserAndFletcher
+import com.hollow.vpn.vpn.V2RayParserAndFetcher
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class V2RayParserTest {
 
-    private val parser = V2RayParserAndFletcher()
+    private val parser = V2RayParserAndFetcher()
 
     @Test
     fun `parses VLESS Reality URI with public key, sni, shortId, and flow`() {

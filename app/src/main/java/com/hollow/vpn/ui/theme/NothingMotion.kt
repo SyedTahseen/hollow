@@ -1,26 +1,15 @@
 package com.hollow.vpn.ui.theme
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /**
  * Nothing OS 3.0 motion tokens and GPU-accelerated micro-interaction primitives.
@@ -40,12 +29,6 @@ object NothingMotion {
     fun <T> tactileSpring() = spring<T>(
         dampingRatio = 0.62f,
         stiffness = 560f
-    )
-
-    /** Gentle no-bounce spring for layout reveals and container morphs. */
-    fun <T> settleSpring() = spring<T>(
-        dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = 420f
     )
 }
 
@@ -69,47 +52,5 @@ fun Modifier.nothingPressScale(
     this.graphicsLayer {
         scaleX = scale
         scaleY = scale
-    }
-}
-
-/**
- * Subtle GPU-accelerated staggered entrance animation for cards and sections.
- */
-@Composable
-fun NothingStaggerReveal(
-    index: Int,
-    modifier: Modifier = Modifier,
-    slideDistance: Dp = 12.dp,
-    content: @Composable () -> Unit
-) {
-    val density = LocalDensity.current
-    val slidePx = with(density) { slideDistance.toPx() }
-    val alpha = remember { Animatable(0f) }
-    val offsetY = remember { Animatable(slidePx) }
-
-    LaunchedEffect(Unit) {
-        val staggerDelay = (index.coerceAtMost(6) * 32L)
-        if (staggerDelay > 0L) delay(staggerDelay)
-        launch {
-            alpha.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 240, easing = NothingMotion.FluidEase)
-            )
-        }
-        launch {
-            offsetY.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(durationMillis = 280, easing = NothingMotion.FluidEase)
-            )
-        }
-    }
-
-    Box(
-        modifier = modifier.graphicsLayer {
-            this.alpha = alpha.value
-            this.translationY = offsetY.value
-        }
-    ) {
-        content()
     }
 }

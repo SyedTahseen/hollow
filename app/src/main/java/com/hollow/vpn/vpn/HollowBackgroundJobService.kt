@@ -71,7 +71,7 @@ class HollowBackgroundJobService : JobService() {
             val servers = dao.getAllServersOnce().take(40)
             if (servers.isEmpty()) return
 
-            val parser = V2RayParserAndFletcher()
+            val parser = V2RayParserAndFetcher()
             val sem = Semaphore(4)
             val now = System.currentTimeMillis()
 
@@ -101,7 +101,6 @@ class HollowBackgroundJobService : JobService() {
                     }
                 }.awaitAll()
             }
-            prefs.saveLastHealthPulseMillis(now)
         }
 
         internal suspend fun runFullRefreshIfNeeded(context: Context) {
@@ -131,7 +130,7 @@ class HollowBackgroundJobService : JobService() {
             }
             if (urls.isEmpty()) return
 
-            val parser = V2RayParserAndFletcher()
+            val parser = V2RayParserAndFetcher()
             val result = parser.fetchMultipleSubscriptionsAndRankTop15(
                 subscriptions = subs,
                 fallbackUrls = urls,

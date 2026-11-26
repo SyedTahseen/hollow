@@ -1,12 +1,5 @@
 package com.hollow.vpn.ui.screens
 
-import com.hollow.vpn.ui.theme.HollowDialog
-import com.hollow.vpn.ui.theme.HollowModalSheet
-import com.hollow.vpn.ui.theme.HollowRadius
-import com.hollow.vpn.ui.theme.HollowType
-import com.hollow.vpn.ui.theme.HollowStroke
-import com.hollow.vpn.ui.theme.HollowSpace
-import com.hollow.vpn.ui.theme.HollowSizes
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -64,7 +57,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -100,18 +92,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import com.hollow.vpn.BuildConfig
+import com.hollow.vpn.data.AppLinks
 import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
-import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowCreamSurface
+import com.hollow.vpn.ui.theme.HollowDialog
 import com.hollow.vpn.ui.theme.HollowInk
 import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowInkSecondary
+import com.hollow.vpn.ui.theme.HollowModalSheet
 import com.hollow.vpn.ui.theme.HollowOrange
+import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowScreenPadding
+import com.hollow.vpn.ui.theme.HollowSizes
+import com.hollow.vpn.ui.theme.HollowSpace
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingCanvas
@@ -1035,7 +1035,7 @@ internal fun AboutHollowSheet(
                     AboutMetaRow(label = "VERSION", value = "v${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})")
                     AboutMetaRow(label = "PACKAGE", value = BuildConfig.APPLICATION_ID)
                     AboutMetaRow(label = "ANDROID SDK", value = "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-                    AboutMetaRow(label = "REPOSITORY", value = "github.com/irexanon/V2ray")
+                    AboutMetaRow(label = "REPOSITORY", value = AppLinks.REPO_DISPLAY)
                 }
             }
 

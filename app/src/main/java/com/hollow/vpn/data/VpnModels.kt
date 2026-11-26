@@ -83,15 +83,6 @@ fun SubscriptionEntity.categoryLabel(): String {
     }
 }
 
-enum class ServerFilter(val label: String) {
-    FASTEST("Fastest"),
-    ALL("All"),
-    LOW_PING("Low Ping"),
-    CUSTOM("Custom"),
-    RECOMMENDED("Recommended"),
-    HIGH_SPEED("High Speed")
-}
-
 enum class FetchingStage {
     IDLE,
     DOWNLOADING,
@@ -122,8 +113,7 @@ sealed interface AppUpdateState {
     data class UpToDate(
         val currentVersion: String,
         val latestVersion: String,
-        val checkedAtMillis: Long = System.currentTimeMillis(),
-        val releaseUrl: String = "https://github.com/irexanon/V2ray/releases"
+        val releaseUrl: String = AppLinks.RELEASES_URL
     ) : AppUpdateState
     data class UpdateAvailable(
         val currentVersion: String,
@@ -294,6 +284,15 @@ class VpnPreferencesStore(context: Context) {
             .remove("snap_port")
             .remove("snap_protocol")
             .remove("snap_xray_json")
+            .remove("snap_tun_mode")
+            .remove("snap_ipv6")
+            .remove("snap_dns_mode")
+            .remove("snap_routing_mode")
+            .remove("snap_per_app")
+            .remove("snap_bypass_selected")
+            .remove("snap_selected_packages")
+            .remove("snap_smart_switch")
+            .remove("snap_server_speed_mbps")
             .apply()
     }
 
@@ -320,12 +319,6 @@ class VpnPreferencesStore(context: Context) {
             .apply()
     }
 
-    fun saveLastHealthPulseMillis(nowMillis: Long = System.currentTimeMillis()) {
-        prefs.edit().putLong("last_health_pulse_at", nowMillis).apply()
-    }
-
-    fun loadLastHealthPulseMillis(): Long = prefs.getLong("last_health_pulse_at", 0L)
-
     /** Favorite servers are keyed by "host:port" so they survive re-fetches and DB resets. */
     fun loadFavoriteKeys(): Set<String> =
         prefs.getStringSet("favorite_server_keys", emptySet())?.toSet() ?: emptySet()
@@ -345,9 +338,6 @@ interface VpnDao {
 
     @Query("SELECT * FROM vpn_servers ORDER BY pingMs ASC")
     suspend fun getAllServersOnce(): List<ServerEntity>
-
-    @Query("SELECT * FROM vpn_servers WHERE isSelected = 1 LIMIT 1")
-    fun observeSelectedServer(): Flow<ServerEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertServers(servers: List<ServerEntity>)
@@ -387,9 +377,6 @@ interface VpnDao {
 
     @Query("DELETE FROM vpn_subscriptions WHERE url = :url")
     suspend fun deleteSubscriptionByUrl(url: String)
-
-    @Query("DELETE FROM vpn_subscriptions")
-    suspend fun deleteAllSubscriptions()
 }
 
 @Database(
