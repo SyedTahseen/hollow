@@ -769,44 +769,29 @@ fun ConnectedHomeScreen(
                 },
                 label = "home_phase_motion"
             ) { phase ->
-                when (phase) {
-                    1 -> ConnectingHomeContent(
-                        selectedServer = selectedServer,
-                        telemetry = telemetry,
-                        onCancel = onToggleConnect,
-                        onOpenAddServer = onOpenAddServer,
-                        onOpenSettings = onOpenSettings
-                    )
-                    2 -> ProtectedHomeContent(
-                        selectedServer = selectedServer,
-                        telemetry = telemetry,
-                        onDisconnect = onToggleConnect,
-                        onOpenServerList = onOpenServerList,
-                        onOpenAddServer = onOpenAddServer,
-                        onOpenSettings = onOpenSettings
-                    )
-                    else -> DisconnectedHomeContent(
-                        selectedServer = selectedServer,
-                        telemetry = telemetry,
-                        tunModeEnabled = tunModeEnabled,
-                        onConnect = onToggleConnect,
-                        onOpenServerList = onOpenServerList,
-                        onOpenAddServer = onOpenAddServer,
-                        onOpenSettings = onOpenSettings,
-                        onRefreshRealIp = onRefreshRealIp
-                    )
-                }
+                HomeContent(
+                    phase = phase,
+                    selectedServer = selectedServer,
+                    telemetry = telemetry,
+                    tunModeEnabled = tunModeEnabled,
+                    onToggleConnect = onToggleConnect,
+                    onOpenServerList = onOpenServerList,
+                    onOpenAddServer = onOpenAddServer,
+                    onOpenSettings = onOpenSettings,
+                    onRefreshRealIp = onRefreshRealIp
+                )
             }
         }
     }
 }
 
 @Composable
-private fun DisconnectedHomeContent(
+private fun HomeContent(
+    phase: Int,
     selectedServer: ServerEntity?,
     telemetry: ConnectionTelemetryState,
     tunModeEnabled: Boolean,
-    onConnect: () -> Unit,
+    onToggleConnect: () -> Unit,
     onOpenServerList: () -> Unit,
     onOpenAddServer: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -820,6 +805,17 @@ private fun DisconnectedHomeContent(
         if (telemetry.realPublicCity.isNotBlank()) "${telemetry.realPublicCity} · $cleanIpDisplay" else cleanIpDisplay
     }
 
+    val serverIp = selectedServer?.resolvedIp?.ifBlank { selectedServer.host } ?: telemetry.serverIpLabel
+    // The app only knows the server's country (no city field), so that is the "city" label for the VPN.
+    val vpnLocationLine = "${selectedServer?.countryName ?: "VPN"} · $serverIp"
+    val infoLine = if (phase == 0) ipLocationLine else vpnLocationLine
+
+    val protectedPhase = phase == 2
+    val connectingPhase = phase == 1
+    val titleText = when (phase) { 2 -> "YOU ARE PROTECTED."; 1 -> "CONNECTING."; else -> "YOU ARE UNPROTECTED." }
+    val titleColor = when (phase) { 2 -> HollowLime; 1 -> HollowAmber; else -> Color(0xFFD71921) }
+    val infoColor = when (phase) { 2 -> HollowForestMuted; 1 -> HollowObsidianMuted; else -> HollowInkSecondary }
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -832,26 +828,34 @@ private fun DisconnectedHomeContent(
 
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(12.dp))
-            HomeTopBar(
-                dotColor = HollowOrange,
-                textColor = HollowInk,
-                buttonContainer = NothingTopBtnFill,
-                buttonContent = NothingOnCanvas,
-                buttonBorder = NothingTopBtnBorder,
-                onOpenAddServer = onOpenAddServer,
-                onOpenSettings = onOpenSettings
-            )
+            when (phase) {
+                2 -> HomeTopBar(
+                    dotColor = HollowLime, textColor = HollowDarkInk,
+                    buttonContainer = HollowForestCard, buttonContent = HollowDarkInk, buttonBorder = HollowForestDivider,
+                    onOpenAddServer = onOpenAddServer, onOpenSettings = onOpenSettings
+                )
+                1 -> HomeTopBar(
+                    dotColor = HollowAmber, textColor = HollowDarkInk,
+                    buttonContainer = HollowObsidianSurface, buttonContent = HollowDarkInk, buttonBorder = HollowObsidianDivider,
+                    onOpenAddServer = onOpenAddServer, onOpenSettings = onOpenSettings
+                )
+                else -> HomeTopBar(
+                    dotColor = HollowOrange, textColor = HollowInk,
+                    buttonContainer = NothingTopBtnFill, buttonContent = NothingOnCanvas, buttonBorder = NothingTopBtnBorder,
+                    onOpenAddServer = onOpenAddServer, onOpenSettings = onOpenSettings
+                )
+            }
 
             Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 28.dp))
 
             Text(
-                text = "YOU ARE UNPROTECTED.",
+                text = titleText,
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (isCompact) 21.sp else 24.sp,
                 lineHeight = if (isCompact) 25.sp else 29.sp,
                 letterSpacing = 0.5.sp,
-                color = Color(0xFFD71921),
+                color = titleColor,
                 modifier = Modifier.testTag("connection_status_text")
             )
 
@@ -866,11 +870,11 @@ private fun DisconnectedHomeContent(
                 horizontalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Text(
-                    text = ipLocationLine,
+                    text = infoLine,
                     fontFamily = JetBrainsMonoFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 13.sp,
-                    color = HollowInkSecondary,
+                    color = infoColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -885,9 +889,14 @@ private fun DisconnectedHomeContent(
 
             Spacer(modifier = Modifier.height(cardGap))
 
-            // Quick Server / Add a Server Card (Page 1) with tactile press-scale
             val serverCardInteraction = remember { MutableInteractionSource() }
-            Surface(
+            if (protectedPhase) {
+                ConnectionStatsCard(
+                    telemetry = telemetry,
+                    onClick = onOpenServerList,
+                    modifier = Modifier.testTag("active_server_pill")
+                )
+            } else Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .minimumInteractiveComponentSize()
@@ -902,8 +911,8 @@ private fun DisconnectedHomeContent(
                     }
                     .testTag("active_server_pill"),
                 shape = RoundedCornerShape(20.dp),
-                color = HollowCreamSurface,
-                border = BorderStroke(1.dp, HollowCreamDivider)
+                color = if (connectingPhase) HollowObsidianSurface else HollowCreamSurface,
+                border = BorderStroke(1.dp, if (connectingPhase) HollowObsidianDivider else HollowCreamDivider)
             ) {
                 Row(
                     modifier = Modifier
@@ -936,7 +945,7 @@ private fun DisconnectedHomeContent(
                             fontFamily = SpaceGroteskFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp,
-                            color = HollowInk,
+                            color = if (connectingPhase) HollowDarkInk else HollowInk,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -950,7 +959,7 @@ private fun DisconnectedHomeContent(
                         Text(
                             text = subText,
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
-                            color = HollowInkSecondary,
+                            color = if (connectingPhase) HollowObsidianMuted else HollowInkSecondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -990,17 +999,129 @@ private fun DisconnectedHomeContent(
 
             Spacer(modifier = Modifier.height(cardGap + 8.dp))
 
-            HollowSlideActionPill(
-                label = "Slide to connect",
-                trackColor = NothingSurfaceElevated,
-                thumbColor = HollowOrange,
-                arrowColor = Color.White,
-                labelColor = HollowInk,
-                onSlideComplete = onConnect,
-                modifier = Modifier.testTag("bottom_disconnect_connect_button")
-            )
+            when (phase) {
+                2 -> HollowSlideActionPill(
+                    label = "Slide to disconnect",
+                    trackColor = HollowForestCard,
+                    thumbColor = HollowLime,
+                    arrowColor = NothingBlack,
+                    labelColor = HollowDarkInk,
+                    borderColor = HollowForestDivider,
+                    onSlideComplete = onToggleConnect,
+                    modifier = Modifier.testTag("bottom_disconnect_connect_button")
+                )
+                1 -> Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable(role = Role.Button, onClick = onToggleConnect)
+                        .testTag("bottom_disconnect_connect_button"),
+                    shape = RoundedCornerShape(14.dp),
+                    color = HollowObsidianSurface,
+                    border = BorderStroke(1.dp, HollowObsidianDivider)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Cancel",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp),
+                            color = HollowDarkInk
+                        )
+                    }
+                }
+                else -> HollowSlideActionPill(
+                    label = "Slide to connect",
+                    trackColor = NothingSurfaceElevated,
+                    thumbColor = HollowOrange,
+                    arrowColor = Color.White,
+                    labelColor = HollowInk,
+                    onSlideComplete = onToggleConnect,
+                    modifier = Modifier.testTag("bottom_disconnect_connect_button")
+                )
+            }
 
             Spacer(modifier = Modifier.height(14.dp))
+        }
+    }
+}
+
+private fun formatConnectedFor(seconds: Long): String {
+    val s = seconds.coerceAtLeast(0L)
+    return when {
+        s < 60L -> "$s sec"
+        s < 3600L -> "${s / 60} min ${s % 60} sec"
+        else -> "${s / 3600} hr ${(s % 3600) / 60} min"
+    }
+}
+
+private fun formatSpeed2(bytesPerSec: Long): String {
+    val b = bytesPerSec.coerceAtLeast(0L).toDouble()
+    return when {
+        b < 1024.0 -> String.format(Locale.US, "%.2f B/s", b)
+        b < 1024.0 * 1024.0 -> String.format(Locale.US, "%.2f KB/s", b / 1024.0)
+        b < 1024.0 * 1024.0 * 1024.0 -> String.format(Locale.US, "%.2f MB/s", b / (1024.0 * 1024.0))
+        else -> String.format(Locale.US, "%.2f GB/s", b / (1024.0 * 1024.0 * 1024.0))
+    }
+}
+
+/** Footer card while protected: "Connected for <time>" plus live download / upload speed. */
+@Composable
+private fun ConnectionStatsCard(
+    telemetry: ConnectionTelemetryState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val downColor = Color(0xFF4DF0C0)
+    val upColor = Color(0xFFF28B9B)
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .clickable(role = Role.Button, onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.Black.copy(alpha = 0.55f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Connected for",
+                    fontFamily = SpaceGroteskFamily,
+                    fontSize = 15.sp,
+                    color = Color.White.copy(alpha = 0.6f),
+                    maxLines = 1
+                )
+                Text(
+                    text = formatConnectedFor(telemetry.elapsedSeconds),
+                    fontFamily = SpaceGroteskFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    maxLines = 1,
+                    modifier = Modifier.testTag("connection_timer_text")
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("↓", fontSize = 15.sp, color = downColor)
+                    Text(
+                        formatSpeed2(telemetry.downloadBytesPerSec),
+                        fontFamily = SpaceGroteskFamily, fontSize = 14.sp, color = Color.White, maxLines = 1
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("↑", fontSize = 15.sp, color = upColor)
+                    Text(
+                        formatSpeed2(telemetry.uploadBytesPerSec),
+                        fontFamily = SpaceGroteskFamily, fontSize = 14.sp, color = Color.White, maxLines = 1
+                    )
+                }
+            }
         }
     }
 }
