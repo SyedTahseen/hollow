@@ -709,18 +709,15 @@ fun ConnectedHomeScreen(
     val palette = when (homePhase) {
         2 -> MapColors(
             background = HollowForest, sphere = HollowForest,
-            land = Color.White.copy(alpha = 0.07f), landActive = HollowLime.copy(alpha = 0.22f),
-            landLine = Color.White.copy(alpha = 0.14f)
+            dot = Color.White.copy(alpha = 0.26f), dotActive = HollowLime
         )
         1 -> MapColors(
             background = HollowObsidian, sphere = HollowObsidian,
-            land = Color.White.copy(alpha = 0.07f), landActive = Color.White.copy(alpha = 0.20f),
-            landLine = Color.White.copy(alpha = 0.14f)
+            dot = Color.White.copy(alpha = 0.24f), dotActive = Color.White
         )
         else -> MapColors(
             background = HollowCream, sphere = HollowCream,
-            land = HollowInk.copy(alpha = 0.07f), landActive = HollowOrange.copy(alpha = 0.22f),
-            landLine = HollowInk.copy(alpha = 0.16f)
+            dot = HollowInk.copy(alpha = 0.26f), dotActive = HollowOrange
         )
     }
     val pinTone = when (homePhase) { 2 -> HollowLime; 1 -> Color.White; else -> HollowOrange }

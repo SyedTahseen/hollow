@@ -26,11 +26,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathFillType
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
@@ -43,10 +42,6 @@ import kotlinx.coroutines.launch
 import java.util.Random
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.acos
-import kotlin.math.asin
-import kotlin.math.atan2
-import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
@@ -61,9 +56,10 @@ enum class MapPin { Selected, Connecting, Connected }
 data class MapColors(
     val background: Color = Color(0xFF121212),
     val sphere: Color = Color(0xFF1B1B1B),
-    val land: Color = Color(0xFF242424),
-    val landActive: Color = Color(0xFF3A3A3A),
-    val landLine: Color = Color(0xFF3F3F3F),
+    /** Land dots. */
+    val dot: Color = Color(0x47FFFFFF),
+    /** Land dots of the active country. */
+    val dotActive: Color = Color.White,
 )
 
 private fun wrap(d: Double): Double { var x = d; while (x > 180) x -= 360; while (x < -180) x += 360; return x }
@@ -76,86 +72,12 @@ private const val ZOOM_MAX = 6f
 
 private fun smooth(x: Float): Float { val t = x.coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
 
-private class Scratch {
-    var xs = FloatArray(2048); var ys = FloatArray(2048); var n = 0
-    var rr = FloatArray(1024); var uu = FloatArray(1024); var dd = FloatArray(1024)
-    fun add(x: Float, y: Float) {
-        if (n == xs.size) { xs = xs.copyOf(n * 2); ys = ys.copyOf(n * 2) }
-        xs[n] = x; ys[n] = y; n++
-    }
-    fun ensure(m: Int) {
-        if (rr.size < m) { rr = FloatArray(m * 2); uu = FloatArray(m * 2); dd = FloatArray(m * 2) }
-    }
-}
-
-private fun addArc(sc: Scratch, from: Float, to: Float, ccw: Boolean, cx: Float, cy: Float, r: Float) {
-    val tau = (2 * Math.PI).toFloat()
-    var sweep = if (ccw) to - from else from - to
-    sweep %= tau
-    if (sweep < 0f) sweep += tau
-    if (sweep > tau - 0.02f) sweep = 0f
-    val signed = if (ccw) sweep else -sweep
-    val steps = ceil(sweep / 0.0873f).toInt()
-    for (i in 1 until steps) {
-        val a = from + signed * i / steps
-        sc.add(cx + r * cos(a), cy - r * sin(a))
-    }
-}
-
-private fun addRing(
-    path: Path, ring: GlobeRing, step: Int, cl: Float, sl: Float, cp: Float, sp: Float,
-    cx: Float, cy: Float, r: Float, sc: Scratch,
-): Boolean {
-    val n = ring.n
-    val st = if (n < 16) 1 else step
-    val m = (n + st - 1) / st
-    if (m < 3) return false
-    sc.ensure(m)
-    val rr = sc.rr; val uu = sc.uu; val dd = sc.dd
-    val xyz = ring.xyz
-    var first = -1
-    for (j in 0 until m) {
-        val i = j * st * 3
-        val x = xyz[i]; val y = xyz[i + 1]; val z = xyz[i + 2]
-        val a = x * cl + y * sl
-        rr[j] = -x * sl + y * cl
-        dd[j] = a * cp + z * sp
-        uu[j] = -a * sp + z * cp
-        if (first < 0 && dd[j] > 0f) first = j
-    }
-    if (first < 0) return false
-
-    sc.n = 0
-    sc.add(cx + r * rr[first], cy - r * uu[first])
-    var exitA = 0f
-    for (k in 1..m) {
-        val j = (first + k) % m
-        val p = (first + k - 1) % m
-        val visP = dd[p] > 0f
-        val visJ = dd[j] > 0f
-        if (visP && visJ) {
-            if (k < m) sc.add(cx + r * rr[j], cy - r * uu[j])
-        } else if (visP || visJ) {
-            val t = dd[p] / (dd[p] - dd[j])
-            var xr = rr[p] + t * (rr[j] - rr[p])
-            var xu = uu[p] + t * (uu[j] - uu[p])
-            val len = kotlin.math.hypot(xr, xu)
-            if (len > 1e-6f) { xr /= len; xu /= len }
-            if (visP) {
-                sc.add(cx + r * xr, cy - r * xu)
-                exitA = atan2(xu, xr)
-            } else {
-                addArc(sc, exitA, atan2(xu, xr), ring.ccw, cx, cy, r)
-                sc.add(cx + r * xr, cy - r * xu)
-                if (k < m) sc.add(cx + r * rr[j], cy - r * uu[j])
-            }
-        }
-    }
-    if (sc.n < 3) return false
-    path.moveTo(sc.xs[0], sc.ys[0])
-    for (q in 1 until sc.n) path.lineTo(sc.xs[q], sc.ys[q])
-    path.close()
-    return true
+/** Reusable buffers for the dot pass so drawing doesn't allocate every frame. */
+private class DotScratch(f: DotField) {
+    val base = FloatArray(f.n * 2)
+    val old = FloatArray(f.n * 2)
+    val fresh = FloatArray(f.n * 2)
+    val bucketOf = IntArray(f.codes.size)
 }
 
 private class Cam(val vLon: Double, val vLat: Double, val mLon: Double, val mLat: Double, val r: Float, val space: Float)
@@ -181,7 +103,7 @@ fun WorldMap(
 
     val ctx = LocalContext.current
     val geo by produceState<List<Country>?>(WorldGeo.cached, ctx) { value = WorldGeo.load(ctx) }
-    val globe by produceState<List<GlobeCountry>?>(GlobeGeo.cached, ctx) { value = GlobeGeo.load(ctx) }
+    val dots by produceState<DotField?>(DotGeo.cached, ctx) { value = DotGeo.load(ctx) }
     val activeNow = remember(geo, countryCode, target) {
         countryCode?.trim()?.uppercase()?.takeIf { it.length == 2 }
             ?: geo?.let { WorldGeo.codeAt(it, target.lon, target.lat) }
@@ -244,9 +166,14 @@ fun WorldMap(
         val rnd = Random(11)
         List(70) { floatArrayOf(rnd.nextFloat(), rnd.nextFloat(), 0.5f + rnd.nextFloat() * 1.1f, 0.25f + rnd.nextFloat() * 0.55f) }
     }
-    val pool = remember { ArrayList<Path>() }
-    val drawn = remember { ArrayList<Path>() }
-    val scratch = remember { Scratch() }
+    val dotScratch = remember(dots) { dots?.let { DotScratch(it) } }
+    val dotPaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            style = android.graphics.Paint.Style.STROKE
+            strokeCap = android.graphics.Paint.Cap.ROUND
+        }
+    }
 
     Box(
         modifier
@@ -308,41 +235,61 @@ fun WorldMap(
                 else -> 0f
             }
 
-            val list = globe
-            if (list != null) {
+            val field = dots
+            val sc = dotScratch
+            if (field != null && sc != null) {
                 val lonR = Math.toRadians(cam.vLon); val latR = Math.toRadians(cam.vLat)
                 val cl = cos(lonR).toFloat(); val sl = sin(lonR).toFloat()
                 val cp = cos(latR).toFloat(); val sp = sin(latR).toFloat()
-                val vx = cp * cl; val vy = cp * sl; val vz = sp
 
-                val maxD = hypot(max(cx, size.width - cx), max(cy, size.height - cy))
-                val visAng = if (maxD >= r) (Math.PI / 2).toFloat() else asin(maxD / r)
+                // Dot size follows the spacing on screen, so the matrix stays even while zooming.
                 val ppd = r * (Math.PI / 180.0).toFloat()
-                val step = when { ppd < 3f -> 4; ppd < 6f -> 3; ppd < 12f -> 2; else -> 1 }
+                val diameter = (ppd * field.spacingDeg * 0.42f).coerceIn(1.1.dp.toPx(), 4.2.dp.toPx())
 
-                drawn.clear()
-                var used = 0
-                for (gc in list) {
-                    val path = if (used < pool.size) pool[used] else Path().also { pool += it }
-                    path.rewind()
-                    path.fillType = PathFillType.EvenOdd
-                    val l = lit(gc.code)
-                    var any = false
-                    for (ring in gc.rings) {
-                        if (ring.radius * r < 0.35f && l == 0f) continue
-                        val cosT = (ring.cx * vx + ring.cy * vy + ring.cz * vz).coerceIn(-1f, 1f)
-                        if (acos(cosT) - ring.radius > visAng) continue
-                        if (addRing(path, ring, step, cl, sl, cp, sp, cx, cy, r, scratch)) any = true
+                val bucketOf = sc.bucketOf
+                for (k in bucketOf.indices) {
+                    val code = field.codes[k]
+                    bucketOf[k] = when {
+                        code == "--" -> 0
+                        code == newCode -> 2
+                        code == oldCode -> 1
+                        else -> 0
                     }
-                    if (any) {
-                        used++
-                        drawn += path
-                        drawPath(path, lerp(colors.land, colors.landActive, l))
+                }
+                val litNew = newCode?.let { lit(it) } ?: 0f
+                val litOld = if (oldCode != null && oldCode != newCode) lit(oldCode!!) else 0f
+
+                val base = sc.base; val old = sc.old; val fresh = sc.fresh
+                var nBase = 0; var nOld = 0; var nFresh = 0
+                val w = size.width; val h = size.height
+                val xyz = field.xyz; val owner = field.country
+                for (i in 0 until field.n) {
+                    val x = xyz[i * 3]; val y = xyz[i * 3 + 1]; val z = xyz[i * 3 + 2]
+                    val a = x * cl + y * sl
+                    if (a * cp + z * sp <= 0f) continue
+                    val sx = cx + r * (-x * sl + y * cl)
+                    if (sx < -diameter || sx > w + diameter) continue
+                    val sy = cy - r * (-a * sp + z * cp)
+                    if (sy < -diameter || sy > h + diameter) continue
+                    when (bucketOf[owner[i].toInt()]) {
+                        2 -> { fresh[nFresh++] = sx; fresh[nFresh++] = sy }
+                        1 -> { old[nOld++] = sx; old[nOld++] = sy }
+                        else -> { base[nBase++] = sx; base[nBase++] = sy }
                     }
                 }
 
-                val line = Stroke(0.8.dp.toPx(), join = StrokeJoin.Round)
-                for (p in drawn) drawPath(p, colors.landLine, style = line)
+                val nc = drawContext.canvas.nativeCanvas
+                dotPaint.strokeWidth = diameter
+                dotPaint.color = colors.dot.toArgb()
+                nc.drawPoints(base, 0, nBase, dotPaint)
+                if (nOld > 0) {
+                    dotPaint.color = lerp(colors.dot, colors.dotActive, litOld).toArgb()
+                    nc.drawPoints(old, 0, nOld, dotPaint)
+                }
+                if (nFresh > 0) {
+                    dotPaint.color = lerp(colors.dot, colors.dotActive, litNew).toArgb()
+                    nc.drawPoints(fresh, 0, nFresh, dotPaint)
+                }
             }
 
             if (space > 0f) {
