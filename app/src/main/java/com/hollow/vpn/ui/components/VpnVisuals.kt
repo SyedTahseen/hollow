@@ -363,7 +363,9 @@ fun HollowBottomNavigationBar(
     onSelectConnect: () -> Unit,
     onSelectServers: () -> Unit,
     onSelectSettings: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** false = no full-width backdrop behind the pill, so whatever is behind the bar (the map) shows through. */
+    showBackdrop: Boolean = true
 ) {
     val isDarkPhaseBg = backgroundColor == HollowForest || backgroundColor == HollowObsidian
     val capsuleFill = when (backgroundColor) {
@@ -409,7 +411,7 @@ fun HollowBottomNavigationBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(animBg)
+            .background(if (showBackdrop) animBg else Color.Transparent)
             .navigationBarsPadding()
             .padding(horizontal = 24.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center

@@ -60,6 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -150,7 +151,11 @@ private fun routeIncoming(raw: String, actions: AddServerActions) {
 fun AddServerButton(
     state: AddServerState,
     actions: AddServerActions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    containerColor: Color = NothingTopBtnFill,
+    contentColor: Color = NothingOnCanvas,
+    borderColor: Color? = NothingTopBtnBorder,
+    testTag: String = "country_add"
 ) {
     val context = LocalContext.current
 
@@ -165,12 +170,12 @@ fun AddServerButton(
 
     Box(modifier = modifier) {
         HollowTopSquareButton(
-            containerColor = NothingTopBtnFill,
-            contentColor = NothingOnCanvas,
-            borderColor = NothingTopBtnBorder,
+            containerColor = containerColor,
+            contentColor = contentColor,
+            borderColor = borderColor,
             contentDescription = "Add server",
             onClick = { state.menuOpen = true },
-            modifier = Modifier.testTag("country_add")
+            modifier = Modifier.testTag(testTag)
         ) { tint ->
             Icon(
                 imageVector = Icons.Rounded.Add,
@@ -253,10 +258,12 @@ private fun AddServerMenuItem(
 @Composable
 fun AddServerOverlays(
     state: AddServerState,
-    actions: AddServerActions
+    actions: AddServerActions,
+    handleRequests: Boolean = true
 ) {
     // Requests from other screens (home empty state, settings, failed fetch) open the right surface here.
-    LaunchedEffect(actions.request) {
+    LaunchedEffect(actions.request, handleRequests) {
+        if (!handleRequests) return@LaunchedEffect
         when (actions.request) {
             AddServerRequest.MENU -> state.menuOpen = true
             AddServerRequest.SUBSCRIPTION -> state.showSubscription = true

@@ -466,7 +466,8 @@ fun HollowVpnApp(
                                     inactiveContentColor = navInactiveTextColor,
                                     onSelectConnect = { vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME) },
                                     onSelectServers = { vpnViewModel.navigateTo(VpnScreen.SERVER_LIST) },
-                                    onSelectSettings = { vpnViewModel.navigateTo(VpnScreen.SETTINGS) }
+                                    onSelectSettings = { vpnViewModel.navigateTo(VpnScreen.SETTINGS) },
+                                    showBackdrop = currentScreen != VpnScreen.CONNECTED_HOME
                                 )
                             }
                         }
@@ -632,7 +633,7 @@ fun HollowVpnApp(
                                     onOpenSettings = {
                                         vpnViewModel.navigateTo(VpnScreen.SETTINGS)
                                     },
-                                    onOpenAddServer = { vpnViewModel.requestAddServer(AddServerRequest.MENU) },
+                                    addServerActions = addServerActions,
                                     onRefreshRealIp = vpnViewModel::refreshRealPublicIp
                                 )
                             }
