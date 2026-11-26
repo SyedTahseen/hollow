@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -28,11 +27,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -41,15 +38,11 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -93,7 +86,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import com.hollow.vpn.BuildConfig
 import com.hollow.vpn.data.AppLinks
-import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
@@ -115,7 +107,6 @@ import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingCanvas
-import com.hollow.vpn.ui.theme.NothingMatrixGreen
 import com.hollow.vpn.ui.theme.NothingRed
 import com.hollow.vpn.ui.theme.NothingSurface
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
@@ -796,7 +787,6 @@ fun RawXrayJsonEditorDialog(
 @Composable
 internal fun AboutHollowSheet(
     onCopyBuildInfo: (String) -> Unit,
-    onCheckUpdates: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -1015,32 +1005,6 @@ internal fun AboutHollowSheet(
                         maxLines = 1
                     )
                 }
-
-                Button(
-                    onClick = onCheckUpdates,
-                    shape = RoundedCornerShape(HollowRadius.Md),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = HollowInk,
-                        contentColor = HollowCream
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(HollowSizes.Button)
-                        .testTag("btn_about_check_updates")
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SystemUpdate,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(HollowSpace.Sm))
-                    Text(
-                        text = "Check update",
-                        fontSize = HollowType.Body,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
-                    )
-                }
             }
         }
     }
@@ -1119,240 +1083,4 @@ private fun AboutMetaRow(
             overflow = TextOverflow.Ellipsis
         )
     }
-}
-
-@Composable
-internal fun AppUpdateCheckDialog(
-    updateState: AppUpdateState,
-    onRetry: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val context = LocalContext.current
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = HollowDialog.containerColor,
-        shape = HollowDialog.Shape,
-        icon = {
-            when (updateState) {
-                AppUpdateState.Checking, AppUpdateState.Idle -> {
-                    CircularProgressIndicator(
-                        color = HollowOrange,
-                        strokeWidth = 2.5.dp,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                is AppUpdateState.UpToDate -> {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(NothingMatrixGreen.copy(alpha = 0.14f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            tint = NothingMatrixGreen,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                }
-                is AppUpdateState.UpdateAvailable -> {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(HollowOrange.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.SystemUpdate,
-                            contentDescription = null,
-                            tint = HollowOrange,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-                is AppUpdateState.Error -> {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(HollowOrange.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ErrorOutline,
-                            contentDescription = null,
-                            tint = HollowOrange,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-        },
-        title = {
-            Text(
-                text = when (updateState) {
-                    AppUpdateState.Idle, AppUpdateState.Checking -> "Checking for updates…"
-                    is AppUpdateState.UpToDate -> "You're up to date"
-                    is AppUpdateState.UpdateAvailable -> "Update available"
-                    is AppUpdateState.Error -> "Update check failed"
-                },
-                fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
-                color = HollowInk
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
-            ) {
-                when (updateState) {
-                    AppUpdateState.Idle, AppUpdateState.Checking -> {
-                        Text(
-                            text = "Contacting GitHub Releases for Hollow VPN v${BuildConfig.VERSION_NAME}…",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = HollowInkSecondary
-                        )
-                    }
-                    is AppUpdateState.UpToDate -> {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(HollowRadius.Md),
-                            color = HollowCreamSurface,
-                            border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(HollowSpace.Lg),
-                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
-                            ) {
-                                AboutMetaRow("INSTALLED", "v${updateState.currentVersion}")
-                                AboutMetaRow("LATEST RELEASE", updateState.latestVersion)
-                            }
-                        }
-                        Text(
-                            text = "You are already running the latest available release.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = HollowInkSecondary
-                        )
-                    }
-                    is AppUpdateState.UpdateAvailable -> {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(HollowRadius.Md),
-                            color = NothingSurface,
-                            border = BorderStroke(HollowStroke.Hairline, NothingBorder)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(HollowSpace.Lg),
-                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
-                            ) {
-                                Text(
-                                    text = "v${updateState.currentVersion}  →  ${updateState.latestVersion}",
-                                    fontFamily = JetBrainsMonoFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = HollowType.Body,
-                                    color = NothingMatrixGreen
-                                )
-                                Text(
-                                    text = updateState.releaseNotes.take(260),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = HollowInkSecondary
-                                )
-                            }
-                        }
-                    }
-                    is AppUpdateState.Error -> {
-                        Text(
-                            text = updateState.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = HollowInkSecondary
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            when (updateState) {
-                is AppUpdateState.UpdateAvailable -> {
-                    val targetUrl = updateState.apkDownloadUrl ?: updateState.releaseUrl
-                    Button(
-                        onClick = {
-                            try {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
-                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                )
-                            } catch (_: Exception) {
-                            }
-                            onDismiss()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = HollowInk,
-                            contentColor = HollowCream
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(HollowSpace.Sm))
-                        Text(if (updateState.apkDownloadUrl != null) "Download APK" else "Open Release")
-                    }
-                }
-                is AppUpdateState.Error -> {
-                    Button(
-                        onClick = onRetry,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = HollowInk,
-                            contentColor = HollowCream
-                        )
-                    ) {
-                        Text("Retry")
-                    }
-                }
-                is AppUpdateState.UpToDate -> {
-                    Button(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = HollowInk,
-                            contentColor = HollowCream
-                        )
-                    ) {
-                        Text("Done")
-                    }
-                }
-                else -> {
-                    TextButton(onClick = onDismiss) {
-                        Text("Hide", color = HollowInk)
-                    }
-                }
-            }
-        },
-        dismissButton = {
-            if (updateState is AppUpdateState.UpdateAvailable || updateState is AppUpdateState.Error) {
-                TextButton(onClick = onDismiss) {
-                    Text("Close", color = HollowInk)
-                }
-            } else if (updateState is AppUpdateState.UpToDate) {
-                TextButton(
-                    onClick = {
-                        try {
-                            context.startActivity(
-                                Intent(Intent.ACTION_VIEW, Uri.parse(updateState.releaseUrl))
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            )
-                        } catch (_: Exception) {
-                        }
-                    }
-                ) {
-                    Text("Releases", color = HollowInkSecondary)
-                }
-            }
-        }
-    )
 }

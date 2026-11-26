@@ -107,33 +107,12 @@ data class FetchingProgressState(
     val discoveredCountries: List<Pair<String, String>> = emptyList()
 )
 
-sealed interface AppUpdateState {
-    data object Idle : AppUpdateState
-    data object Checking : AppUpdateState
-    data class UpToDate(
-        val currentVersion: String,
-        val latestVersion: String,
-        val releaseUrl: String = AppLinks.RELEASES_URL
-    ) : AppUpdateState
-    data class UpdateAvailable(
-        val currentVersion: String,
-        val latestVersion: String,
-        val releaseNotes: String,
-        val releaseUrl: String,
-        val apkDownloadUrl: String? = null
-    ) : AppUpdateState
-    data class Error(val message: String) : AppUpdateState
-}
-
 data class AppSettingsState(
     val updateIntervalLabel: String = "1 hour",
-    val protocolPreference: String = "Auto (V2Ray)",
     val routingMode: String = "Global",
     val dnsMode: String = "Auto (DoH)",
     val tunMode: Boolean = true,
     val ipv6Enabled: Boolean = false,
-    val startOnAppOpen: Boolean = false,
-    val hideFromRecentApps: Boolean = false,
     val subAutoUpdate: Boolean = true,
     val subReplaceExisting: Boolean = true,
     val activeSubscriptionUrl: String = DEFAULT_SUBSCRIPTION_URL,
@@ -143,10 +122,7 @@ data class AppSettingsState(
     val splitExcludeApps: Set<String> = emptySet(),
     /** Split tunneling, "Include" mode: only these apps use the VPN. */
     val splitIncludeApps: Set<String> = emptySet(),
-    val hasCompletedOnboarding: Boolean = false,
-    val smartSwitchEnabled: Boolean = false,
     val mirrorsEnabled: Boolean = false,
-    val strictTlsEnabled: Boolean = false,
     val domesticCountryCode: String = "IR",
     val themeMode: String = "Dark",
     /** App-wide display size in percent (80..130), same as Outrun's "Display size". */
@@ -165,7 +141,7 @@ data class AppSettingsState(
     val blockQuic: Boolean = true,
     /** Advanced: largest packet the tunnel sends (see [MTU_CHOICES]). */
     val mtu: Int = DEFAULT_MTU,
-    /** Advanced: use [customDnsList] instead of the Private DNS provider. */
+    /** Advanced: use [customDnsList] instead of the default DNS. */
     val customDnsEnabled: Boolean = false,
     val customDnsList: List<String> = emptyList(),
     /** Advanced: connect the selected server when the phone starts. */
@@ -232,8 +208,6 @@ data class ActiveTunnelSnapshot(
     val perAppProxyEnabled: Boolean,
     val bypassSelectedApps: Boolean,
     val selectedAppPackages: Set<String>,
-    val smartSwitchEnabled: Boolean = false,
-    val serverSpeedMbps: Double = 0.0,
     val netShieldEnabled: Boolean = false,
     val blockAdultContent: Boolean = false,
     val splitExcludeIps: List<String> = emptyList(),
@@ -248,13 +222,11 @@ class VpnPreferencesStore(context: Context) {
         val cleanSubUrl = if (rawSubUrl == AppSettingsState.LEGACY_DEFAULT_SUBSCRIPTION_URL) "" else rawSubUrl
         return AppSettingsState(
             updateIntervalLabel = prefs.getString("update_interval", "1 hour") ?: "1 hour",
-            protocolPreference = prefs.getString("protocol_pref", "Auto (V2Ray)") ?: "Auto (V2Ray)",
-            routingMode = prefs.getString("routing_mode", "Global") ?: "Global",
-            dnsMode = prefs.getString("dns_mode", "Auto (DoH)") ?: "Auto (DoH)",
+            // "Direct Only" was a diagnostic mode that has been removed; fall back to Global.
+            routingMode = (prefs.getString("routing_mode", "Global") ?: "Global")
+                .takeUnless { it.contains("Direct", ignoreCase = true) } ?: "Global",
             tunMode = prefs.getBoolean("tun_mode", true),
             ipv6Enabled = prefs.getBoolean("ipv6_enabled", false),
-            startOnAppOpen = prefs.getBoolean("start_on_open_v2", false),
-            hideFromRecentApps = prefs.getBoolean("hide_recents", false),
             // Merged from the old duplicate "auto_configure" toggle: off if either was off.
             subAutoUpdate = prefs.getBoolean("sub_auto_update", true) && prefs.getBoolean("auto_configure", true),
             subReplaceExisting = prefs.getBoolean("sub_replace_existing", true),
@@ -263,10 +235,7 @@ class VpnPreferencesStore(context: Context) {
             bypassSelectedApps = prefs.getBoolean("bypass_selected_apps", false),
             splitExcludeApps = prefs.getStringSet("per_app_packages", emptySet()) ?: emptySet(),
             splitIncludeApps = prefs.getStringSet("split_include_apps", emptySet()) ?: emptySet(),
-            hasCompletedOnboarding = prefs.getBoolean("has_completed_onboarding", false),
-            smartSwitchEnabled = prefs.getBoolean("smart_switch_enabled", false),
             mirrorsEnabled = prefs.getBoolean("mirrors_enabled", false),
-            strictTlsEnabled = prefs.getBoolean("strict_tls_enabled", false),
             domesticCountryCode = prefs.getString("domestic_country_code", "IR") ?: "IR",
             themeMode = prefs.getString("theme_mode", "Dark") ?: "Dark",
             displayScalePercent = prefs.getInt("display_scale_percent", 100).coerceIn(80, 130),
@@ -292,14 +261,18 @@ class VpnPreferencesStore(context: Context) {
         prefs.edit()
             .remove("auto_configure")
             .remove("sub_update_interval")
+            // Settings that no longer exist.
+            .remove("protocol_pref")
+            .remove("dns_mode")
+            .remove("start_on_open_v2")
+            .remove("hide_recents")
+            .remove("has_completed_onboarding")
+            .remove("smart_switch_enabled")
+            .remove("strict_tls_enabled")
             .putString("update_interval", state.updateIntervalLabel)
-            .putString("protocol_pref", state.protocolPreference)
             .putString("routing_mode", state.routingMode)
-            .putString("dns_mode", state.dnsMode)
             .putBoolean("tun_mode", state.tunMode)
             .putBoolean("ipv6_enabled", state.ipv6Enabled)
-            .putBoolean("start_on_open_v2", state.startOnAppOpen)
-            .putBoolean("hide_recents", state.hideFromRecentApps)
             .putBoolean("sub_auto_update", state.subAutoUpdate)
             .putBoolean("sub_replace_existing", state.subReplaceExisting)
             .putString("active_sub_url", state.activeSubscriptionUrl)
@@ -307,10 +280,7 @@ class VpnPreferencesStore(context: Context) {
             .putBoolean("bypass_selected_apps", state.bypassSelectedApps)
             .putStringSet("per_app_packages", state.splitExcludeApps)
             .putStringSet("split_include_apps", state.splitIncludeApps)
-            .putBoolean("has_completed_onboarding", state.hasCompletedOnboarding)
-            .putBoolean("smart_switch_enabled", state.smartSwitchEnabled)
             .putBoolean("mirrors_enabled", state.mirrorsEnabled)
-            .putBoolean("strict_tls_enabled", state.strictTlsEnabled)
             .putString("domestic_country_code", state.domesticCountryCode)
             .putString("theme_mode", state.themeMode)
             .putInt("display_scale_percent", state.displayScalePercent.coerceIn(80, 130))
@@ -342,8 +312,6 @@ class VpnPreferencesStore(context: Context) {
             .putBoolean("snap_per_app", snapshot.perAppProxyEnabled)
             .putBoolean("snap_bypass_selected", snapshot.bypassSelectedApps)
             .putStringSet("snap_selected_packages", snapshot.selectedAppPackages)
-            .putBoolean("snap_smart_switch", snapshot.smartSwitchEnabled)
-            .putFloat("snap_server_speed_mbps", snapshot.serverSpeedMbps.toFloat())
             .putBoolean("snap_netshield", snapshot.netShieldEnabled)
             .putBoolean("snap_block_adult", snapshot.blockAdultContent)
             .putString("snap_split_exclude_ips", snapshot.splitExcludeIps.joinToString("\n"))
@@ -364,12 +332,11 @@ class VpnPreferencesStore(context: Context) {
             tunMode = prefs.getBoolean("snap_tun_mode", true),
             enableIpv6 = prefs.getBoolean("snap_ipv6", false),
             dnsMode = prefs.getString("snap_dns_mode", "Auto (DoH)") ?: "Auto (DoH)",
-            routingMode = prefs.getString("snap_routing_mode", "Global") ?: "Global",
+            routingMode = (prefs.getString("snap_routing_mode", "Global") ?: "Global")
+                .takeUnless { it.contains("Direct", ignoreCase = true) } ?: "Global",
             perAppProxyEnabled = prefs.getBoolean("snap_per_app", false),
             bypassSelectedApps = prefs.getBoolean("snap_bypass_selected", false),
             selectedAppPackages = prefs.getStringSet("snap_selected_packages", emptySet()) ?: emptySet(),
-            smartSwitchEnabled = prefs.getBoolean("snap_smart_switch", false),
-            serverSpeedMbps = prefs.getFloat("snap_server_speed_mbps", 0f).toDouble(),
             netShieldEnabled = prefs.getBoolean("snap_netshield", false),
             blockAdultContent = prefs.getBoolean("snap_block_adult", false),
             splitExcludeIps = loadLines("snap_split_exclude_ips"),

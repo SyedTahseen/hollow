@@ -92,7 +92,6 @@ class XrayVpnService : VpnService() {
     private var activeIncludeDirectStats = false
 
     @Volatile
-    private var smartSwitch: SmartSwitch? = null
 
     @Volatile
     private var networkMonitor: NetworkMonitor? = null
@@ -175,14 +174,6 @@ class XrayVpnService : VpnService() {
         val selectedAppPackages = intent?.getStringArrayListExtra(EXTRA_SELECTED_APP_PACKAGES)?.toSet()
             ?: fallbackSnapshot?.selectedAppPackages
             ?: emptySet()
-        val smartSwitchEnabled = intent?.getBooleanExtra(
-            EXTRA_SMART_SWITCH_ENABLED,
-            fallbackSnapshot?.smartSwitchEnabled ?: false
-        ) ?: (fallbackSnapshot?.smartSwitchEnabled ?: false)
-        val serverSpeedMbps = intent?.getDoubleExtra(
-            EXTRA_SERVER_SPEED_MBPS,
-            fallbackSnapshot?.serverSpeedMbps ?: 0.0
-        ) ?: (fallbackSnapshot?.serverSpeedMbps ?: 0.0)
 
         val netShieldEnabled = intent?.getBooleanExtra(
             EXTRA_NETSHIELD_ENABLED,
@@ -243,8 +234,6 @@ class XrayVpnService : VpnService() {
                     perAppProxyEnabled = perAppProxyEnabled,
                     bypassSelectedApps = bypassSelectedApps,
                     selectedAppPackages = selectedAppPackages,
-                    smartSwitchEnabled = smartSwitchEnabled,
-                    serverSpeedMbps = serverSpeedMbps,
                     netShieldEnabled = netShieldEnabled,
                     blockAdultContent = blockAdultContent,
                     splitExcludeIps = splitExcludeIps,
@@ -274,8 +263,6 @@ class XrayVpnService : VpnService() {
         perAppProxyEnabled: Boolean,
         bypassSelectedApps: Boolean,
         selectedAppPackages: Set<String>,
-        smartSwitchEnabled: Boolean,
-        serverSpeedMbps: Double,
         netShieldEnabled: Boolean = false,
         blockAdultContent: Boolean = false,
         splitExcludeIps: List<String> = emptyList(),
@@ -303,8 +290,6 @@ class XrayVpnService : VpnService() {
                     perAppProxyEnabled = perAppProxyEnabled,
                     bypassSelectedApps = bypassSelectedApps,
                     selectedAppPackages = selectedAppPackages,
-                    smartSwitchEnabled = smartSwitchEnabled,
-                    serverSpeedMbps = serverSpeedMbps,
                     netShieldEnabled = netShieldEnabled,
                     blockAdultContent = blockAdultContent,
                     splitExcludeIps = splitExcludeIps,
@@ -375,27 +360,22 @@ class XrayVpnService : VpnService() {
             }
 
             setConnectStage(3)
-            val isDirectOnly = routingMode.contains("Direct Only", ignoreCase = true)
-            if (!isDirectOnly) {
-                val verifiedDelay = verifyLiveTunnelDelay(core)
-                if (commandGeneration.get() != gen) {
-                    teardownActiveResources()
-                    return
-                }
-                if (verifiedDelay <= 0L || !core.isRunning) {
-                    fail("Tunnel failed live connectivity verification ($host:$port). Check server or try another node.")
-                    teardownActiveResources()
-                    try {
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                    } catch (_: Exception) {
-                    }
-                    stopSelf()
-                    return
-                }
-                appendLog("Tunnel verified live HTTP 204 probe (${verifiedDelay} ms)")
-            } else {
-                appendLog("Direct Only diagnostic mode active (skipping proxy probe)")
+            val verifiedDelay = verifyLiveTunnelDelay(core)
+            if (commandGeneration.get() != gen) {
+                teardownActiveResources()
+                return
             }
+            if (verifiedDelay <= 0L || !core.isRunning) {
+                fail("Tunnel failed live connectivity verification ($host:$port). Check server or try another node.")
+                teardownActiveResources()
+                try {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } catch (_: Exception) {
+                }
+                stopSelf()
+                return
+            }
+            appendLog("Tunnel verified live HTTP 204 probe (${verifiedDelay} ms)")
 
             VpnPreferencesStore(applicationContext).saveActiveTunnelSnapshot(
                 ActiveTunnelSnapshot(
@@ -411,8 +391,6 @@ class XrayVpnService : VpnService() {
                     perAppProxyEnabled = perAppProxyEnabled,
                     bypassSelectedApps = bypassSelectedApps,
                     selectedAppPackages = selectedAppPackages,
-                    smartSwitchEnabled = smartSwitchEnabled,
-                    serverSpeedMbps = serverSpeedMbps,
                     netShieldEnabled = netShieldEnabled,
                     blockAdultContent = blockAdultContent,
                     splitExcludeIps = splitExcludeIps,
@@ -422,12 +400,7 @@ class XrayVpnService : VpnService() {
 
             activeHost = host
             activePort = port
-            activeIncludeDirectStats = isDirectOnly
-            smartSwitch = if (smartSwitchEnabled && !isDirectOnly) {
-                SmartSwitch(referenceMbps = serverSpeedMbps)
-            } else {
-                null
-            }
+            activeIncludeDirectStats = false
             _lastError.value = null
             _trafficSnapshot.value = TunnelTrafficSnapshot()
             setConnectStage(0)
@@ -488,7 +461,6 @@ class XrayVpnService : VpnService() {
             activeHost = snapshot.host
             activePort = snapshot.port
             activeIncludeDirectStats = false
-            smartSwitch = null
             _lastError.value = null
             _trafficSnapshot.value = TunnelTrafficSnapshot()
             setConnectStage(0)
@@ -577,7 +549,6 @@ class XrayVpnService : VpnService() {
         val monitor = NetworkMonitor(cm) { reason ->
             if (commandGeneration.get() != gen || !_isServiceRunning.value) return@NetworkMonitor
             appendLog("Network handover detected: $reason")
-            smartSwitch?.resetSamples()
             VpnPreferencesStore(applicationContext).invalidateBaseline()
             val core = coreController ?: return@NetworkMonitor
             val delay = verifyLiveTunnelDelay(core)
@@ -658,8 +629,6 @@ class XrayVpnService : VpnService() {
                         perAppProxyEnabled = settings.perAppProxyEnabled,
                         bypassSelectedApps = settings.bypassSelectedApps,
                         selectedAppPackages = settings.activeSplitApps,
-                        smartSwitchEnabled = settings.smartSwitchEnabled,
-                        serverSpeedMbps = chosen.lastSpeedMbps,
                         netShieldEnabled = settings.netShieldEnabled,
                         blockAdultContent = settings.blockAdultContent,
                         splitExcludeIps = settings.splitExcludeIps,
@@ -699,16 +668,6 @@ class XrayVpnService : VpnService() {
                     downloadBytesPerSec = downDelta,
                     elapsedSeconds = prev.elapsedSeconds + 1L
                 )
-
-                val verdict = smartSwitch?.onSample(
-                    upBytesPerSec = upDelta,
-                    downBytesPerSec = downDelta,
-                    nowMillis = System.currentTimeMillis()
-                )
-                if (verdict is SmartSwitch.Verdict.Switch) {
-                    appendLog("Smart Switch triggered: ${verdict.reason}")
-                    triggerReserveFailover(expectedGen = gen, reason = verdict.reason)
-                }
             },
             1L,
             1L,
@@ -759,7 +718,6 @@ class XrayVpnService : VpnService() {
         finishUsageSession()
         networkMonitor?.stop()
         networkMonitor = null
-        smartSwitch = null
         statsTask?.cancel(false)
         statsTask = null
         val coreToStop = coreController
@@ -855,7 +813,7 @@ class XrayVpnService : VpnService() {
         }
     }
 
-    /** DNS servers for the tunnel: NetShield (filtering resolver) wins over the Private DNS provider. */
+    /** DNS servers for the tunnel: NetShield (filtering resolver) wins over Custom DNS, which wins over the default. */
     private fun effectiveDnsServers(
         mode: String,
         netShield: Boolean,
@@ -1106,8 +1064,6 @@ class XrayVpnService : VpnService() {
             putExtra(EXTRA_PER_APP_PROXY_ENABLED, settings.perAppProxyEnabled)
             putExtra(EXTRA_BYPASS_SELECTED_APPS, settings.bypassSelectedApps)
             putStringArrayListExtra(EXTRA_SELECTED_APP_PACKAGES, ArrayList(settings.activeSplitApps))
-            putExtra(EXTRA_SMART_SWITCH_ENABLED, settings.smartSwitchEnabled)
-            putExtra(EXTRA_SERVER_SPEED_MBPS, server.lastSpeedMbps)
             putExtra(EXTRA_NETSHIELD_ENABLED, settings.netShieldEnabled)
             putExtra(EXTRA_BLOCK_ADULT_CONTENT, settings.blockAdultContent)
             putStringArrayListExtra(EXTRA_SPLIT_EXCLUDE_IPS, ArrayList(settings.splitExcludeIps))
@@ -1128,8 +1084,6 @@ class XrayVpnService : VpnService() {
         const val EXTRA_PER_APP_PROXY_ENABLED = "extra_per_app_proxy_enabled"
         const val EXTRA_BYPASS_SELECTED_APPS = "extra_bypass_selected_apps"
         const val EXTRA_SELECTED_APP_PACKAGES = "extra_selected_app_packages"
-        const val EXTRA_SMART_SWITCH_ENABLED = "extra_smart_switch_enabled"
-        const val EXTRA_SERVER_SPEED_MBPS = "extra_server_speed_mbps"
         const val EXTRA_NETSHIELD_ENABLED = "extra_netshield_enabled"
         const val EXTRA_BLOCK_ADULT_CONTENT = "extra_block_adult_content"
         const val EXTRA_SPLIT_EXCLUDE_IPS = "extra_split_exclude_ips"

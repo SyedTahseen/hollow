@@ -8,7 +8,6 @@ import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowTransitions
 import android.Manifest
 import android.app.Activity
-import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.VpnService
@@ -79,7 +78,6 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hollow.vpn.data.ServerEntity
-import com.hollow.vpn.ui.AddServerRequest
 import com.hollow.vpn.ui.VpnScreen
 import com.hollow.vpn.ui.VpnViewModel
 import com.hollow.vpn.ui.components.HollowBlinkingDot
@@ -89,7 +87,6 @@ import com.hollow.vpn.ui.components.ServerQrShareDialog
 import com.hollow.vpn.ui.screens.AddServerActions
 import com.hollow.vpn.ui.screens.ConnectedHomeScreen
 import com.hollow.vpn.ui.screens.CountryServerListScreen
-import com.hollow.vpn.ui.screens.GettingStartedScreen
 import com.hollow.vpn.ui.screens.RawXrayJsonEditorDialog
 import com.hollow.vpn.ui.screens.SettingsScreen
 import com.hollow.vpn.ui.screens.SplashFetchingScreen
@@ -133,7 +130,6 @@ fun HollowVpnApp(
     val context = LocalContext.current
     val view = LocalView.current
     val currentScreen by vpnViewModel.currentScreen.collectAsStateWithLifecycle()
-    val gettingStartedStep by vpnViewModel.gettingStartedStep.collectAsStateWithLifecycle()
     val allServers by vpnViewModel.allServers.collectAsStateWithLifecycle()
     val filteredServers by vpnViewModel.filteredServers.collectAsStateWithLifecycle()
     val favoriteKeys by vpnViewModel.favoriteKeys.collectAsStateWithLifecycle()
@@ -159,7 +155,6 @@ fun HollowVpnApp(
     )
     val inspectingJsonServer by vpnViewModel.inspectingJsonServer.collectAsStateWithLifecycle()
     val sharingQrServer by vpnViewModel.sharingQrServer.collectAsStateWithLifecycle()
-    val appUpdateState by vpnViewModel.appUpdateState.collectAsStateWithLifecycle()
     val xrayLogs by XrayVpnService.logs.collectAsStateWithLifecycle()
 
     val systemDark = isSystemInDarkTheme()
@@ -187,14 +182,6 @@ fun HollowVpnApp(
         oledDark = isOledHardware,
         displayScalePercent = settings.displayScalePercent
     ) {
-
-    LaunchedEffect(settings.hideFromRecentApps) {
-        try {
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-            am?.appTasks?.firstOrNull()?.setExcludeFromRecents(settings.hideFromRecentApps)
-        } catch (_: Exception) {
-        }
-    }
 
     LaunchedEffect(snackbarMessage) {
         val msg = snackbarMessage ?: return@LaunchedEffect
@@ -300,7 +287,7 @@ fun HollowVpnApp(
         VpnScreen.CONNECTED_HOME -> HollowBottomTab.CONNECT
         VpnScreen.SERVER_LIST -> HollowBottomTab.SERVERS
         VpnScreen.SETTINGS -> HollowBottomTab.SETTINGS
-        VpnScreen.GETTING_STARTED, VpnScreen.SPLASH_FETCHING -> HollowBottomTab.CONNECT
+        VpnScreen.SPLASH_FETCHING -> HollowBottomTab.CONNECT
     }
 
     val navBackgroundColor = when {
@@ -387,8 +374,7 @@ fun HollowVpnApp(
                 },
                 bottomBar = {
                     val showFetchingPill = fetchingProgress.isActive &&
-                        currentScreen != VpnScreen.SPLASH_FETCHING &&
-                        currentScreen != VpnScreen.GETTING_STARTED
+                        currentScreen != VpnScreen.SPLASH_FETCHING
                     val renderNavBar = showBottomNav && !useNavigationRail
                     if (showFetchingPill || renderNavBar) {
                         Column(
@@ -483,9 +469,7 @@ fun HollowVpnApp(
                         targetState = currentScreen,
                         transitionSpec = {
                             val isModalFlow = targetState == VpnScreen.SPLASH_FETCHING ||
-                                initialState == VpnScreen.SPLASH_FETCHING ||
-                                targetState == VpnScreen.GETTING_STARTED ||
-                                initialState == VpnScreen.GETTING_STARTED
+                                initialState == VpnScreen.SPLASH_FETCHING
                             val isPush = targetState == VpnScreen.SETTINGS ||
                                 (targetState == VpnScreen.SERVER_LIST && initialState == VpnScreen.CONNECTED_HOME)
                             val isPop = initialState == VpnScreen.SETTINGS ||
@@ -501,30 +485,6 @@ fun HollowVpnApp(
                         label = "vpn_screen_motion"
                     ) { screen ->
                         when (screen) {
-                            VpnScreen.GETTING_STARTED -> {
-                                GettingStartedScreen(
-                                    currentStep = gettingStartedStep,
-                                    settings = settings,
-                                    serverCount = allServers.size,
-                                    onSelectStep = vpnViewModel::setGettingStartedStep,
-                                    onFetchSubscription = vpnViewModel::fetchSubscriptionInOnboarding,
-                                    onImportConfig = vpnViewModel::importConfigInOnboarding,
-                                    onSkip = {
-                                        vpnViewModel.completeOnboarding(
-                                            targetScreen = VpnScreen.CONNECTED_HOME,
-                                            autoConnectIfReady = false
-                                        )
-                                    },
-                                    onFinish = { autoConnect ->
-                                        vpnViewModel.completeOnboarding(
-                                            targetScreen = VpnScreen.CONNECTED_HOME,
-                                            autoConnectIfReady = autoConnect
-                                        )
-                                    },
-                                    onShowMessage = vpnViewModel::showMessage
-                                )
-                            }
-
                             VpnScreen.SPLASH_FETCHING -> {
                                 SplashFetchingScreen(
                                     statusSubtitle = fetchingStatus,
@@ -538,12 +498,8 @@ fun HollowVpnApp(
                                     servers = filteredServers,
                                     categories = serverCategories,
                                     selectedCategoryKey = selectedCategory,
-                                    activeProtocolPreference = settings.protocolPreference,
                                     bottomContentPadding = innerPadding.calculateBottomPadding(),
                                     onSelectCategory = vpnViewModel::setCategory,
-                                    onResetProtocolFilter = {
-                                        vpnViewModel.updateSettings { it.copy(protocolPreference = "Auto (V2Ray)") }
-                                    },
                                     favoriteKeys = favoriteKeys,
                                     isTestingFastest = isTestingFastest,
                                     onToggleFavorite = vpnViewModel::toggleFavorite,
@@ -605,16 +561,9 @@ fun HollowVpnApp(
                                     settings = settings,
                                     xrayLogs = xrayLogs,
                                     serverCount = allServers.size,
-                                    appUpdateState = appUpdateState,
                                     bottomContentPadding = innerPadding.calculateBottomPadding(),
                                     onUpdateSettings = vpnViewModel::updateSettings,
-                                    onOpenAddSubscription = {
-                                        vpnViewModel.requestAddServer(AddServerRequest.SUBSCRIPTION)
-                                    },
-                                    onOpenGettingStarted = vpnViewModel::reopenGettingStarted,
                                     onClearXrayLogs = vpnViewModel::clearXrayLogs,
-                                    onExportServers = exportServersToClipboard,
-                                    onCheckForUpdates = vpnViewModel::checkForAppUpdates,
                                     onShowMessage = vpnViewModel::showMessage,
                                     onBack = {
                                         if (!vpnViewModel.navigateBack()) {

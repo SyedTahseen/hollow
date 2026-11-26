@@ -36,7 +36,6 @@ import androidx.compose.material.icons.outlined.PublicOff
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
@@ -102,10 +101,8 @@ fun CountryServerListScreen(
         ServerCategory(ServerCategory.DEFAULT_KEY, "Default")
     ),
     selectedCategoryKey: String = ServerCategory.ALL_KEY,
-    activeProtocolPreference: String = "Auto (V2Ray)",
     bottomContentPadding: Dp = 0.dp,
     onSelectCategory: (String) -> Unit = {},
-    onResetProtocolFilter: () -> Unit = {},
     favoriteKeys: Set<String> = emptySet(),
     isTestingFastest: Boolean = false,
     onToggleFavorite: (ServerEntity) -> Unit = {},
@@ -343,35 +340,6 @@ fun CountryServerListScreen(
                 fontSizeSp = 10.5f
             )
 
-            if (activeProtocolPreference != "Auto (V2Ray)") {
-                Spacer(modifier = Modifier.height(HollowSpace.Md))
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = HollowCreamSurface,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .clickable(onClick = onResetProtocolFilter)
-                        .testTag("chip_reset_protocol_filter")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-                    ) {
-                        Text(
-                            text = "Protocol: ${formatConsumerProtocol(activeProtocolPreference)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = HollowInk
-                        )
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = "Reset protocol filter",
-                            tint = HollowInkSecondary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
-            }
 
             if (isSelectionMode) {
                 Spacer(modifier = Modifier.height(HollowSpace.Md))
@@ -471,8 +439,6 @@ fun CountryServerListScreen(
                                     color = HollowInk
                                 )
                                 val emptyMsg = when {
-                                    activeProtocolPreference != "Auto (V2Ray)" ->
-                                        "No servers match \"${formatConsumerProtocol(activeProtocolPreference)}\". Reset to Auto or add a server."
                                     isDefaultCategory ->
                                         "Manually added servers, pasted config keys, and scanned QR nodes will show up here."
                                     else ->
@@ -485,11 +451,6 @@ fun CountryServerListScreen(
                                     textAlign = TextAlign.Center
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
-                                    if (activeProtocolPreference != "Auto (V2Ray)") {
-                                        TextButton(onClick = onResetProtocolFilter) {
-                                            Text("Reset Protocol", color = HollowInk)
-                                        }
-                                    }
                                     Button(
                                         onClick = {
                                             if (isDefaultCategory) addServerState.showManual = true

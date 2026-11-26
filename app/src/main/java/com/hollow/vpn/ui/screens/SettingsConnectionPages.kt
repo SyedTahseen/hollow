@@ -109,7 +109,6 @@ internal fun AdvancedSettingsPage(
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    val directOnly = settings.routingMode.contains("Direct", ignoreCase = true)
 
     AdvancedValueItem(
         title = "Custom DNS",
@@ -121,9 +120,7 @@ internal fun AdvancedSettingsPage(
     AdvancedToggleItem(
         title = "LAN connections",
         checked = lanConnectionsOn(settings),
-        description = if (directOnly) "Not needed in Direct Only routing mode, where nothing goes through the VPN."
-        else "Lets you reach printers, speakers and other devices on your local network while connected.",
-        enabled = !directOnly,
+        description = "Lets you reach printers, speakers and other devices on your local network while connected.",
         testTag = "switch_lan"
     ) { on ->
         onUpdateSettings { it.copy(routingMode = if (on) ROUTING_BYPASS_LAN else ROUTING_GLOBAL) }
@@ -319,7 +316,7 @@ internal fun CustomDnsPage(
 
     FeatureHero(Icons.Outlined.Tune)
     Spacer(Modifier.height(HollowSpace.Lg))
-    DetailDescription("Connect with a self-hosted or third-party DNS instead of the Private DNS provider.")
+    DetailDescription("Connect with a self-hosted or third-party DNS instead of the default DNS.")
     DetailToggleRow(
         title = "Custom DNS",
         checked = settings.customDnsEnabled,

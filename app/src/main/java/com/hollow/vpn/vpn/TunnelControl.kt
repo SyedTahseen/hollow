@@ -46,8 +46,6 @@ internal object TunnelControl {
                 XrayVpnService.EXTRA_SELECTED_APP_PACKAGES,
                 ArrayList(snapshot.selectedAppPackages)
             )
-            putExtra(XrayVpnService.EXTRA_SMART_SWITCH_ENABLED, snapshot.smartSwitchEnabled)
-            putExtra(XrayVpnService.EXTRA_SERVER_SPEED_MBPS, snapshot.serverSpeedMbps)
             putExtra(XrayVpnService.EXTRA_NETSHIELD_ENABLED, snapshot.netShieldEnabled)
             putExtra(XrayVpnService.EXTRA_BLOCK_ADULT_CONTENT, snapshot.blockAdultContent)
             putStringArrayListExtra(XrayVpnService.EXTRA_SPLIT_EXCLUDE_IPS, ArrayList(snapshot.splitExcludeIps))

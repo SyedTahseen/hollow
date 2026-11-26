@@ -39,9 +39,7 @@ class HollowVpnRobolectricTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val store = VpnPreferencesStore(context)
         val custom = AppSettingsState(
-            protocolPreference = "Trojan (TLS)",
             routingMode = "Bypass LAN",
-            dnsMode = "Quad9 9.9.9.9",
             tunMode = false,
             ipv6Enabled = true,
             perAppProxyEnabled = true,
@@ -51,9 +49,7 @@ class HollowVpnRobolectricTest {
         )
         store.saveSettings(custom)
         val loaded = store.loadSettings()
-        assertEquals("Trojan (TLS)", loaded.protocolPreference)
         assertEquals("Bypass LAN", loaded.routingMode)
-        assertEquals("Quad9 9.9.9.9", loaded.dnsMode)
         assertEquals(false, loaded.tunMode)
         assertEquals(true, loaded.ipv6Enabled)
         assertEquals(true, loaded.perAppProxyEnabled)
@@ -252,33 +248,45 @@ class HollowVpnRobolectricTest {
     }
 
     @Test
-    fun `preferences store defaults hasCompletedOnboarding to false and persists completion`() {
+    fun `preferences store ignores and clears settings that no longer exist`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val prefs = context.getSharedPreferences("v2ray_vpn_prefs", Context.MODE_PRIVATE)
-        prefs.edit().remove("has_completed_onboarding").apply()
+        prefs.edit()
+            .putString("routing_mode", "Direct Only")
+            .putString("dns_mode", "Quad9 9.9.9.9")
+            .putString("protocol_pref", "Trojan (TLS)")
+            .putBoolean("smart_switch_enabled", true)
+            .putBoolean("strict_tls_enabled", true)
+            .putBoolean("start_on_open_v2", true)
+            .putBoolean("hide_recents", true)
+            .putBoolean("has_completed_onboarding", true)
+            .apply()
 
         val store = VpnPreferencesStore(context)
-        assertFalse(store.loadSettings().hasCompletedOnboarding)
+        val loaded = store.loadSettings()
+        // Direct Only was a diagnostic mode: never carried forward, so it can't silently bypass the VPN.
+        assertEquals("Global", loaded.routingMode)
+        // The Private DNS picker is gone; only the default (or Advanced > Custom DNS) applies.
+        assertEquals("Auto (DoH)", loaded.dnsMode)
 
-        store.saveSettings(store.loadSettings().copy(hasCompletedOnboarding = true))
-        assertTrue(store.loadSettings().hasCompletedOnboarding)
+        store.saveSettings(loaded)
+        listOf(
+            "protocol_pref", "dns_mode", "smart_switch_enabled", "strict_tls_enabled",
+            "start_on_open_v2", "hide_recents", "has_completed_onboarding"
+        ).forEach { key -> assertFalse("$key should be removed", prefs.contains(key)) }
     }
 
     @Test
-    fun `preferences store persists smart switch, mirrors, strict tls, domestic region, and speed baseline`() {
+    fun `preferences store persists mirrors, domestic region, and speed baseline`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val store = VpnPreferencesStore(context)
         val custom = AppSettingsState(
-            smartSwitchEnabled = true,
             mirrorsEnabled = true,
-            strictTlsEnabled = true,
             domesticCountryCode = "TR"
         )
         store.saveSettings(custom)
         val loaded = store.loadSettings()
-        assertTrue(loaded.smartSwitchEnabled)
         assertTrue(loaded.mirrorsEnabled)
-        assertTrue(loaded.strictTlsEnabled)
         assertEquals("TR", loaded.domesticCountryCode)
 
         store.saveBaselineSpeed("wifi", 12.5, nowMillis = 1_000_000L)
@@ -289,66 +297,15 @@ class HollowVpnRobolectricTest {
     }
 
     @Test
-    fun `smart switch ignores idle traffic, triggers after 8 stalled ticks, and enforces cooldown and hourly cap`() {
-        val switcher = com.hollow.vpn.vpn.SmartSwitch(referenceMbps = 10.0)
-        var t = 1_000_000L
-
-        // Idle traffic (low uplink) must never trigger switch
-        repeat(20) {
-            t += 1_000L
-            assertTrue(switcher.onSample(500L, 0L, t) is com.hollow.vpn.vpn.SmartSwitch.Verdict.Stay)
-        }
-
-        // Active requests with 0 downlink -> triggers on 8th tick
-        for (i in 1..7) {
-            t += 1_000L
-            assertTrue(switcher.onSample(5_000L, 1_000L, t) is com.hollow.vpn.vpn.SmartSwitch.Verdict.Stay)
-        }
-        t += 1_000L
-        val firstVerdict = switcher.onSample(5_000L, 1_000L, t)
-        assertTrue(firstVerdict is com.hollow.vpn.vpn.SmartSwitch.Verdict.Switch)
-
-        // During 45s cooldown, must stay even on stall
-        repeat(10) {
-            t += 1_000L
-            assertTrue(switcher.onSample(5_000L, 0L, t) is com.hollow.vpn.vpn.SmartSwitch.Verdict.Stay)
-        }
-
-        // Consume remaining 3 switches within an hour (spaced past 45s cooldown), then 5th must be blocked
-        repeat(3) {
-            t += 50_000L
-            repeat(7) {
-                t += 1_000L
-                switcher.onSample(5_000L, 100L, t)
-            }
-            t += 1_000L
-            assertTrue(switcher.onSample(5_000L, 100L, t) is com.hollow.vpn.vpn.SmartSwitch.Verdict.Switch)
-        }
-
-        t += 50_000L
-        repeat(10) {
-            t += 1_000L
-            assertTrue(switcher.onSample(5_000L, 100L, t) is com.hollow.vpn.vpn.SmartSwitch.Verdict.Stay)
-        }
-    }
-
-    @Test
-    fun `protocol ranker and security policy enforce DPI tiers and strict TLS rules`() {
+    fun `protocol ranker orders candidates by DPI resilience tier`() {
         val parser = V2RayParserAndFetcher()
         val reality = parser.parseImportPayload("vless://11111111-1111-1111-1111-111111111111@1.1.1.1:443?security=reality&pbk=PK&sni=cf.com#R").first()
         val hy2 = parser.parseImportPayload("hy2://pass@2.2.2.2:443?insecure=1#H").first()
         val trojan = parser.parseImportPayload("trojan://pass@3.3.3.3:443?security=tls#T").first()
-        val plainVless = parser.parseImportPayload("vless://11111111-1111-1111-1111-111111111111@4.4.4.4:80?security=none#P").first()
         val socks = parser.parseImportPayload("socks://5.5.5.5:1080#S").first()
 
         val ordered = com.hollow.vpn.vpn.ProtocolRanker.prioritizeCandidates(listOf(socks, trojan, hy2, reality))
         assertEquals(listOf("Reality", "Hysteria2", "Trojan", "SOCKS5"), ordered.map { it.transport })
-
-        assertTrue(com.hollow.vpn.vpn.SecurityPolicy.isServerSecure(reality))
-        assertTrue(com.hollow.vpn.vpn.SecurityPolicy.isServerSecure(trojan))
-        assertFalse(com.hollow.vpn.vpn.SecurityPolicy.isServerSecure(hy2))
-        assertFalse(com.hollow.vpn.vpn.SecurityPolicy.isServerSecure(plainVless))
-        assertFalse(com.hollow.vpn.vpn.SecurityPolicy.isServerSecure(socks))
     }
 
     @Test

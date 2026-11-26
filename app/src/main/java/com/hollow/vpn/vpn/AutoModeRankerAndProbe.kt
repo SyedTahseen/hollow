@@ -60,59 +60,6 @@ object ProtocolRanker {
 }
 
 /**
- * Enforces strict transport security when `strictTlsEnabled` is enabled:
- * rejects `allowInsecure=true`, plaintext VLESS/Trojan/SOCKS, and non-AEAD ciphers.
- */
-object SecurityPolicy {
-
-    private val NON_AEAD_MARKERS = setOf("none", "plain", "zero", "rc4", "rc4-md5", "des", "bf-cfb")
-
-    fun isServerSecure(server: ServerEntity): Boolean {
-        val core = server.protocolCore.lowercase()
-        if (core.contains("socks") || core.contains("http")) return false
-        if (core.contains("wireguard") || core.contains("hysteria")) {
-            return !hasAllowInsecure(server)
-        }
-        if (hasAllowInsecure(server)) return false
-
-        val raw = server.rawConfigJson.lowercase()
-        val transport = server.transport.lowercase()
-        val hasTlsOrReality = transport == "reality" ||
-            server.publicKey.isNotBlank() ||
-            raw.contains("\"security\": \"tls\"") ||
-            raw.contains("\"security\":\"tls\"") ||
-            raw.contains("\"security\": \"reality\"") ||
-            raw.contains("\"security\":\"reality\"")
-
-        if (core.contains("vless") || core.contains("trojan")) {
-            return hasTlsOrReality
-        }
-        if (core.contains("shadowsocks")) {
-            val method = server.uuidOrPassword.substringBefore(":").trim().lowercase()
-            return method !in NON_AEAD_MARKERS
-        }
-        if (core.contains("vmess")) {
-            if (hasTlsOrReality) return true
-            return !NON_AEAD_MARKERS.any { marker ->
-                raw.contains("\"security\": \"$marker\"") || raw.contains("\"security\":\"$marker\"")
-            }
-        }
-        return true
-    }
-
-    private fun hasAllowInsecure(server: ServerEntity): Boolean {
-        val uri = server.shareUri.lowercase()
-        if (uri.contains("allowinsecure=1") || uri.contains("allowinsecure=true") ||
-            uri.contains("insecure=1") || uri.contains("insecure=true")
-        ) {
-            return true
-        }
-        val raw = server.rawConfigJson.lowercase()
-        return raw.contains("\"allowinsecure\": true") || raw.contains("\"allowinsecure\":true")
-    }
-}
-
-/**
  * Beta/Thompson-inspired ordering for multiple subscription sources so reliable feeds
  * are pulled first without ever starving newly added feeds.
  */
@@ -280,7 +227,7 @@ object ThroughputProbe {
             }
             val elapsedSec = ((System.nanoTime() - startNs) / 1_000_000_000.0).coerceAtLeast(0.05)
             if (totalBytes < 16 * 1024) return 0.0
-            // Return MB/s (megabytes per second) matching SmartSwitch's referenceMbps units
+            // Return MB/s (megabytes per second)
             (totalBytes / 1_048_576.0) / elapsedSec
         } catch (_: Exception) {
             0.0

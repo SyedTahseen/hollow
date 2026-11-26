@@ -386,7 +386,7 @@ internal fun NetShieldPage(
         FeatureCaption(
             "NetShield works on domain names, so it can't block ads served from the same domain as the " +
                 "content, and apps that use their own encrypted DNS bypass it. While on, it replaces the " +
-                "Private DNS provider you chose."
+                "default and custom DNS."
         )
     }
 }

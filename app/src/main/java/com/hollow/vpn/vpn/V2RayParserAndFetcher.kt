@@ -3,9 +3,7 @@ package com.hollow.vpn.vpn
 import android.content.Context
 import android.provider.Settings
 import android.util.Base64
-import com.hollow.vpn.data.AppLinks
 import com.hollow.vpn.data.AppSettingsState
-import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.FetchingProgressState
 import com.hollow.vpn.data.FetchingStage
 import com.hollow.vpn.data.ProbeUrls
@@ -292,13 +290,8 @@ class V2RayParserAndFetcher {
             }
             if (validNodes.isEmpty()) return 0
 
-            val policyFiltered = if (settings.strictTlsEnabled) {
-                validNodes.filter { SecurityPolicy.isServerSecure(it) }.ifEmpty { validNodes }
-            } else {
-                validNodes
-            }
 
-            val prioritized = ProtocolRanker.prioritizeCandidates(policyFiltered)
+            val prioritized = ProtocolRanker.prioritizeCandidates(validNodes)
             var acceptedInBatch = 0
 
             for (candidate in prioritized) {
@@ -681,7 +674,7 @@ class V2RayParserAndFetcher {
      * Benchmarks candidate servers:
      * 1. Measures user's line baseline (if needed) under TCP reachability probing.
      * 2. Uses TCP ping strictly to DROP unreachable nodes (never to rank, avoiding CDN edge bias).
-     * 3. Orders survivors by DPI-resilient protocol tier (shuffled within tier) & optional strict TLS.
+     * 3. Orders survivors by DPI-resilient protocol tier (shuffled within tier).
      * 4. Verifies live Xray outbound HTTP 204 delay (`Libv2ray.measureOutboundDelay`).
      * 5. Runs serialized one-at-a-time throughput verification on top candidates so winners are truly fast.
      * 6. Resolves real IPs + HTTPS-only GeoIP country flags, returning a country-diverse Top 15.
@@ -699,14 +692,9 @@ class V2RayParserAndFetcher {
     ): List<ServerEntity> = withContext(Dispatchers.IO) {
         if (servers.isEmpty()) return@withContext emptyList()
 
-        val securityFiltered = if (settings.strictTlsEnabled) {
-            servers.filter { SecurityPolicy.isServerSecure(it) }.ifEmpty { servers }
-        } else {
-            servers
-        }
 
         val prioritizedInput = ProtocolRanker.prioritizeCandidates(
-            securityFiltered.distinctBy {
+            servers.distinctBy {
                 "${it.protocolCore.lowercase()}:${it.host.lowercase()}:${it.port}:${it.uuidOrPassword}:${it.sni.lowercase()}"
             }
         )
@@ -1068,103 +1056,6 @@ class V2RayParserAndFetcher {
         }
 
         PublicIpInfo("Unavailable", "Unknown", "XX", "Unavailable")
-    }
-
-    /**
-     * Checks live GitHub Releases / Tags for a newer Hollow VPN build without crashing if no release exists yet.
-     */
-    suspend fun checkAppUpdate(currentVersion: String): AppUpdateState = withContext(Dispatchers.IO) {
-        val cleanCurrent = currentVersion.trim().ifBlank { "1.0" }
-        try {
-            val releaseReq = Request.Builder()
-                .url(AppLinks.LATEST_RELEASE_API)
-                .header("Accept", "application/vnd.github+json")
-                .header("User-Agent", "HollowVPN/$cleanCurrent")
-                .build()
-            httpClient.newCall(releaseReq).execute().use { resp ->
-                if (resp.isSuccessful) {
-                    val json = JSONObject(resp.body?.string().orEmpty())
-                    val tagName = json.optString("tag_name", "").trim()
-                    val htmlUrl = json.optString("html_url", AppLinks.RELEASES_URL)
-                    val body = json.optString("body", "").trim()
-                    val assets = json.optJSONArray("assets")
-                    var apkUrl: String? = null
-                    if (assets != null) {
-                        for (i in 0 until assets.length()) {
-                            val asset = assets.optJSONObject(i) ?: continue
-                            val name = asset.optString("name", "")
-                            val dl = asset.optString("browser_download_url", "")
-                            if (name.endsWith(".apk", ignoreCase = true) && dl.isNotBlank()) {
-                                apkUrl = dl
-                                break
-                            }
-                        }
-                    }
-                    if (tagName.isNotBlank()) {
-                        return@withContext if (compareSemVer(tagName, cleanCurrent) > 0) {
-                            AppUpdateState.UpdateAvailable(
-                                currentVersion = cleanCurrent,
-                                latestVersion = tagName,
-                                releaseNotes = body.ifBlank { "New build $tagName is available." },
-                                releaseUrl = htmlUrl,
-                                apkDownloadUrl = apkUrl
-                            )
-                        } else {
-                            AppUpdateState.UpToDate(
-                                currentVersion = cleanCurrent,
-                                latestVersion = tagName,
-                                releaseUrl = htmlUrl
-                            )
-                        }
-                    }
-                } else if (resp.code == 404) {
-                    // Fallback to repository tags if no formal GitHub Release has been published yet
-                    val tagsReq = Request.Builder()
-                        .url(AppLinks.LATEST_TAG_API)
-                        .header("Accept", "application/vnd.github+json")
-                        .header("User-Agent", "HollowVPN/$cleanCurrent")
-                        .build()
-                    httpClient.newCall(tagsReq).execute().use { tagResp ->
-                        if (tagResp.isSuccessful) {
-                            val arr = JSONArray(tagResp.body?.string().orEmpty())
-                            val firstTag = arr.optJSONObject(0)?.optString("name", "")?.trim().orEmpty()
-                            if (firstTag.isNotBlank() && compareSemVer(firstTag, cleanCurrent) > 0) {
-                                return@withContext AppUpdateState.UpdateAvailable(
-                                    currentVersion = cleanCurrent,
-                                    latestVersion = firstTag,
-                                    releaseNotes = "New tag $firstTag published on repository.",
-                                    releaseUrl = AppLinks.RELEASES_URL
-                                )
-                            }
-                            return@withContext AppUpdateState.UpToDate(
-                                currentVersion = cleanCurrent,
-                                latestVersion = firstTag.ifBlank { "v$cleanCurrent" },
-                                releaseUrl = AppLinks.RELEASES_URL
-                            )
-                        }
-                    }
-                }
-                AppUpdateState.Error("Update server returned HTTP ${resp.code}. Please try again later.")
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            AppUpdateState.Error("Unable to reach update server. Check your internet connection and retry.")
-        }
-    }
-
-    private fun compareSemVer(remote: String, local: String): Int {
-        val rParts = remote.trim().removePrefix("v").removePrefix("V")
-            .substringBefore("-").split(".").map { it.filter(Char::isDigit).toIntOrNull() ?: 0 }
-        val lParts = local.trim().removePrefix("v").removePrefix("V")
-            .substringBefore("-").split(".").map { it.filter(Char::isDigit).toIntOrNull() ?: 0 }
-        val len = maxOf(rParts.size, lParts.size)
-        for (i in 0 until len) {
-            val r = rParts.getOrElse(i) { 0 }
-            val l = lParts.getOrElse(i) { 0 }
-            if (r != l) return r.compareTo(l)
-        }
-        return 0
     }
 
     /**
@@ -2486,7 +2377,7 @@ class V2RayParserAndFetcher {
     }
 
     /**
-     * Applies user DNS, Routing Mode (GeoIP/Geosite rules when `geoip.dat` & `geosite.dat` are
+     * Applies user DNS, LAN routing (GeoIP/Geosite rules when `geoip.dat` & `geosite.dat` are
      * installed, with automatic CIDR fallback), IPv6 strategy, TUN vs local proxy inbounds,
      * ordered proxy/direct/block outbounds, QUIC UDP/443 block, IPv6 leak block, and Xray stats.
      */
@@ -2597,11 +2488,11 @@ class V2RayParserAndFetcher {
             val dnsServers = JSONArray()
             when {
                 settings.netShieldEnabled -> {
-                    // NetShield: filtering resolver (AdGuard) takes over from the Private DNS provider.
+                    // NetShield: filtering resolver (AdGuard) takes over from the default DNS.
                     AppSettingsState.netShieldDns(settings.blockAdultContent).forEach { dnsServers.put(it) }
                 }
                 AppSettingsState.activeCustomDns(settings).isNotEmpty() -> {
-                    // Advanced > Custom DNS replaces the Private DNS provider.
+                    // Advanced > Custom DNS replaces the default DNS.
                     AppSettingsState.activeCustomDns(settings).forEach { dnsServers.put(it) }
                 }
                 settings.dnsMode.contains("8.8.8.8") -> {
@@ -2629,85 +2520,76 @@ class V2RayParserAndFetcher {
 
             // 4. Routing rules (real GeoIP/Geosite when geoip.dat/geosite.dat exist, plus CIDR rules)
             val rules = JSONArray()
-            if (settings.routingMode.contains("Direct Only", ignoreCase = true)) {
+            if (settings.routingMode.contains("Bypass LAN", ignoreCase = true)) {
+                val bypassCidrs = JSONArray()
+                    .put("10.0.0.0/8")
+                    .put("172.16.0.0/12")
+                    .put("192.168.0.0/16")
+                    .put("127.0.0.0/8")
+                    .put("169.254.0.0/16")
+                    .put("224.0.0.0/4")
+                    .put("fc00::/7")
+                    .put("fe80::/10")
+                    .put("ff00::/8")
+                val includeDomestic = settings.routingMode.contains("Domestic", ignoreCase = true)
+                if (includeDomestic) {
+                    bypassCidrs.put("100.64.0.0/10")
+                    bypassCidrs.put("198.18.0.0/15")
+                    if (hasGeoAssets) {
+                        bypassCidrs.put("geoip:private")
+                        bypassCidrs.put("geoip:${settings.domesticCountryCode.lowercase()}")
+                    }
+                } else if (hasGeoAssets) {
+                    bypassCidrs.put("geoip:private")
+                }
+                rules.put(
+                    JSONObject()
+                        .put("type", "field")
+                        .put("ip", bypassCidrs)
+                        .put("outboundTag", "direct")
+                )
+
+                if (hasGeoAssets) {
+                    val bypassDomains = JSONArray().put("geosite:private")
+                    if (includeDomestic) {
+                        val code = settings.domesticCountryCode.lowercase()
+                        val geositeTag = if (code == "cn") "geosite:cn" else "geosite:category-$code"
+                        bypassDomains.put(geositeTag)
+                    }
+                    rules.put(
+                        JSONObject()
+                            .put("type", "field")
+                            .put("domain", bypassDomains)
+                            .put("outboundTag", "direct")
+                    )
+                }
+            }
+            if (!settings.ipv6Enabled) {
+                rules.put(
+                    JSONObject()
+                        .put("type", "field")
+                        .put("ip", JSONArray().put("::/0"))
+                        .put("outboundTag", "block")
+                )
+            }
+            // Block QUIC (UDP 443) so browsers cleanly fall back to TLS/TCP over the tunnel
+            if (settings.blockQuic) {
+                rules.put(
+                    JSONObject()
+                        .put("type", "field")
+                        .put("port", "443")
+                        .put("network", "udp")
+                        .put("outboundTag", "block")
+                )
+            }
+            // Explicit catch-all routing rule to the primary proxy outbound
+            if (proxyOutbounds.isNotEmpty()) {
                 rules.put(
                     JSONObject()
                         .put("type", "field")
                         .put("network", "tcp,udp")
-                        .put("outboundTag", "direct")
+                        .put("outboundTag", proxyTag)
                 )
-            } else {
-                if (settings.routingMode.contains("Bypass LAN", ignoreCase = true)) {
-                    val bypassCidrs = JSONArray()
-                        .put("10.0.0.0/8")
-                        .put("172.16.0.0/12")
-                        .put("192.168.0.0/16")
-                        .put("127.0.0.0/8")
-                        .put("169.254.0.0/16")
-                        .put("224.0.0.0/4")
-                        .put("fc00::/7")
-                        .put("fe80::/10")
-                        .put("ff00::/8")
-                    val includeDomestic = settings.routingMode.contains("Domestic", ignoreCase = true)
-                    if (includeDomestic) {
-                        bypassCidrs.put("100.64.0.0/10")
-                        bypassCidrs.put("198.18.0.0/15")
-                        if (hasGeoAssets) {
-                            bypassCidrs.put("geoip:private")
-                            bypassCidrs.put("geoip:${settings.domesticCountryCode.lowercase()}")
-                        }
-                    } else if (hasGeoAssets) {
-                        bypassCidrs.put("geoip:private")
-                    }
-                    rules.put(
-                        JSONObject()
-                            .put("type", "field")
-                            .put("ip", bypassCidrs)
-                            .put("outboundTag", "direct")
-                    )
-
-                    if (hasGeoAssets) {
-                        val bypassDomains = JSONArray().put("geosite:private")
-                        if (includeDomestic) {
-                            val code = settings.domesticCountryCode.lowercase()
-                            val geositeTag = if (code == "cn") "geosite:cn" else "geosite:category-$code"
-                            bypassDomains.put(geositeTag)
-                        }
-                        rules.put(
-                            JSONObject()
-                                .put("type", "field")
-                                .put("domain", bypassDomains)
-                                .put("outboundTag", "direct")
-                        )
-                    }
-                }
-                if (!settings.ipv6Enabled) {
-                    rules.put(
-                        JSONObject()
-                            .put("type", "field")
-                            .put("ip", JSONArray().put("::/0"))
-                            .put("outboundTag", "block")
-                    )
-                }
-                // Block QUIC (UDP 443) so browsers cleanly fall back to TLS/TCP over the tunnel
-                if (settings.blockQuic) {
-                    rules.put(
-                        JSONObject()
-                            .put("type", "field")
-                            .put("port", "443")
-                            .put("network", "udp")
-                            .put("outboundTag", "block")
-                    )
-                }
-                // Explicit catch-all routing rule to the primary proxy outbound
-                if (proxyOutbounds.isNotEmpty()) {
-                    rules.put(
-                        JSONObject()
-                            .put("type", "field")
-                            .put("network", "tcp,udp")
-                            .put("outboundTag", proxyTag)
-                    )
-                }
             }
             root.put(
                 "routing",

@@ -4,9 +4,7 @@ import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.hollow.vpn.BuildConfig
 import com.hollow.vpn.data.AppSettingsState
-import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.data.FetchingProgressState
 import com.hollow.vpn.data.FetchingStage
 import com.hollow.vpn.data.ServerEntity
@@ -17,7 +15,6 @@ import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
 import com.hollow.vpn.data.favoriteKey
 import com.hollow.vpn.vpn.HollowJobScheduler
-import com.hollow.vpn.vpn.SecurityPolicy
 import com.hollow.vpn.vpn.V2RayParserAndFetcher
 import com.hollow.vpn.vpn.XrayProbeResult
 import com.hollow.vpn.vpn.XrayVpnService
@@ -46,7 +43,6 @@ import org.json.JSONObject
 import kotlin.math.max
 
 enum class VpnScreen {
-    GETTING_STARTED,
     SPLASH_FETCHING,
     SERVER_LIST,
     CONNECTED_HOME,
@@ -84,18 +80,10 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private val _settings = MutableStateFlow(prefsStore.loadSettings())
     val settings: StateFlow<AppSettingsState> = _settings.asStateFlow()
 
-    private val initialScreen = if (_settings.value.hasCompletedOnboarding) {
-        VpnScreen.CONNECTED_HOME
-    } else {
-        VpnScreen.GETTING_STARTED
-    }
-
-    private val _screenStack = MutableStateFlow(listOf(initialScreen))
-    private val _currentScreen = MutableStateFlow(initialScreen)
+    private val _screenStack = MutableStateFlow(listOf(VpnScreen.CONNECTED_HOME))
+    private val _currentScreen = MutableStateFlow(VpnScreen.CONNECTED_HOME)
     val currentScreen: StateFlow<VpnScreen> = _currentScreen.asStateFlow()
 
-    private val _gettingStartedStep = MutableStateFlow(0)
-    val gettingStartedStep: StateFlow<Int> = _gettingStartedStep.asStateFlow()
 
     private val _selectedCategory = MutableStateFlow(ServerCategory.ALL_KEY)
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
@@ -120,9 +108,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _sharingQrServer = MutableStateFlow<ServerEntity?>(null)
     val sharingQrServer: StateFlow<ServerEntity?> = _sharingQrServer.asStateFlow()
-
-    private val _appUpdateState = MutableStateFlow<AppUpdateState>(AppUpdateState.Idle)
-    val appUpdateState: StateFlow<AppUpdateState> = _appUpdateState.asStateFlow()
 
     val allServers: StateFlow<List<ServerEntity>> = dao.observeAllServers()
         .stateIn(
@@ -170,8 +155,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         _settings,
         allSubscriptions
     ) { servers, category, settings, subs ->
-        val protocolFiltered = filterByProtocolPreference(servers, settings.protocolPreference)
-        val sorted = protocolFiltered.sortedWith(
+        val sorted = servers.sortedWith(
             compareByDescending<ServerEntity> { it.isSelected }
                 .thenBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
         )
@@ -189,30 +173,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = emptyList()
     )
 
-    private fun filterByProtocolPreference(
-        servers: List<ServerEntity>,
-        preference: String
-    ): List<ServerEntity> {
-        return when (preference) {
-            "VLESS (Reality)" -> servers.filter { it.transport.equals("Reality", ignoreCase = true) }
-            "VLESS (WS / TCP)" -> servers.filter {
-                it.protocolCore.contains("VLESS", ignoreCase = true) && !it.transport.equals("Reality", ignoreCase = true)
-            }
-            "VMess (WebSocket)" -> servers.filter { it.protocolCore.contains("VMess", ignoreCase = true) }
-            "Trojan (TLS)" -> servers.filter { it.protocolCore.contains("Trojan", ignoreCase = true) }
-            "Hysteria2" -> servers.filter { it.protocolCore.contains("Hysteria", ignoreCase = true) }
-            "gRPC" -> servers.filter { it.transport.equals("gRPC", ignoreCase = true) }
-            "Shadowsocks" -> servers.filter { it.protocolCore.contains("Shadowsocks", ignoreCase = true) }
-            else -> servers
-        }
-    }
-
-    val selectedServer: StateFlow<ServerEntity?> = combine(allServers, _settings) { list, currentSettings ->
-        val matching = filterByProtocolPreference(list, currentSettings.protocolPreference)
-        matching.firstOrNull { it.isSelected }
-            ?: list.firstOrNull { it.isSelected }
-            ?: matching.firstOrNull()
-            ?: list.firstOrNull()
+    val selectedServer: StateFlow<ServerEntity?> = allServers.map { list ->
+        list.firstOrNull { it.isSelected } ?: list.firstOrNull()
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -428,144 +390,15 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             val configuredSubUrl = subs.firstOrNull()?.url?.takeIf { it.isNotBlank() }
                 ?: _settings.value.activeSubscriptionUrl.trim()
 
-            if (!_settings.value.hasCompletedOnboarding) {
-                _screenStack.value = listOf(VpnScreen.GETTING_STARTED)
-                _currentScreen.value = VpnScreen.GETTING_STARTED
-                _gettingStartedStep.value = 0
-                return@launch
-            }
-
-            val canAutoConnect = _settings.value.startOnAppOpen &&
-                (!_settings.value.tunMode || _settings.value.rootMode || android.net.VpnService.prepare(getApplication()) == null)
-
             _screenStack.value = listOf(VpnScreen.CONNECTED_HOME)
             _currentScreen.value = VpnScreen.CONNECTED_HOME
 
             if (configuredSubUrl.isNotBlank() && (existing.isEmpty() || _settings.value.subAutoUpdate)) {
                 runFetcherAutoFetchAndPingSweep(
                     returnScreen = VpnScreen.CONNECTED_HOME,
-                    autoConnectAfterFetch = canAutoConnect,
                     showLoadingScreen = false
                 )
-            } else if (existing.isNotEmpty() && canAutoConnect) {
-                val active = existing.firstOrNull { it.isSelected } ?: existing.first()
-                connectToServer(active)
             }
-        }
-    }
-
-    fun setGettingStartedStep(step: Int) {
-        _gettingStartedStep.value = step.coerceIn(0, 2)
-    }
-
-    fun completeOnboarding(
-        targetScreen: VpnScreen = VpnScreen.CONNECTED_HOME,
-        autoConnectIfReady: Boolean = false
-    ) {
-        updateSettings { it.copy(hasCompletedOnboarding = true) }
-        _gettingStartedStep.value = 0
-        _screenStack.value = listOf(targetScreen)
-        _currentScreen.value = targetScreen
-
-        if (autoConnectIfReady) {
-            viewModelScope.launch {
-                val servers = dao.getAllServersOnce()
-                val active = servers.firstOrNull { it.isSelected } ?: servers.firstOrNull()
-                if (active != null &&
-                    (!_settings.value.tunMode || _settings.value.rootMode || android.net.VpnService.prepare(getApplication()) == null)
-                ) {
-                    connectToServer(active)
-                }
-            }
-        }
-    }
-
-    fun reopenGettingStarted() {
-        _gettingStartedStep.value = if (_settings.value.hasCompletedOnboarding) 2 else 0
-        navigateTo(VpnScreen.GETTING_STARTED)
-    }
-
-    fun fetchSubscriptionInOnboarding(
-        rawUrlOrLinks: String,
-        onResult: (Result<Int>) -> Unit
-    ) {
-        val input = rawUrlOrLinks.trim()
-        if (input.isBlank()) {
-            onResult(Result.failure(IllegalArgumentException("Please enter a valid subscription URL")))
-            return
-        }
-        if (isDirectServerInput(input)) {
-            importConfigInOnboarding(input, onResult)
-            return
-        }
-        updateSettings { it.copy(activeSubscriptionUrl = input) }
-        viewModelScope.launch {
-            dao.deleteSubscriptionByUrl(input)
-            dao.insertSubscription(
-                SubscriptionEntity(
-                    url = input,
-                    autoUpdate = _settings.value.subAutoUpdate,
-                    replaceExisting = _settings.value.subReplaceExisting
-                )
-            )
-            val result = fetcher.fetchSubscriptionAndRankTop15(
-                subscriptionUrl = input,
-                context = getApplication(),
-                settings = _settings.value
-            )
-            result.fold(
-                onSuccess = { top15Nodes ->
-                    if (_settings.value.subReplaceExisting) {
-                        dao.deleteFetchedServers()
-                    }
-                    dao.clearSelection()
-                    val marked = top15Nodes.mapIndexed { idx, srv -> srv.copy(isSelected = idx == 0) }
-                    dao.insertServers(marked)
-                    marked.firstOrNull()?.let { fastest ->
-                        val ip = fetcher.resolveServerIpAddress(fastest.host)
-                        _telemetry.update { it.copy(serverIpLabel = ip) }
-                    }
-                    onResult(Result.success(marked.size))
-                },
-                onFailure = { err ->
-                    onResult(Result.failure(err))
-                }
-            )
-        }
-    }
-
-    fun importConfigInOnboarding(
-        rawText: String,
-        onResult: (Result<Int>) -> Unit
-    ) {
-        val trimmed = rawText.trim()
-        if (trimmed.isBlank()) {
-            onResult(Result.failure(IllegalArgumentException("Paste a valid vless://, vmess://, trojan://, ss://, or JSON config")))
-            return
-        }
-        viewModelScope.launch {
-            val parsed = fetcher.parseImportPayload(trimmed, isCustom = true)
-            if (parsed.isEmpty()) {
-                onResult(Result.failure(IllegalArgumentException("No valid server link or JSON config found")))
-                return@launch
-            }
-            val benchmarked = fetcher.benchmarkAndRankTop15(
-                servers = parsed,
-                context = getApplication(),
-                settings = _settings.value
-            )
-            if (benchmarked.isEmpty()) {
-                onResult(Result.failure(IllegalStateException("Servers parsed, but none passed proxy verification")))
-                return@launch
-            }
-            dao.clearSelection()
-            val toInsert = benchmarked.mapIndexed { idx, srv -> srv.copy(isSelected = idx == 0) }
-            dao.insertServers(toInsert)
-            toInsert.firstOrNull()?.let { fastest ->
-                val ip = fetcher.resolveServerIpAddress(fastest.host)
-                _telemetry.update { it.copy(serverIpLabel = ip) }
-            }
-            onResult(Result.success(toInsert.size))
         }
     }
 
@@ -669,14 +502,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         _selectedCategory.value = key
     }
 
-    fun checkForAppUpdates() {
-        if (_appUpdateState.value is AppUpdateState.Checking) return
-        viewModelScope.launch {
-            _appUpdateState.value = AppUpdateState.Checking
-            _appUpdateState.value = fetcher.checkAppUpdate(BuildConfig.VERSION_NAME)
-        }
-    }
-
     /** Opens the server list with the "+" menu (or its subscription / manual surface) ready. */
     fun requestAddServer(request: AddServerRequest = AddServerRequest.MENU) {
         _addServerRequest.value = request
@@ -763,26 +588,15 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        if (_settings.value.strictTlsEnabled && !SecurityPolicy.isServerSecure(server)) {
-            _telemetry.update { it.copy(isConnecting = false, isConnected = false) }
-            showMessage("Strict TLS blocked ${server.countryName}: insecure TLS or plaintext node")
-            return
-        }
-
         XrayVpnService.clearLastError()
         _telemetry.update { it.copy(isConnecting = true, connectingStage = 1) }
 
-        val isDirectOnly = _settings.value.routingMode.contains("Direct Only", ignoreCase = true)
-        val livePing: Int? = if (isDirectOnly) {
-            server.pingMs
-        } else {
-            when (val probe = fetcher.measureRealXrayDelayOrNull(getApplication(), server, _settings.value)) {
-                is XrayProbeResult.Success -> probe.delayMs
-                XrayProbeResult.NativeUnavailable -> withContext(Dispatchers.IO) {
-                    fetcher.measureRealTcpLatencyOrNull(server.host, server.port, timeoutMs = 2200)
-                }
-                XrayProbeResult.Unreachable -> null
+        val livePing: Int? = when (val probe = fetcher.measureRealXrayDelayOrNull(getApplication(), server, _settings.value)) {
+            is XrayProbeResult.Success -> probe.delayMs
+            XrayProbeResult.NativeUnavailable -> withContext(Dispatchers.IO) {
+                fetcher.measureRealTcpLatencyOrNull(server.host, server.port, timeoutMs = 2200)
             }
+            XrayProbeResult.Unreachable -> null
         }
 
         currentCoroutineContext().ensureActive()
