@@ -97,6 +97,10 @@ class HollowTileService : TileService() {
             )
             putExtra(XrayVpnService.EXTRA_SMART_SWITCH_ENABLED, snapshot.smartSwitchEnabled)
             putExtra(XrayVpnService.EXTRA_SERVER_SPEED_MBPS, snapshot.serverSpeedMbps)
+            putExtra(XrayVpnService.EXTRA_NETSHIELD_ENABLED, snapshot.netShieldEnabled)
+            putExtra(XrayVpnService.EXTRA_BLOCK_ADULT_CONTENT, snapshot.blockAdultContent)
+            putStringArrayListExtra(XrayVpnService.EXTRA_SPLIT_EXCLUDE_IPS, ArrayList(snapshot.splitExcludeIps))
+            putStringArrayListExtra(XrayVpnService.EXTRA_SPLIT_INCLUDE_IPS, ArrayList(snapshot.splitIncludeIps))
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(startIntent)

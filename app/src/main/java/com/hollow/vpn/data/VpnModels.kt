@@ -149,9 +149,24 @@ data class AppSettingsState(
     val domesticCountryCode: String = "IR",
     val themeMode: String = "Dark",
     /** App-wide display size in percent (80..130), same as Outrun's "Display size". */
-    val displayScalePercent: Int = 100
+    val displayScalePercent: Int = 100,
+    /** NetShield: filter ads, trackers and malware by sending DNS lookups to a filtering resolver. */
+    val netShieldEnabled: Boolean = false,
+    /** NetShield extra: also block adult content (AdGuard "family" resolver). */
+    val blockAdultContent: Boolean = false,
+    /** Split tunneling, "Skip VPN" mode: these IPs / CIDRs connect directly. */
+    val splitExcludeIps: List<String> = emptyList(),
+    /** Split tunneling, "VPN only" mode: only these IPs / CIDRs go through the VPN. */
+    val splitIncludeIps: List<String> = emptyList()
 ) {
     companion object {
+        /** AdGuard DNS: default (ads, trackers, malware) and family (adds adult content). */
+        val NETSHIELD_DNS = listOf("94.140.14.14", "94.140.15.15")
+        val NETSHIELD_DNS_FAMILY = listOf("94.140.14.15", "94.140.15.16")
+
+        fun netShieldDns(blockAdult: Boolean): List<String> =
+            if (blockAdult) NETSHIELD_DNS_FAMILY else NETSHIELD_DNS
+
         const val DEFAULT_SUBSCRIPTION_URL = ""
         internal const val LEGACY_DEFAULT_SUBSCRIPTION_URL =
             "https://raw.githubusercontent.com/mirrorrepomagic/free-v2ray-public-list/refs/heads/main/V2Ray-Config-By-EbraSha.txt"
@@ -172,7 +187,11 @@ data class ActiveTunnelSnapshot(
     val bypassSelectedApps: Boolean,
     val selectedAppPackages: Set<String>,
     val smartSwitchEnabled: Boolean = false,
-    val serverSpeedMbps: Double = 0.0
+    val serverSpeedMbps: Double = 0.0,
+    val netShieldEnabled: Boolean = false,
+    val blockAdultContent: Boolean = false,
+    val splitExcludeIps: List<String> = emptyList(),
+    val splitIncludeIps: List<String> = emptyList()
 )
 
 class VpnPreferencesStore(context: Context) {
@@ -204,9 +223,16 @@ class VpnPreferencesStore(context: Context) {
             strictTlsEnabled = prefs.getBoolean("strict_tls_enabled", false),
             domesticCountryCode = prefs.getString("domestic_country_code", "IR") ?: "IR",
             themeMode = prefs.getString("theme_mode", "Dark") ?: "Dark",
-            displayScalePercent = prefs.getInt("display_scale_percent", 100).coerceIn(80, 130)
+            displayScalePercent = prefs.getInt("display_scale_percent", 100).coerceIn(80, 130),
+            netShieldEnabled = prefs.getBoolean("netshield_enabled", false),
+            blockAdultContent = prefs.getBoolean("netshield_block_adult", false),
+            splitExcludeIps = loadLines("split_exclude_ips"),
+            splitIncludeIps = loadLines("split_include_ips")
         )
     }
+
+    private fun loadLines(key: String): List<String> =
+        (prefs.getString(key, "") ?: "").split("\n").map { it.trim() }.filter { it.isNotEmpty() }
 
     fun saveSettings(state: AppSettingsState) {
         prefs.edit()
@@ -233,6 +259,10 @@ class VpnPreferencesStore(context: Context) {
             .putString("domestic_country_code", state.domesticCountryCode)
             .putString("theme_mode", state.themeMode)
             .putInt("display_scale_percent", state.displayScalePercent.coerceIn(80, 130))
+            .putBoolean("netshield_enabled", state.netShieldEnabled)
+            .putBoolean("netshield_block_adult", state.blockAdultContent)
+            .putString("split_exclude_ips", state.splitExcludeIps.joinToString("\n"))
+            .putString("split_include_ips", state.splitIncludeIps.joinToString("\n"))
             .apply()
     }
 
@@ -252,6 +282,10 @@ class VpnPreferencesStore(context: Context) {
             .putStringSet("snap_selected_packages", snapshot.selectedAppPackages)
             .putBoolean("snap_smart_switch", snapshot.smartSwitchEnabled)
             .putFloat("snap_server_speed_mbps", snapshot.serverSpeedMbps.toFloat())
+            .putBoolean("snap_netshield", snapshot.netShieldEnabled)
+            .putBoolean("snap_block_adult", snapshot.blockAdultContent)
+            .putString("snap_split_exclude_ips", snapshot.splitExcludeIps.joinToString("\n"))
+            .putString("snap_split_include_ips", snapshot.splitIncludeIps.joinToString("\n"))
             .apply()
     }
 
@@ -273,7 +307,11 @@ class VpnPreferencesStore(context: Context) {
             bypassSelectedApps = prefs.getBoolean("snap_bypass_selected", false),
             selectedAppPackages = prefs.getStringSet("snap_selected_packages", emptySet()) ?: emptySet(),
             smartSwitchEnabled = prefs.getBoolean("snap_smart_switch", false),
-            serverSpeedMbps = prefs.getFloat("snap_server_speed_mbps", 0f).toDouble()
+            serverSpeedMbps = prefs.getFloat("snap_server_speed_mbps", 0f).toDouble(),
+            netShieldEnabled = prefs.getBoolean("snap_netshield", false),
+            blockAdultContent = prefs.getBoolean("snap_block_adult", false),
+            splitExcludeIps = loadLines("snap_split_exclude_ips"),
+            splitIncludeIps = loadLines("snap_split_include_ips")
         )
     }
 
@@ -293,6 +331,10 @@ class VpnPreferencesStore(context: Context) {
             .remove("snap_selected_packages")
             .remove("snap_smart_switch")
             .remove("snap_server_speed_mbps")
+            .remove("snap_netshield")
+            .remove("snap_block_adult")
+            .remove("snap_split_exclude_ips")
+            .remove("snap_split_include_ips")
             .apply()
     }
 

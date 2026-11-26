@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
+import android.net.IpPrefix
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -17,10 +18,14 @@ import androidx.core.app.NotificationCompat
 import com.hollow.vpn.MainActivity
 import com.hollow.vpn.R
 import com.hollow.vpn.data.ActiveTunnelSnapshot
+import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.ProbeUrls
+import com.hollow.vpn.data.UsageSession
+import com.hollow.vpn.data.UsageStore
 import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
 import go.Seq
+import java.net.InetAddress
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.ArrayDeque
@@ -101,6 +106,16 @@ class XrayVpnService : VpnService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // Usage & history bookkeeping for the connection that is currently up.
+    private val usageLock = Any()
+    private var usageSessionStart = 0L
+    private var usageSessionServer = ""
+    private var usageSessionUp = 0L
+    private var usageSessionDown = 0L
+    private var usagePendingUp = 0L
+    private var usagePendingDown = 0L
+    private var usageLastFlush = 0L
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_DISCONNECT) {
             appendLog("Disconnect requested by user")
@@ -164,6 +179,21 @@ class XrayVpnService : VpnService() {
             fallbackSnapshot?.serverSpeedMbps ?: 0.0
         ) ?: (fallbackSnapshot?.serverSpeedMbps ?: 0.0)
 
+        val netShieldEnabled = intent?.getBooleanExtra(
+            EXTRA_NETSHIELD_ENABLED,
+            fallbackSnapshot?.netShieldEnabled ?: false
+        ) ?: (fallbackSnapshot?.netShieldEnabled ?: false)
+        val blockAdultContent = intent?.getBooleanExtra(
+            EXTRA_BLOCK_ADULT_CONTENT,
+            fallbackSnapshot?.blockAdultContent ?: false
+        ) ?: (fallbackSnapshot?.blockAdultContent ?: false)
+        val splitExcludeIps = intent?.getStringArrayListExtra(EXTRA_SPLIT_EXCLUDE_IPS)?.toList()
+            ?: fallbackSnapshot?.splitExcludeIps
+            ?: emptyList()
+        val splitIncludeIps = intent?.getStringArrayListExtra(EXTRA_SPLIT_INCLUDE_IPS)?.toList()
+            ?: fallbackSnapshot?.splitIncludeIps
+            ?: emptyList()
+
         if (tunMode && prepare(this) != null) {
             fail("VPN permission not granted by Android OS")
             stopSelf()
@@ -208,7 +238,11 @@ class XrayVpnService : VpnService() {
                     bypassSelectedApps = bypassSelectedApps,
                     selectedAppPackages = selectedAppPackages,
                     smartSwitchEnabled = smartSwitchEnabled,
-                    serverSpeedMbps = serverSpeedMbps
+                    serverSpeedMbps = serverSpeedMbps,
+                    netShieldEnabled = netShieldEnabled,
+                    blockAdultContent = blockAdultContent,
+                    splitExcludeIps = splitExcludeIps,
+                    splitIncludeIps = splitIncludeIps
                 )
             }
         } catch (e: Exception) {
@@ -235,7 +269,11 @@ class XrayVpnService : VpnService() {
         bypassSelectedApps: Boolean,
         selectedAppPackages: Set<String>,
         smartSwitchEnabled: Boolean,
-        serverSpeedMbps: Double
+        serverSpeedMbps: Double,
+        netShieldEnabled: Boolean = false,
+        blockAdultContent: Boolean = false,
+        splitExcludeIps: List<String> = emptyList(),
+        splitIncludeIps: List<String> = emptyList()
     ) {
         if (commandGeneration.get() != gen) return
         teardownActiveResources()
@@ -245,14 +283,20 @@ class XrayVpnService : VpnService() {
             setConnectStage(2)
             var tunFd = 0
             if (tunMode) {
+                val dnsServers = effectiveDnsServers(dnsMode, netShieldEnabled, blockAdultContent)
                 val builder = Builder()
                     .setSession("Hollow VPN - $country ($host)")
                     .setMtu(VPN_MTU)
                     .addAddress("10.26.0.1", 30)
-                    .addDnsServer(selectedDns(dnsMode))
-                    .addRoute("0.0.0.0", 0)
                     .addAddress("fd00:26::1", 126)
-                    .addRoute("::", 0)
+                dnsServers.forEach { builder.addDnsServer(it) }
+                configureRoutes(
+                    builder = builder,
+                    splitEnabled = perAppProxyEnabled,
+                    bypassSelected = bypassSelectedApps,
+                    includeIps = splitIncludeIps,
+                    excludeIps = splitExcludeIps
+                )
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     builder.setMetered(false)
@@ -271,7 +315,10 @@ class XrayVpnService : VpnService() {
                 }
                 vpnInterface = established
                 tunFd = established.fd
-                appendLog("TUN interface up (MTU=$VPN_MTU, DNS=${selectedDns(dnsMode)}, IPv6=$enableIpv6)")
+                appendLog(
+                    "TUN interface up (MTU=$VPN_MTU, DNS=${dnsServers.joinToString()}, IPv6=$enableIpv6" +
+                        (if (netShieldEnabled) ", NetShield${if (blockAdultContent) "+adult" else ""}" else "") + ")"
+                )
             }
 
             initializeXray()
@@ -328,7 +375,11 @@ class XrayVpnService : VpnService() {
                     bypassSelectedApps = bypassSelectedApps,
                     selectedAppPackages = selectedAppPackages,
                     smartSwitchEnabled = smartSwitchEnabled,
-                    serverSpeedMbps = serverSpeedMbps
+                    serverSpeedMbps = serverSpeedMbps,
+                    netShieldEnabled = netShieldEnabled,
+                    blockAdultContent = blockAdultContent,
+                    splitExcludeIps = splitExcludeIps,
+                    splitIncludeIps = splitIncludeIps
                 )
             )
 
@@ -344,6 +395,7 @@ class XrayVpnService : VpnService() {
             _trafficSnapshot.value = TunnelTrafficSnapshot()
             setConnectStage(0)
             _isServiceRunning.value = true
+            beginUsageSession(country)
             HollowTileService.requestTileUpdate(applicationContext)
             startTrafficStatsPolling(gen, core)
             startNetworkMonitor(gen)
@@ -455,7 +507,11 @@ class XrayVpnService : VpnService() {
                         bypassSelectedApps = settings.bypassSelectedApps,
                         selectedAppPackages = settings.selectedAppPackages,
                         smartSwitchEnabled = settings.smartSwitchEnabled,
-                        serverSpeedMbps = chosen.lastSpeedMbps
+                        serverSpeedMbps = chosen.lastSpeedMbps,
+                        netShieldEnabled = settings.netShieldEnabled,
+                        blockAdultContent = settings.blockAdultContent,
+                        splitExcludeIps = settings.splitExcludeIps,
+                        splitIncludeIps = settings.splitIncludeIps
                     )
                 }
             } catch (e: CancellationException) {
@@ -482,6 +538,7 @@ class XrayVpnService : VpnService() {
                     rawStats = raw,
                     includeDirect = activeIncludeDirectStats
                 )
+                recordUsage(upDelta, downDelta)
                 val prev = _trafficSnapshot.value
                 _trafficSnapshot.value = TunnelTrafficSnapshot(
                     uploadBytes = prev.uploadBytes + upDelta,
@@ -546,6 +603,7 @@ class XrayVpnService : VpnService() {
     }
 
     private fun teardownActiveResources() {
+        finishUsageSession()
         networkMonitor?.stop()
         networkMonitor = null
         smartSwitch = null
@@ -587,6 +645,106 @@ class XrayVpnService : VpnService() {
         }
         if (stopThread.isAlive) {
             Log.w(TAG, "Xray stopLoop exceeded ${STOP_GRACE_MILLIS}ms grace period; detaching")
+        }
+    }
+
+    private fun beginUsageSession(server: String) {
+        synchronized(usageLock) {
+            usageSessionStart = System.currentTimeMillis()
+            usageSessionServer = server
+            usageSessionUp = 0L
+            usageSessionDown = 0L
+            usagePendingUp = 0L
+            usagePendingDown = 0L
+            usageLastFlush = usageSessionStart
+        }
+    }
+
+    private fun recordUsage(up: Long, down: Long) {
+        if (up <= 0L && down <= 0L) return
+        synchronized(usageLock) {
+            if (usageSessionStart == 0L) return
+            usageSessionUp += up
+            usageSessionDown += down
+            usagePendingUp += up
+            usagePendingDown += down
+            val now = System.currentTimeMillis()
+            if (now - usageLastFlush >= USAGE_FLUSH_MILLIS) flushUsageLocked(now)
+        }
+    }
+
+    private fun flushUsageLocked(now: Long) {
+        UsageStore.addToday(applicationContext, usagePendingUp, usagePendingDown)
+        usagePendingUp = 0L
+        usagePendingDown = 0L
+        usageLastFlush = now
+    }
+
+    /** Saves the connection that just ended to Usage & history. Safe to call when nothing is open. */
+    private fun finishUsageSession() {
+        synchronized(usageLock) {
+            if (usageSessionStart == 0L) return
+            val now = System.currentTimeMillis()
+            flushUsageLocked(now)
+            UsageStore.saveSession(
+                applicationContext,
+                UsageSession(usageSessionStart, now, usageSessionServer, usageSessionUp, usageSessionDown)
+            )
+            usageSessionStart = 0L
+            usageSessionUp = 0L
+            usageSessionDown = 0L
+        }
+    }
+
+    /** DNS servers for the tunnel: NetShield (filtering resolver) wins over the Private DNS provider. */
+    private fun effectiveDnsServers(mode: String, netShield: Boolean, blockAdult: Boolean): List<String> =
+        if (netShield) AppSettingsState.netShieldDns(blockAdult) else listOf(selectedDns(mode))
+
+    /**
+     * Routes for the tunnel. Normally everything goes through the VPN. With split tunneling on:
+     * - "VPN only" with IP addresses: only those ranges are routed into the VPN.
+     * - "Skip VPN" with IP addresses: everything is routed except those ranges (Android 13+ uses
+     *   excludeRoute; older versions get the equivalent list of routes computed here).
+     */
+    private fun configureRoutes(
+        builder: Builder,
+        splitEnabled: Boolean,
+        bypassSelected: Boolean,
+        includeIps: List<String>,
+        excludeIps: List<String>
+    ) {
+        val incIps = if (splitEnabled && !bypassSelected) includeIps else emptyList()
+        val exIps = if (splitEnabled && bypassSelected) excludeIps else emptyList()
+
+        if (incIps.isNotEmpty()) {
+            var added = 0
+            incIps.forEach { ip ->
+                val ok = runCatching { builder.addRoute(ip.substringBefore('/'), IpRoutes.prefixLength(ip)) }.isSuccess
+                if (ok) added++ else appendLog("Route $ip rejected by Android")
+            }
+            if (added == 0) error("None of the included IP addresses could be routed")
+            return
+        }
+
+        if (exIps.isNotEmpty() && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            var added = 0
+            (IpRoutes.routes(false, exIps) + IpRoutes.routes(true, exIps)).forEach { (addr, len) ->
+                if (runCatching { builder.addRoute(addr, len) }.isSuccess) added++
+            }
+            if (added == 0) error("No usable routes left after excluding IP addresses")
+            return
+        }
+
+        builder.addRoute("0.0.0.0", 0)
+        builder.addRoute("::", 0)
+        if (exIps.isNotEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            exIps.forEach { ip ->
+                runCatching {
+                    builder.excludeRoute(
+                        IpPrefix(InetAddress.getByName(ip.substringBefore('/')), IpRoutes.prefixLength(ip))
+                    )
+                }.onFailure { appendLog("Excluded address $ip rejected by Android") }
+            }
         }
     }
 
@@ -777,6 +935,11 @@ class XrayVpnService : VpnService() {
         const val EXTRA_SELECTED_APP_PACKAGES = "extra_selected_app_packages"
         const val EXTRA_SMART_SWITCH_ENABLED = "extra_smart_switch_enabled"
         const val EXTRA_SERVER_SPEED_MBPS = "extra_server_speed_mbps"
+        const val EXTRA_NETSHIELD_ENABLED = "extra_netshield_enabled"
+        const val EXTRA_BLOCK_ADULT_CONTENT = "extra_block_adult_content"
+        const val EXTRA_SPLIT_EXCLUDE_IPS = "extra_split_exclude_ips"
+        const val EXTRA_SPLIT_INCLUDE_IPS = "extra_split_include_ips"
+        private const val USAGE_FLUSH_MILLIS = 10_000L
         private const val CHANNEL_ID = "v2ray_vpn_tunnel_channel"
         private const val NOTIFICATION_ID = 2048
         private const val VPN_MTU = 1500

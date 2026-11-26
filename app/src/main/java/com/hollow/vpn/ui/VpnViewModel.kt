@@ -1401,6 +1401,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     fun updateSettings(transform: (AppSettingsState) -> AppSettingsState) {
         var subAutoUpdateChanged = false
         var perAppChanged = false
+        var routingChanged = false
         var latestSettings = _settings.value
         _settings.update { current ->
             val updated = transform(current)
@@ -1408,6 +1409,10 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             perAppChanged = updated.perAppProxyEnabled != current.perAppProxyEnabled ||
                 updated.bypassSelectedApps != current.bypassSelectedApps ||
                 updated.selectedAppPackages != current.selectedAppPackages
+            routingChanged = updated.netShieldEnabled != current.netShieldEnabled ||
+                updated.blockAdultContent != current.blockAdultContent ||
+                updated.splitExcludeIps != current.splitExcludeIps ||
+                updated.splitIncludeIps != current.splitIncludeIps
             latestSettings = updated
             prefsStore.saveSettings(updated)
             updated
@@ -1415,8 +1420,11 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         if (subAutoUpdateChanged) {
             HollowJobScheduler.schedulePeriodicMaintenance(getApplication(), latestSettings)
         }
-        if (perAppChanged && (_telemetry.value.isConnected || _telemetry.value.isConnecting)) {
-            showMessage("Per-app routing updated — reconnect VPN to apply")
+        if ((perAppChanged || routingChanged) && (_telemetry.value.isConnected || _telemetry.value.isConnecting)) {
+            showMessage(
+                if (perAppChanged) "Split tunneling updated — reconnect VPN to apply"
+                else "Settings updated — reconnect VPN to apply"
+            )
         }
     }
 
@@ -1465,6 +1473,16 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 putExtra(XrayVpnService.EXTRA_SMART_SWITCH_ENABLED, currentSettings.smartSwitchEnabled)
                 putExtra(XrayVpnService.EXTRA_SERVER_SPEED_MBPS, server.lastSpeedMbps)
+                putExtra(XrayVpnService.EXTRA_NETSHIELD_ENABLED, currentSettings.netShieldEnabled)
+                putExtra(XrayVpnService.EXTRA_BLOCK_ADULT_CONTENT, currentSettings.blockAdultContent)
+                putStringArrayListExtra(
+                    XrayVpnService.EXTRA_SPLIT_EXCLUDE_IPS,
+                    ArrayList(currentSettings.splitExcludeIps)
+                )
+                putStringArrayListExtra(
+                    XrayVpnService.EXTRA_SPLIT_INCLUDE_IPS,
+                    ArrayList(currentSettings.splitIncludeIps)
+                )
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 ctx.startForegroundService(intent)

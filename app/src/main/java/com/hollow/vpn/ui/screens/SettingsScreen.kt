@@ -53,6 +53,7 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.SettingsBrightness
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Terminal
@@ -117,7 +118,10 @@ private enum class ActiveSettingDialog {
 
 /** Every setting that has its own page where the value is changed. */
 private enum class SettingsPage {
+    NET_SHIELD,
     SPLIT_TUNNELING,
+    SPLIT_IPS,
+    USAGE_HISTORY,
     KILL_SWITCH,
     PRIVATE_DNS,
     IPV6,
@@ -195,7 +199,13 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     var page by remember { mutableStateOf<SettingsPage?>(null) }
-    BackHandler { if (page != null) page = null else onBack() }
+    BackHandler {
+        when (page) {
+            null -> onBack()
+            SettingsPage.SPLIT_IPS -> page = SettingsPage.SPLIT_TUNNELING
+            else -> page = null
+        }
+    }
 
     val context = LocalContext.current
     var activeDialog by remember { mutableStateOf<ActiveSettingDialog?>(null) }
@@ -238,7 +248,10 @@ fun SettingsScreen(
                     page = current,
                     settings = settings,
                     onUpdateSettings = onUpdateSettings,
-                    onBack = { page = null },
+                    onBack = {
+                        page = if (current == SettingsPage.SPLIT_IPS) SettingsPage.SPLIT_TUNNELING else null
+                    },
+                    onOpenSplitIps = { page = SettingsPage.SPLIT_IPS },
                     onOpenPerAppPicker = { showPerAppPicker = true },
                     onOpenSystemVpnSettings = {
                         try {
@@ -304,12 +317,11 @@ fun SettingsScreen(
             bypassSelectedApps = !settings.perAppProxyEnabled || settings.bypassSelectedApps,
             onSave = { packages, bypassMode ->
                 onShowMessage(
-                    if (packages.isEmpty()) "Split tunneling disabled (all apps use VPN)"
+                    if (packages.isEmpty()) "No apps selected for split tunneling"
                     else "Split tunneling saved for ${packages.size} app(s)"
                 )
                 onUpdateSettings {
                     it.copy(
-                        perAppProxyEnabled = packages.isNotEmpty(),
                         bypassSelectedApps = bypassMode,
                         selectedAppPackages = packages
                     )
@@ -356,10 +368,23 @@ private fun SettingsOverview(
 
     SettingsSectionHeader("Features")
     SettingsRow(
+        icon = Icons.Outlined.Security,
+        title = "NetShield",
+        subtitle = when {
+            !settings.netShieldEnabled -> "Off"
+            settings.blockAdultContent -> "Blocking ads, trackers, malware and adult content"
+            else -> "Blocking ads, trackers and malware"
+        },
+        onClick = { onOpenPage(SettingsPage.NET_SHIELD) },
+        testTag = "row_netshield"
+    )
+    SettingsRow(
         icon = Icons.Outlined.Apps,
         title = "Split tunneling",
         subtitle = if (settings.perAppProxyEnabled) {
-            "On · ${settings.selectedAppPackages.size} apps"
+            val ipCount = if (settings.bypassSelectedApps) settings.splitExcludeIps.size else settings.splitIncludeIps.size
+            "On · ${if (settings.bypassSelectedApps) "skipping" else "VPN only"} · " +
+                "${settings.selectedAppPackages.size} apps" + if (ipCount > 0) " · $ipCount IPs" else ""
         } else "Off",
         onClick = { onOpenPage(SettingsPage.SPLIT_TUNNELING) },
         testTag = "row_per_app_selection"
@@ -372,9 +397,16 @@ private fun SettingsOverview(
         testTag = "row_system_vpn_settings"
     )
     SettingsRow(
+        icon = UsageHistoryIcon,
+        title = "Usage & history",
+        subtitle = "Data use, connection log and app usage",
+        onClick = { onOpenPage(SettingsPage.USAGE_HISTORY) },
+        testTag = "row_usage_history"
+    )
+    SettingsRow(
         icon = Icons.Outlined.Dns,
         title = "Private DNS",
-        subtitle = formatDnsSummary(settings.dnsMode),
+        subtitle = if (settings.netShieldEnabled) "Overridden by NetShield" else formatDnsSummary(settings.dnsMode),
         onClick = { onOpenPage(SettingsPage.PRIVATE_DNS) },
         testTag = "row_dns"
     )
@@ -503,7 +535,7 @@ private fun SettingsOverview(
 }
 
 @Composable
-private fun SettingsSectionHeader(title: String) {
+internal fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
         fontFamily = SpaceGroteskFamily,
@@ -515,7 +547,7 @@ private fun SettingsSectionHeader(title: String) {
 }
 
 @Composable
-private fun SettingsRow(
+internal fun SettingsRow(
     icon: ImageVector,
     title: String,
     subtitle: String?,
@@ -570,11 +602,16 @@ private fun SettingsDetail(
     settings: AppSettingsState,
     onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
     onBack: () -> Unit,
+    onOpenSplitIps: () -> Unit,
     onOpenPerAppPicker: () -> Unit,
     onOpenSystemVpnSettings: () -> Unit
 ) {
     val title = when (page) {
+        SettingsPage.NET_SHIELD -> "NetShield"
         SettingsPage.SPLIT_TUNNELING -> "Split tunneling"
+        SettingsPage.SPLIT_IPS ->
+            if (settings.bypassSelectedApps) "Skipped IP addresses" else "VPN-only IP addresses"
+        SettingsPage.USAGE_HISTORY -> "Usage & history"
         SettingsPage.KILL_SWITCH -> "Kill switch"
         SettingsPage.PRIVATE_DNS -> "Private DNS"
         SettingsPage.IPV6 -> "IPv6 routing"
@@ -622,53 +659,28 @@ private fun SettingsDetail(
     Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
     when (page) {
-        SettingsPage.SPLIT_TUNNELING -> {
-            DetailDescription("Choose which apps skip the VPN, or which apps are the only ones to use it.")
-            DetailToggleRow(
-                title = "Split tunneling",
-                checked = settings.perAppProxyEnabled,
-                onCheckedChange = { enabled ->
-                    onUpdateSettings {
-                        it.copy(
-                            perAppProxyEnabled = enabled,
-                            bypassSelectedApps = if (enabled && !it.perAppProxyEnabled) true else it.bypassSelectedApps
-                        )
-                    }
-                },
-                testTag = "switch_per_app_proxy"
-            )
-            if (settings.perAppProxyEnabled) {
-                PerAppInlineModeRow(
-                    bypassSelectedApps = settings.bypassSelectedApps,
-                    onSelectBypass = { bypass -> onUpdateSettings { it.copy(bypassSelectedApps = bypass) } }
-                )
-            }
-            SettingsRow(
-                icon = Icons.Outlined.Apps,
-                title = if (!settings.perAppProxyEnabled || settings.bypassSelectedApps) "Apps skipping VPN" else "Apps using VPN",
-                subtitle = if (settings.selectedAppPackages.isEmpty()) "None selected"
-                else "${settings.selectedAppPackages.size} apps",
-                onClick = onOpenPerAppPicker,
-                testTag = "row_per_app_selection_picker"
-            )
-        }
+        SettingsPage.NET_SHIELD -> NetShieldPage(settings, onUpdateSettings)
 
-        SettingsPage.KILL_SWITCH -> {
-            DetailDescription(
-                "Android's Always-on VPN with “Block connections without VPN” stops all traffic if the " +
-                    "tunnel drops, so your real IP is never exposed. It is a system setting, so you turn it on in Android."
-            )
-            SettingsRow(
-                icon = Icons.Outlined.Lock,
-                title = "Open Android VPN settings",
-                subtitle = "Enable Always-on VPN for Hollow",
-                onClick = onOpenSystemVpnSettings,
-                testTag = "row_open_system_vpn"
-            )
-        }
+        SettingsPage.SPLIT_TUNNELING -> SplitTunnelingPage(
+            settings = settings,
+            onUpdateSettings = onUpdateSettings,
+            onOpenAppPicker = onOpenPerAppPicker,
+            onOpenIps = onOpenSplitIps
+        )
+
+        SettingsPage.SPLIT_IPS -> SplitIpAddressesPage(settings, onUpdateSettings)
+
+        SettingsPage.KILL_SWITCH -> KillSwitchPage(onOpenSystemVpnSettings)
+
+        SettingsPage.USAGE_HISTORY -> UsageHistoryPage()
 
         SettingsPage.PRIVATE_DNS -> {
-            DetailDescription("The DNS provider used to look up websites while connected.")
+            DetailDescription(
+                if (settings.netShieldEnabled) {
+                    "The DNS provider used to look up websites while connected. NetShield is on, so it " +
+                        "currently overrides this choice."
+                } else "The DNS provider used to look up websites while connected."
+            )
             DetailRadioList(DNS_PROVIDER_OPTIONS, settings.dnsMode) { chosen ->
                 onUpdateSettings { it.copy(dnsMode = chosen) }
             }
@@ -806,7 +818,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
 }
 
 @Composable
-private fun DetailDescription(text: String) {
+internal fun DetailDescription(text: String) {
     Text(
         text = text,
         fontFamily = SpaceGroteskFamily,
@@ -897,7 +909,7 @@ private fun DetailRadioList(
 // ─────────────────────────────── Segmented selectors ───────────────────────────────
 
 @Composable
-private fun PerAppInlineModeRow(
+internal fun PerAppInlineModeRow(
     bypassSelectedApps: Boolean,
     onSelectBypass: (Boolean) -> Unit
 ) {

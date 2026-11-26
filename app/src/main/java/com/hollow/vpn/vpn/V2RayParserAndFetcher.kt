@@ -2595,6 +2595,10 @@ class V2RayParserAndFetcher {
             // 3. DNS configuration matching user's DNS setting & IPv6 preference
             val dnsServers = JSONArray()
             when {
+                settings.netShieldEnabled -> {
+                    // NetShield: filtering resolver (AdGuard) takes over from the Private DNS provider.
+                    AppSettingsState.netShieldDns(settings.blockAdultContent).forEach { dnsServers.put(it) }
+                }
                 settings.dnsMode.contains("8.8.8.8") -> {
                     dnsServers.put("8.8.8.8").put("8.8.4.4")
                 }
