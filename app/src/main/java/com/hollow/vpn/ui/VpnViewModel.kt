@@ -1454,36 +1454,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             val currentSettings = _settings.value
             val baseJson = fetcher.resolveConfigJson(server)
             val xrayJson = fetcher.applyRuntimeSettingsToXrayJson(baseJson, currentSettings)
-            val intent = Intent(ctx, XrayVpnService::class.java).apply {
-                action = XrayVpnService.ACTION_CONNECT
-                putExtra(XrayVpnService.EXTRA_SERVER_COUNTRY, server.countryName)
-                putExtra(XrayVpnService.EXTRA_SERVER_HOST, server.host)
-                putExtra(XrayVpnService.EXTRA_SERVER_PORT, server.port)
-                putExtra(XrayVpnService.EXTRA_SERVER_PROTOCOL, server.protocolCore)
-                putExtra(XrayVpnService.EXTRA_XRAY_JSON, xrayJson)
-                putExtra(XrayVpnService.EXTRA_TUN_MODE, currentSettings.tunMode)
-                putExtra(XrayVpnService.EXTRA_ENABLE_IPV6, currentSettings.ipv6Enabled)
-                putExtra(XrayVpnService.EXTRA_DNS_MODE, currentSettings.dnsMode)
-                putExtra(XrayVpnService.EXTRA_ROUTING_MODE, currentSettings.routingMode)
-                putExtra(XrayVpnService.EXTRA_PER_APP_PROXY_ENABLED, currentSettings.perAppProxyEnabled)
-                putExtra(XrayVpnService.EXTRA_BYPASS_SELECTED_APPS, currentSettings.bypassSelectedApps)
-                putStringArrayListExtra(
-                    XrayVpnService.EXTRA_SELECTED_APP_PACKAGES,
-                    ArrayList(currentSettings.selectedAppPackages)
-                )
-                putExtra(XrayVpnService.EXTRA_SMART_SWITCH_ENABLED, currentSettings.smartSwitchEnabled)
-                putExtra(XrayVpnService.EXTRA_SERVER_SPEED_MBPS, server.lastSpeedMbps)
-                putExtra(XrayVpnService.EXTRA_NETSHIELD_ENABLED, currentSettings.netShieldEnabled)
-                putExtra(XrayVpnService.EXTRA_BLOCK_ADULT_CONTENT, currentSettings.blockAdultContent)
-                putStringArrayListExtra(
-                    XrayVpnService.EXTRA_SPLIT_EXCLUDE_IPS,
-                    ArrayList(currentSettings.splitExcludeIps)
-                )
-                putStringArrayListExtra(
-                    XrayVpnService.EXTRA_SPLIT_INCLUDE_IPS,
-                    ArrayList(currentSettings.splitIncludeIps)
-                )
-            }
+            val intent = XrayVpnService.connectIntent(ctx, server, currentSettings, xrayJson)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 ctx.startForegroundService(intent)
             } else {

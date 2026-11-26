@@ -61,6 +61,30 @@ class HollowVpnRobolectricTest {
     }
 
     @Test
+    fun `preferences store persists Connection section settings`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val store = VpnPreferencesStore(context)
+        assertEquals("google", store.loadSettings().testUrlChoice)
+        store.saveSettings(
+            AppSettingsState(
+                testUrlChoice = "apple",
+                blockQuic = false,
+                mtu = 1380,
+                customDnsEnabled = true,
+                customDnsList = listOf("1.1.1.1", "9.9.9.9"),
+                autoConnectBoot = true
+            )
+        )
+        val loaded = store.loadSettings()
+        assertEquals("apple", loaded.testUrlChoice)
+        assertEquals(false, loaded.blockQuic)
+        assertEquals(1380, loaded.mtu)
+        assertEquals(true, loaded.customDnsEnabled)
+        assertEquals(listOf("1.1.1.1", "9.9.9.9"), loaded.customDnsList)
+        assertEquals(true, loaded.autoConnectBoot)
+    }
+
+    @Test
     fun `xray vpn service disconnect clears errors and does not report cancellation failure`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val disconnectIntent = Intent(context, XrayVpnService::class.java).apply {

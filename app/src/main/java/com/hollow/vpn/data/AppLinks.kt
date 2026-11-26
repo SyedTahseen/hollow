@@ -12,4 +12,11 @@ internal object AppLinks {
 internal object ProbeUrls {
     const val PRIMARY = "https://www.gstatic.com/generate_204"
     const val BACKUP = "https://cp.cloudflare.com/generate_204"
+
+    /** The address chosen under Settings > Latency test. */
+    fun primaryFor(settings: AppSettingsState): String = AppSettingsState.testUrlOption(settings.testUrlChoice).url
+
+    /** Fallback when the chosen address fails: Google, or Cloudflare when Google is the choice already. */
+    fun backupFor(settings: AppSettingsState): String =
+        if (AppSettingsState.testUrlOption(settings.testUrlChoice).url == BACKUP) PRIMARY else BACKUP
 }

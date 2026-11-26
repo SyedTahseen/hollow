@@ -1402,7 +1402,7 @@ class V2RayParserAndFetcher {
             val baseConfig = resolveConfigJson(server)
             val testConfig = applyRuntimeSettingsToXrayJson(baseConfig, settings.copy(tunMode = false))
             val primaryDelay = try {
-                Libv2ray.measureOutboundDelay(testConfig, DELAY_PROBE_PRIMARY)
+                Libv2ray.measureOutboundDelay(testConfig, ProbeUrls.primaryFor(settings))
             } catch (e: UnsatisfiedLinkError) {
                 throw e
             } catch (e: NoClassDefFoundError) {
@@ -1417,7 +1417,7 @@ class V2RayParserAndFetcher {
                 return@withContext XrayProbeResult.Unreachable
             }
             val backupDelay = try {
-                Libv2ray.measureOutboundDelay(testConfig, DELAY_PROBE_BACKUP)
+                Libv2ray.measureOutboundDelay(testConfig, ProbeUrls.backupFor(settings))
             } catch (e: UnsatisfiedLinkError) {
                 throw e
             } catch (e: NoClassDefFoundError) {
@@ -2509,6 +2509,7 @@ class V2RayParserAndFetcher {
                 val proto = inbound.optString("protocol", "").lowercase()
                 if (proto == "tun") {
                     if (settings.tunMode) {
+                        inbound.optJSONObject("settings")?.put("MTU", settings.mtu)
                         updatedInbounds.put(inbound)
                         hasTun = true
                     }
@@ -2543,7 +2544,7 @@ class V2RayParserAndFetcher {
                     JSONObject()
                         .put("tag", "tun-in")
                         .put("protocol", "tun")
-                        .put("settings", JSONObject().put("name", "xray0").put("MTU", 1500).put("userLevel", 8))
+                        .put("settings", JSONObject().put("name", "xray0").put("MTU", settings.mtu).put("userLevel", 8))
                         .put(
                             "sniffing",
                             JSONObject()
@@ -2598,6 +2599,10 @@ class V2RayParserAndFetcher {
                 settings.netShieldEnabled -> {
                     // NetShield: filtering resolver (AdGuard) takes over from the Private DNS provider.
                     AppSettingsState.netShieldDns(settings.blockAdultContent).forEach { dnsServers.put(it) }
+                }
+                AppSettingsState.activeCustomDns(settings).isNotEmpty() -> {
+                    // Advanced > Custom DNS replaces the Private DNS provider.
+                    AppSettingsState.activeCustomDns(settings).forEach { dnsServers.put(it) }
                 }
                 settings.dnsMode.contains("8.8.8.8") -> {
                     dnsServers.put("8.8.8.8").put("8.8.4.4")
@@ -2685,13 +2690,15 @@ class V2RayParserAndFetcher {
                     )
                 }
                 // Block QUIC (UDP 443) so browsers cleanly fall back to TLS/TCP over the tunnel
-                rules.put(
-                    JSONObject()
-                        .put("type", "field")
-                        .put("port", "443")
-                        .put("network", "udp")
-                        .put("outboundTag", "block")
-                )
+                if (settings.blockQuic) {
+                    rules.put(
+                        JSONObject()
+                            .put("type", "field")
+                            .put("port", "443")
+                            .put("network", "udp")
+                            .put("outboundTag", "block")
+                    )
+                }
                 // Explicit catch-all routing rule to the primary proxy outbound
                 if (proxyOutbounds.isNotEmpty()) {
                     rules.put(
@@ -2836,7 +2843,5 @@ class V2RayParserAndFetcher {
     }
 
     companion object {
-        private const val DELAY_PROBE_PRIMARY = ProbeUrls.PRIMARY
-        private const val DELAY_PROBE_BACKUP = ProbeUrls.BACKUP
     }
 }

@@ -219,6 +219,43 @@ class V2RayParserTest {
     }
 
     @Test
+    fun `Block QUIC off leaves UDP 443 alone, custom DNS replaces the provider and MTU reaches the tun inbound`() {
+        val uri = "vless://11111111-2222-3333-4444-555555555555@de.example.com:443?security=tls&type=tcp#Germany"
+        val baseJson = parser.parseImportPayload(uri).first().rawConfigJson
+
+        val settings = AppSettingsState(
+            blockQuic = false,
+            customDnsEnabled = true,
+            customDnsList = listOf("9.9.9.9", "2620:fe::fe"),
+            ipv6Enabled = false,
+            mtu = 1400
+        )
+        val runtime = JSONObject(parser.applyRuntimeSettingsToXrayJson(baseJson, settings))
+
+        val rules = runtime.getJSONObject("routing").getJSONArray("rules")
+        val hasQuicRule = (0 until rules.length()).any { rules.getJSONObject(it).optString("port") == "443" }
+        assertFalse(hasQuicRule)
+
+        // IPv6 resolvers are dropped while IPv6 is off.
+        val dns = runtime.getJSONObject("dns").getJSONArray("servers")
+        assertEquals(1, dns.length())
+        assertEquals("9.9.9.9", dns.getString(0))
+
+        val inbounds = runtime.getJSONArray("inbounds")
+        val tun = (0 until inbounds.length()).map { inbounds.getJSONObject(it) }.first { it.getString("protocol") == "tun" }
+        assertEquals(1400, tun.getJSONObject("settings").getInt("MTU"))
+    }
+
+    @Test
+    fun `NetShield still wins over custom DNS`() {
+        val uri = "vless://11111111-2222-3333-4444-555555555555@de.example.com:443?security=tls&type=tcp#Germany"
+        val baseJson = parser.parseImportPayload(uri).first().rawConfigJson
+        val settings = AppSettingsState(netShieldEnabled = true, customDnsEnabled = true, customDnsList = listOf("9.9.9.9"))
+        val dns = JSONObject(parser.applyRuntimeSettingsToXrayJson(baseJson, settings)).getJSONObject("dns").getJSONArray("servers")
+        assertEquals("94.140.14.14", dns.getString(0))
+    }
+
+    @Test
     fun `applyRuntimeSettingsToXrayJson injects CGNAT and domestic reserved CIDRs for Bypass LAN & Domestic`() {
         val uri = "vless://11111111-2222-3333-4444-555555555555@de.example.com:443?security=tls&type=tcp#Germany"
         val baseJson = parser.parseImportPayload(uri).first().rawConfigJson

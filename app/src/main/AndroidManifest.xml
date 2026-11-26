@@ -60,6 +60,14 @@
                 android:value="vpn" />
         </service>
 
+        <receiver
+            android:name=".vpn.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".vpn.HollowTileService"
             android:exported="true"

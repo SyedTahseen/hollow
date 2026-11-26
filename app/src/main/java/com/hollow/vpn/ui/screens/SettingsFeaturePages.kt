@@ -133,7 +133,7 @@ private const val KILL_SWITCH_HELP_URL = "https://developer.android.com/develop/
 
 /** Dot-matrix hero tile that stands in for Outrun's illustration at the top of each feature page. */
 @Composable
-private fun FeatureHero(icon: ImageVector, modifier: Modifier = Modifier) {
+internal fun FeatureHero(icon: ImageVector, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(HollowRadius.Lg)
     Box(
         modifier = modifier
@@ -220,7 +220,7 @@ private fun FeatureToggleCard(
 }
 
 @Composable
-private fun FeatureButton(
+internal fun FeatureButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -262,7 +262,7 @@ private fun FeatureButton(
 }
 
 @Composable
-private fun FeatureCaption(text: String, modifier: Modifier = Modifier, color: Color = HollowInkSecondary) {
+internal fun FeatureCaption(text: String, modifier: Modifier = Modifier, color: Color = HollowInkSecondary) {
     Text(
         text = text,
         fontFamily = SpaceGroteskFamily,

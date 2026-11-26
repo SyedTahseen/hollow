@@ -47,7 +47,6 @@ import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Lock
@@ -124,13 +123,16 @@ private enum class SettingsPage {
     USAGE_HISTORY,
     KILL_SWITCH,
     PRIVATE_DNS,
-    IPV6,
     PROTOCOL,
     ROUTING_MODE,
     SMART_SWITCH,
     STRICT_TLS,
     START_ON_OPEN,
     AUTO_UPDATE,
+    LATENCY_TEST,
+    ADVANCED,
+    CUSTOM_DNS,
+    MTU,
     APPEARANCE,
     HIDE_RECENTS
 }
@@ -178,6 +180,19 @@ private fun formatDnsSummary(dns: String): String = when {
 
 private fun onOff(value: Boolean) = if (value) "On" else "Off"
 
+/** One-line summary under "Advanced settings": what is switched away from the defaults. */
+private fun advancedSummary(settings: AppSettingsState): String {
+    val parts = buildList {
+        if (settings.customDnsEnabled && settings.customDnsList.isNotEmpty()) add("Custom DNS")
+        if (lanConnectionsOn(settings)) add("LAN")
+        if (settings.ipv6Enabled) add("IPv6")
+        if (!settings.blockQuic) add("QUIC allowed")
+        if (settings.mtu != AppSettingsState.DEFAULT_MTU) add("MTU ${settings.mtu}")
+        if (settings.autoConnectBoot) add("Boot connect")
+    }
+    return if (parts.isEmpty()) "DNS, IPv6, QUIC, MTU and more" else parts.joinToString(" · ")
+}
+
 /**
  * Settings: a clean sectioned list (icon, title, current value). Tapping a setting opens its own
  * page where the value is changed; actions (guide, logs, export, updates, about) run directly.
@@ -203,6 +218,7 @@ fun SettingsScreen(
         when (page) {
             null -> onBack()
             SettingsPage.SPLIT_IPS -> page = SettingsPage.SPLIT_TUNNELING
+            SettingsPage.CUSTOM_DNS, SettingsPage.MTU -> page = SettingsPage.ADVANCED
             else -> page = null
         }
     }
@@ -249,8 +265,13 @@ fun SettingsScreen(
                     settings = settings,
                     onUpdateSettings = onUpdateSettings,
                     onBack = {
-                        page = if (current == SettingsPage.SPLIT_IPS) SettingsPage.SPLIT_TUNNELING else null
+                        page = when (current) {
+                            SettingsPage.SPLIT_IPS -> SettingsPage.SPLIT_TUNNELING
+                            SettingsPage.CUSTOM_DNS, SettingsPage.MTU -> SettingsPage.ADVANCED
+                            else -> null
+                        }
                     },
+                    onOpenPage = { page = it },
                     onOpenSplitIps = { page = SettingsPage.SPLIT_IPS },
                     onOpenPerAppPicker = { showPerAppPicker = true },
                     onOpenSystemVpnSettings = {
@@ -410,15 +431,29 @@ private fun SettingsOverview(
         onClick = { onOpenPage(SettingsPage.PRIVATE_DNS) },
         testTag = "row_dns"
     )
-    SettingsRow(
-        icon = Icons.Outlined.Language,
-        title = "IPv6 routing",
-        subtitle = onOff(settings.ipv6Enabled),
-        onClick = { onOpenPage(SettingsPage.IPV6) },
-        testTag = "row_ipv6"
-    )
 
     SettingsSectionHeader("Connection")
+    SettingsRow(
+        icon = LatencyTestIcon,
+        title = "Latency test",
+        subtitle = AppSettingsState.testUrlOption(settings.testUrlChoice).name,
+        onClick = { onOpenPage(SettingsPage.LATENCY_TEST) },
+        testTag = "row_latency_test"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.CloudQueue,
+        title = "Auto-update subscriptions",
+        subtitle = if (settings.autoConfigure) "On · every ${settings.updateIntervalLabel}" else "Off",
+        onClick = { onOpenPage(SettingsPage.AUTO_UPDATE) },
+        testTag = "row_update_interval"
+    )
+    SettingsRow(
+        icon = AdvancedSettingsIcon,
+        title = "Advanced settings",
+        subtitle = advancedSummary(settings),
+        onClick = { onOpenPage(SettingsPage.ADVANCED) },
+        testTag = "row_advanced_settings"
+    )
     SettingsRow(
         icon = Icons.Rounded.AccountTree,
         title = "Protocol",
@@ -462,13 +497,6 @@ private fun SettingsOverview(
         subtitle = if (serverCount > 0) "$serverCount saved" else "Add servers or a subscription",
         onClick = onOpenAddSubscription,
         testTag = "row_custom_subscription"
-    )
-    SettingsRow(
-        icon = Icons.Outlined.CloudQueue,
-        title = "Auto-update subscriptions",
-        subtitle = if (settings.autoConfigure) "On · every ${settings.updateIntervalLabel}" else "Off",
-        onClick = { onOpenPage(SettingsPage.AUTO_UPDATE) },
-        testTag = "row_update_interval"
     )
 
     SettingsSectionHeader("General")
@@ -602,6 +630,7 @@ private fun SettingsDetail(
     settings: AppSettingsState,
     onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
     onBack: () -> Unit,
+    onOpenPage: (SettingsPage) -> Unit,
     onOpenSplitIps: () -> Unit,
     onOpenPerAppPicker: () -> Unit,
     onOpenSystemVpnSettings: () -> Unit
@@ -614,13 +643,16 @@ private fun SettingsDetail(
         SettingsPage.USAGE_HISTORY -> "Usage & history"
         SettingsPage.KILL_SWITCH -> "Kill switch"
         SettingsPage.PRIVATE_DNS -> "Private DNS"
-        SettingsPage.IPV6 -> "IPv6 routing"
         SettingsPage.PROTOCOL -> "Protocol"
         SettingsPage.ROUTING_MODE -> "Routing mode"
         SettingsPage.SMART_SWITCH -> "Auto-switch slow servers"
         SettingsPage.STRICT_TLS -> "Strict TLS verification"
         SettingsPage.START_ON_OPEN -> "Start on app open"
         SettingsPage.AUTO_UPDATE -> "Auto-update subscriptions"
+        SettingsPage.LATENCY_TEST -> "Latency test"
+        SettingsPage.ADVANCED -> "Advanced settings"
+        SettingsPage.CUSTOM_DNS -> "Custom DNS"
+        SettingsPage.MTU -> "MTU"
         SettingsPage.APPEARANCE -> "Appearance"
         SettingsPage.HIDE_RECENTS -> "Hide from recent apps"
     }
@@ -686,11 +718,6 @@ private fun SettingsDetail(
             }
         }
 
-        SettingsPage.IPV6 -> {
-            DetailDescription("Send IPv6 traffic through the VPN as well. Turn off if some sites fail to load.")
-            DetailToggleRow("IPv6 routing", settings.ipv6Enabled, { v -> onUpdateSettings { it.copy(ipv6Enabled = v) } }, "switch_ipv6")
-        }
-
         SettingsPage.PROTOCOL -> {
             DetailDescription("The protocol used to build the tunnel. Auto picks the best one for your network.")
             DetailRadioList(PROTOCOL_OPTIONS, settings.protocolPreference) { chosen ->
@@ -731,6 +758,19 @@ private fun SettingsDetail(
                 }
             }
         }
+
+        SettingsPage.LATENCY_TEST -> LatencyTestPage(settings, onUpdateSettings)
+
+        SettingsPage.ADVANCED -> AdvancedSettingsPage(
+            settings = settings,
+            onUpdateSettings = onUpdateSettings,
+            onOpenCustomDns = { onOpenPage(SettingsPage.CUSTOM_DNS) },
+            onOpenMtu = { onOpenPage(SettingsPage.MTU) }
+        )
+
+        SettingsPage.CUSTOM_DNS -> CustomDnsPage(settings, onUpdateSettings)
+
+        SettingsPage.MTU -> MtuPage(settings, onUpdateSettings, onChosen = { onOpenPage(SettingsPage.ADVANCED) })
 
         SettingsPage.APPEARANCE -> {
             DetailDescription("Choose how Hollow looks.")
@@ -830,7 +870,7 @@ internal fun DetailDescription(text: String) {
 }
 
 @Composable
-private fun DetailToggleRow(
+internal fun DetailToggleRow(
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -859,7 +899,7 @@ private fun DetailToggleRow(
 }
 
 @Composable
-private fun DetailRadioList(
+internal fun DetailRadioList(
     options: List<SettingChoiceOption>,
     selectedValue: String,
     onSelect: (String) -> Unit

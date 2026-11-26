@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
@@ -20,6 +21,7 @@ import com.hollow.vpn.R
 import com.hollow.vpn.data.ActiveTunnelSnapshot
 import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.ProbeUrls
+import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.UsageSession
 import com.hollow.vpn.data.UsageStore
 import com.hollow.vpn.data.VpnDatabase
@@ -283,10 +285,12 @@ class XrayVpnService : VpnService() {
             setConnectStage(2)
             var tunFd = 0
             if (tunMode) {
-                val dnsServers = effectiveDnsServers(dnsMode, netShieldEnabled, blockAdultContent)
+                val settingsNow = VpnPreferencesStore(applicationContext).loadSettings()
+                val tunMtu = settingsNow.mtu
+                val dnsServers = effectiveDnsServers(dnsMode, netShieldEnabled, blockAdultContent, settingsNow)
                 val builder = Builder()
                     .setSession("Hollow VPN - $country ($host)")
-                    .setMtu(VPN_MTU)
+                    .setMtu(tunMtu)
                     .addAddress("10.26.0.1", 30)
                     .addAddress("fd00:26::1", 126)
                 dnsServers.forEach { builder.addDnsServer(it) }
@@ -316,7 +320,7 @@ class XrayVpnService : VpnService() {
                 vpnInterface = established
                 tunFd = established.fd
                 appendLog(
-                    "TUN interface up (MTU=$VPN_MTU, DNS=${dnsServers.joinToString()}, IPv6=$enableIpv6" +
+                    "TUN interface up (MTU=$tunMtu, DNS=${dnsServers.joinToString()}, IPv6=$enableIpv6" +
                         (if (netShieldEnabled) ", NetShield${if (blockAdultContent) "+adult" else ""}" else "") + ")"
                 )
             }
@@ -565,14 +569,15 @@ class XrayVpnService : VpnService() {
     }
 
     private fun verifyLiveTunnelDelay(core: CoreController): Long {
+        val settings = VpnPreferencesStore(applicationContext).loadSettings()
         val primary = try {
-            core.measureDelay(VERIFY_URL_PRIMARY)
+            core.measureDelay(ProbeUrls.primaryFor(settings))
         } catch (_: Throwable) {
             -1L
         }
         if (primary > 0L) return primary
         return try {
-            core.measureDelay(VERIFY_URL_BACKUP)
+            core.measureDelay(ProbeUrls.backupFor(settings))
         } catch (_: Throwable) {
             -1L
         }
@@ -697,8 +702,16 @@ class XrayVpnService : VpnService() {
     }
 
     /** DNS servers for the tunnel: NetShield (filtering resolver) wins over the Private DNS provider. */
-    private fun effectiveDnsServers(mode: String, netShield: Boolean, blockAdult: Boolean): List<String> =
-        if (netShield) AppSettingsState.netShieldDns(blockAdult) else listOf(selectedDns(mode))
+    private fun effectiveDnsServers(
+        mode: String,
+        netShield: Boolean,
+        blockAdult: Boolean,
+        settings: AppSettingsState
+    ): List<String> = when {
+        netShield -> AppSettingsState.netShieldDns(blockAdult)
+        AppSettingsState.activeCustomDns(settings).isNotEmpty() -> AppSettingsState.activeCustomDns(settings)
+        else -> listOf(selectedDns(mode))
+    }
 
     /**
      * Routes for the tunnel. Normally everything goes through the VPN. With split tunneling on:
@@ -919,6 +932,34 @@ class XrayVpnService : VpnService() {
     }
 
     companion object {
+        /** The explicit "connect to this server" intent, shared by the app and the boot receiver. */
+        fun connectIntent(
+            ctx: Context,
+            server: ServerEntity,
+            settings: AppSettingsState,
+            xrayJson: String
+        ): Intent = Intent(ctx, XrayVpnService::class.java).apply {
+            action = ACTION_CONNECT
+            putExtra(EXTRA_SERVER_COUNTRY, server.countryName)
+            putExtra(EXTRA_SERVER_HOST, server.host)
+            putExtra(EXTRA_SERVER_PORT, server.port)
+            putExtra(EXTRA_SERVER_PROTOCOL, server.protocolCore)
+            putExtra(EXTRA_XRAY_JSON, xrayJson)
+            putExtra(EXTRA_TUN_MODE, settings.tunMode)
+            putExtra(EXTRA_ENABLE_IPV6, settings.ipv6Enabled)
+            putExtra(EXTRA_DNS_MODE, settings.dnsMode)
+            putExtra(EXTRA_ROUTING_MODE, settings.routingMode)
+            putExtra(EXTRA_PER_APP_PROXY_ENABLED, settings.perAppProxyEnabled)
+            putExtra(EXTRA_BYPASS_SELECTED_APPS, settings.bypassSelectedApps)
+            putStringArrayListExtra(EXTRA_SELECTED_APP_PACKAGES, ArrayList(settings.selectedAppPackages))
+            putExtra(EXTRA_SMART_SWITCH_ENABLED, settings.smartSwitchEnabled)
+            putExtra(EXTRA_SERVER_SPEED_MBPS, server.lastSpeedMbps)
+            putExtra(EXTRA_NETSHIELD_ENABLED, settings.netShieldEnabled)
+            putExtra(EXTRA_BLOCK_ADULT_CONTENT, settings.blockAdultContent)
+            putStringArrayListExtra(EXTRA_SPLIT_EXCLUDE_IPS, ArrayList(settings.splitExcludeIps))
+            putStringArrayListExtra(EXTRA_SPLIT_INCLUDE_IPS, ArrayList(settings.splitIncludeIps))
+        }
+
         const val ACTION_CONNECT = "com.hollow.vpn.vpn.ACTION_CONNECT"
         const val ACTION_DISCONNECT = "com.hollow.vpn.vpn.ACTION_DISCONNECT"
         const val EXTRA_SERVER_COUNTRY = "extra_server_country"
@@ -942,10 +983,7 @@ class XrayVpnService : VpnService() {
         private const val USAGE_FLUSH_MILLIS = 10_000L
         private const val CHANNEL_ID = "v2ray_vpn_tunnel_channel"
         private const val NOTIFICATION_ID = 2048
-        private const val VPN_MTU = 1500
         private const val STOP_GRACE_MILLIS = 5_000L
-        private const val VERIFY_URL_PRIMARY = ProbeUrls.PRIMARY
-        private const val VERIFY_URL_BACKUP = ProbeUrls.BACKUP
         private const val TAG = "XrayVpnService"
         private const val MAX_LOG_ENTRIES = 250
 

@@ -157,9 +157,46 @@ data class AppSettingsState(
     /** Split tunneling, "Skip VPN" mode: these IPs / CIDRs connect directly. */
     val splitExcludeIps: List<String> = emptyList(),
     /** Split tunneling, "VPN only" mode: only these IPs / CIDRs go through the VPN. */
-    val splitIncludeIps: List<String> = emptyList()
+    val splitIncludeIps: List<String> = emptyList(),
+    /** Latency test: id of the address every server is tested against (see [TEST_URLS]). */
+    val testUrlChoice: String = DEFAULT_TEST_URL_ID,
+    /** Advanced: drop QUIC (UDP 443) so apps fall back to TCP, which suits most proxy protocols. */
+    val blockQuic: Boolean = true,
+    /** Advanced: largest packet the tunnel sends (see [MTU_CHOICES]). */
+    val mtu: Int = DEFAULT_MTU,
+    /** Advanced: use [customDnsList] instead of the Private DNS provider. */
+    val customDnsEnabled: Boolean = false,
+    val customDnsList: List<String> = emptyList(),
+    /** Advanced: connect the selected server when the phone starts. */
+    val autoConnectBoot: Boolean = false
 ) {
     companion object {
+        const val DEFAULT_TEST_URL_ID = "google"
+        const val DEFAULT_MTU = 1500
+
+        /** Addresses used to time a server. Each one answers a tiny request through the proxy. */
+        val TEST_URLS = listOf(
+            TestUrlOption("google", "Google", "https://www.gstatic.com/generate_204"),
+            TestUrlOption("cloudflare", "Cloudflare", "https://cp.cloudflare.com/generate_204"),
+            TestUrlOption("apple", "Apple", "https://captive.apple.com/")
+        )
+
+        val MTU_CHOICES = listOf(
+            1500 to "Default, best throughput",
+            1420 to "Good for most mobile networks",
+            1400 to "Safer on tunnels and some carriers",
+            1380 to "For networks that drop larger packets",
+            1280 to "Minimum for IPv6, most compatible"
+        )
+
+        fun testUrlOption(id: String): TestUrlOption =
+            TEST_URLS.firstOrNull { it.id == id } ?: TEST_URLS.first()
+
+        /** Custom DNS servers that are usable right now (IPv6 resolvers are dropped while IPv6 is off). */
+        fun activeCustomDns(settings: AppSettingsState): List<String> =
+            if (!settings.customDnsEnabled) emptyList()
+            else settings.customDnsList.filter { settings.ipv6Enabled || ':' !in it }
+
         /** AdGuard DNS: default (ads, trackers, malware) and family (adds adult content). */
         val NETSHIELD_DNS = listOf("94.140.14.14", "94.140.15.15")
         val NETSHIELD_DNS_FAMILY = listOf("94.140.14.15", "94.140.15.16")
@@ -172,6 +209,8 @@ data class AppSettingsState(
             "https://raw.githubusercontent.com/mirrorrepomagic/free-v2ray-public-list/refs/heads/main/V2Ray-Config-By-EbraSha.txt"
     }
 }
+
+data class TestUrlOption(val id: String, val name: String, val url: String)
 
 data class ActiveTunnelSnapshot(
     val country: String,
@@ -227,7 +266,14 @@ class VpnPreferencesStore(context: Context) {
             netShieldEnabled = prefs.getBoolean("netshield_enabled", false),
             blockAdultContent = prefs.getBoolean("netshield_block_adult", false),
             splitExcludeIps = loadLines("split_exclude_ips"),
-            splitIncludeIps = loadLines("split_include_ips")
+            splitIncludeIps = loadLines("split_include_ips"),
+            testUrlChoice = prefs.getString("test_url_choice", AppSettingsState.DEFAULT_TEST_URL_ID)
+                ?: AppSettingsState.DEFAULT_TEST_URL_ID,
+            blockQuic = prefs.getBoolean("block_quic", true),
+            mtu = prefs.getInt("mtu", AppSettingsState.DEFAULT_MTU).coerceIn(1280, 1500),
+            customDnsEnabled = prefs.getBoolean("custom_dns_enabled", false),
+            customDnsList = loadLines("custom_dns_list"),
+            autoConnectBoot = prefs.getBoolean("auto_connect_boot", false)
         )
     }
 
@@ -263,6 +309,12 @@ class VpnPreferencesStore(context: Context) {
             .putBoolean("netshield_block_adult", state.blockAdultContent)
             .putString("split_exclude_ips", state.splitExcludeIps.joinToString("\n"))
             .putString("split_include_ips", state.splitIncludeIps.joinToString("\n"))
+            .putString("test_url_choice", state.testUrlChoice)
+            .putBoolean("block_quic", state.blockQuic)
+            .putInt("mtu", state.mtu.coerceIn(1280, 1500))
+            .putBoolean("custom_dns_enabled", state.customDnsEnabled)
+            .putString("custom_dns_list", state.customDnsList.joinToString("\n"))
+            .putBoolean("auto_connect_boot", state.autoConnectBoot)
             .apply()
     }
 
