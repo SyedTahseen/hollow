@@ -1,6 +1,8 @@
 package com.hollow.vpn.ui.screens
 
 import android.content.ClipData
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -104,13 +106,11 @@ import com.hollow.vpn.ui.theme.HollowSizes
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowType
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingCanvas
 import com.hollow.vpn.ui.theme.NothingRed
 import com.hollow.vpn.ui.theme.NothingSurface
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
-import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -192,9 +192,10 @@ internal fun XrayDiagnosticLogsDialog(
                             Text(
                                 text = line,
                                 style = TextStyle(
-                                    fontFamily = JetBrainsMonoFamily,
+                                    fontFamily = DotoDisplayFamily,
                                     fontSize = HollowType.Caption,
-                                    lineHeight = 16.sp,
+                                    letterSpacing = HollowTracking.Caption,
+                                    lineHeight = HollowLineHeight.Caption,
                                     color = if (line.contains("ERROR:", ignoreCase = true)) {
                                         HollowOrange
                                     } else {
@@ -227,7 +228,7 @@ internal fun XrayDiagnosticLogsDialog(
                         Icon(
                             imageVector = Icons.Outlined.ContentCopy,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(HollowSizes.IconSm)
                         )
                         Spacer(Modifier.width(HollowSpace.Sm))
                         Text("Copy")
@@ -321,9 +322,11 @@ internal fun PerAppProxyPickerDialog(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (including) "Included apps" else "Excluded apps",
-                        fontFamily = SpaceGroteskFamily,
+                        fontFamily = DotoDisplayFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Display,
+                        lineHeight = HollowLineHeight.Display,
+                        letterSpacing = HollowTracking.Display,
                         color = HollowInk
                     )
                     Spacer(Modifier.height(HollowSpace.Xxs))
@@ -344,9 +347,11 @@ internal fun PerAppProxyPickerDialog(
                 ) {
                     Text(
                         text = "${workingSelection.size} apps",
-                        fontFamily = JetBrainsMonoFamily,
+                        fontFamily = DotoDisplayFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = HollowType.Small,
+                        lineHeight = HollowLineHeight.Small,
+                        letterSpacing = HollowTracking.Small,
                         color = if (workingSelection.isNotEmpty()) HollowOrange else HollowInkSecondary,
                         modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Sm)
                     )
@@ -405,7 +410,9 @@ internal fun PerAppProxyPickerDialog(
                     label = {
                         Text(
                             text = "Selected (${workingSelection.size})",
-                            fontSize = HollowType.Small
+                            fontSize = HollowType.Small,
+                            lineHeight = HollowLineHeight.Small,
+                            letterSpacing = HollowTracking.Small,
                         )
                     },
                     colors = FilterChipDefaults.filterChipColors(
@@ -501,9 +508,11 @@ internal fun PerAppProxyPickerDialog(
                                     )
                                     Text(
                                         text = app.packageName,
-                                        fontFamily = JetBrainsMonoFamily,
+                                        fontFamily = DotoDisplayFamily,
                                         color = HollowInkSecondary,
                                         fontSize = HollowType.Caption,
+                                        lineHeight = HollowLineHeight.Caption,
+                                        letterSpacing = HollowTracking.Caption,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -592,12 +601,12 @@ private fun InstalledAppIcon(
             bitmap = bitmap!!,
             contentDescription = appLabel,
             modifier = Modifier
-                .size(38.dp)
+                .size(HollowSizes.Chip)
                 .clip(RoundedCornerShape(HollowRadius.Sm))
         )
     } else {
         Surface(
-            modifier = Modifier.size(38.dp),
+            modifier = Modifier.size(HollowSizes.Chip),
             shape = RoundedCornerShape(HollowRadius.Sm),
             color = HollowCream,
             border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
@@ -607,7 +616,7 @@ private fun InstalledAppIcon(
                     imageVector = Icons.Outlined.Apps,
                     contentDescription = null,
                     tint = HollowInkSecondary,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(HollowSizes.IconSm)
                 )
             }
         }
@@ -641,6 +650,8 @@ fun SettingOptionPickerDialog(
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Display,
+                lineHeight = HollowLineHeight.Display,
+                letterSpacing = HollowTracking.Display,
                 color = HollowInk
             )
 
@@ -746,8 +757,10 @@ fun RawXrayJsonEditorDialog(
                 value = jsonText,
                 onValueChange = { jsonText = it },
                 textStyle = TextStyle(
-                    fontFamily = JetBrainsMonoFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontSize = HollowType.Small,
+                    lineHeight = HollowLineHeight.Small,
+                    letterSpacing = HollowTracking.Small,
                     color = HollowInk
                 ),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -841,7 +854,7 @@ internal fun AboutHollowSheet(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(52.dp)
+                                    .size(HollowSizes.Field)
                                     .clip(RoundedCornerShape(HollowRadius.Md))
                                     .background(NothingSurfaceElevated)
                                     .border(HollowStroke.Hairline, NothingBorder, RoundedCornerShape(HollowRadius.Md)),
@@ -850,7 +863,7 @@ internal fun AboutHollowSheet(
                                 HollowBrandShieldLogo(
                                     backgroundColor = NothingSurfaceElevated,
                                     strokeColor = HollowInk,
-                                    modifier = Modifier.size(30.dp)
+                                    modifier = Modifier.size(HollowSizes.IconLg)
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
@@ -859,7 +872,8 @@ internal fun AboutHollowSheet(
                                     fontFamily = DotoDisplayFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = HollowType.Headline,
-                                    letterSpacing = 0.6.sp,
+                                    lineHeight = HollowLineHeight.Headline,
+                                    letterSpacing = HollowTracking.Headline,
                                     color = HollowInk
                                 )
                                 Text(
@@ -874,9 +888,11 @@ internal fun AboutHollowSheet(
                             ) {
                                 Text(
                                     text = "v${BuildConfig.VERSION_NAME}",
-                                    fontFamily = JetBrainsMonoFamily,
+                                    fontFamily = DotoDisplayFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = HollowType.Caption,
+                                    lineHeight = HollowLineHeight.Caption,
+                                    letterSpacing = HollowTracking.Caption,
                                     color = Color.White,
                                     modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Xs)
                                 )
@@ -889,7 +905,8 @@ internal fun AboutHollowSheet(
                             text = "Built for fast, resilient encrypted routing across VLESS Reality, VMess, Trojan, Shadowsocks, and Hysteria2 with zero tracking and strict local control.",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = HollowType.Body,
-                                lineHeight = 18.sp
+                                letterSpacing = HollowTracking.Body,
+                                lineHeight = HollowLineHeight.Body
                             ),
                             color = HollowInkSecondary
                         )
@@ -901,10 +918,11 @@ internal fun AboutHollowSheet(
 
             Text(
                 text = "ARCHITECTURE & PRIVACY",
-                fontFamily = JetBrainsMonoFamily,
+                fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
-                letterSpacing = 1.4.sp,
+                lineHeight = HollowLineHeight.Caption,
+                letterSpacing = HollowTracking.Caption,
                 color = HollowOrange
             )
             Spacer(modifier = Modifier.height(HollowSpace.Md))
@@ -948,10 +966,11 @@ internal fun AboutHollowSheet(
 
             Text(
                 text = "BUILD METADATA",
-                fontFamily = JetBrainsMonoFamily,
+                fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
-                letterSpacing = 1.4.sp,
+                lineHeight = HollowLineHeight.Caption,
+                letterSpacing = HollowTracking.Caption,
                 color = HollowInkSecondary
             )
             Spacer(modifier = Modifier.height(HollowSpace.Md))
@@ -995,12 +1014,14 @@ internal fun AboutHollowSheet(
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(HollowSizes.IconSm)
                     )
                     Spacer(Modifier.width(HollowSpace.Sm))
                     Text(
                         text = "Copy info",
                         fontSize = HollowType.Body,
+                        lineHeight = HollowLineHeight.Body,
+                        letterSpacing = HollowTracking.Body,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
                     )
@@ -1022,7 +1043,7 @@ private fun AboutFeatureRow(
     ) {
         Box(
             modifier = Modifier
-                .size(34.dp)
+                .size(HollowSizes.Chip)
                 .clip(RoundedCornerShape(HollowRadius.Sm))
                 .background(NothingSurfaceElevated)
                 .border(HollowStroke.Hairline, NothingBorder, RoundedCornerShape(HollowRadius.Sm)),
@@ -1032,7 +1053,7 @@ private fun AboutFeatureRow(
                 imageVector = icon,
                 contentDescription = null,
                 tint = HollowInk,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(HollowSizes.IconSm)
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -1040,7 +1061,9 @@ private fun AboutFeatureRow(
                 text = title,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = HollowType.BodyStrong
+                    fontSize = HollowType.BodyStrong,
+                    lineHeight = HollowLineHeight.BodyStrong,
+                    letterSpacing = HollowTracking.BodyStrong,
                 ),
                 color = HollowInk
             )
@@ -1066,18 +1089,21 @@ private fun AboutMetaRow(
     ) {
         Text(
             text = label,
-            fontFamily = JetBrainsMonoFamily,
+            fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Micro,
-            letterSpacing = 0.8.sp,
+            lineHeight = HollowLineHeight.Micro,
+            letterSpacing = HollowTracking.Micro,
             color = HollowInkSecondary
         )
         Spacer(modifier = Modifier.width(HollowSpace.Md))
         Text(
             text = value,
-            fontFamily = JetBrainsMonoFamily,
+            fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Small,
+            lineHeight = HollowLineHeight.Small,
+            letterSpacing = HollowTracking.Small,
             color = HollowInk,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

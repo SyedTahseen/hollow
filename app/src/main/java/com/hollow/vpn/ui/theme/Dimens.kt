@@ -38,6 +38,33 @@ object HollowSizes {
     val Button = 48.dp
     /** Screen header row (title + actions). */
     val TopBar = 64.dp
+    /** Standard list row for a server / country (Outrun `ServerRow`). */
+    val ServerRow = 64.dp
+    /** Large collapsing header (Outrun `TopBarExpanded`). */
+    val TopBarExpanded = 112.dp
+    /** Bottom dock / nav (Outrun `Dock`). */
+    val Dock = 80.dp
+    /** Status dot. */
+    val Dot = 8.dp
+    /** Icon sizes: small 16 · standard 24 · large 32. */
+    val IconSm = 16.dp
+    val Icon = 24.dp
+    val IconLg = 32.dp
+    /** Icon tile / hero tile. */
+    val Tile = 64.dp
+    /** Flag artwork (Outrun `FlagWidth` x `FlagHeight`). */
+    val FlagWidth = 30.dp
+    val FlagHeight = 20.dp
+    /** Minimum height of a compact card row / a settings row. */
+    val CardRowMin = 42.dp
+    val SettingRowMin = 56.dp
+    /** Hairline border and spinner stroke. */
+    val Border = 1.dp
+    val Spinner = 2.dp
+    /** Toggle switch (Material 3 default footprint, as in Outrun). */
+    val SwitchWidth = 52.dp
+    val SwitchHeight = 32.dp
+    val SwitchThumb = 24.dp
     /** Widest a screen's content column may grow on tablets / foldables. */
     val MaxContent = 800.dp
     /** Widest a centred, single-purpose screen (splash / fetching) may grow. */

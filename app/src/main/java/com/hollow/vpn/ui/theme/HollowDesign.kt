@@ -22,6 +22,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
 /*
@@ -75,19 +76,45 @@ object HollowStroke {
 }
 
 /**
- * Type scale (sp). One ladder for the whole app, matching Typography in Type.kt:
- * Micro 10 · Caption 11 · Small 12 · Body 13 · BodyStrong 14 · Title 16 · Heading 18 · Headline 20 · Display 24
+ * Type scale (sp), identical to Outrun's: 12 · 14 · 16 · 20 · 28.
+ * Legacy names are kept so call sites compile; several names intentionally share a size.
  */
 object HollowType {
-    val Micro = 10.sp
-    val Caption = 11.sp
-    val Small = 12.sp
-    val Body = 13.sp
-    val BodyStrong = 14.sp
-    val Title = 16.sp
-    val Heading = 18.sp
-    val Headline = 20.sp
-    val Display = 24.sp
+    val Micro = 12.sp
+    val Caption = 12.sp
+    val Small = 14.sp
+    val Body = 16.sp
+    val BodyStrong = 16.sp
+    val Title = 20.sp
+    val Heading = 20.sp
+    val Headline = 28.sp
+    val Display = 28.sp
+}
+
+/** Line heights paired with [HollowType] (Outrun: 12/16 · 14/20 · 16/24 · 20/24 · 28/34). */
+object HollowLineHeight {
+    val Micro = 16.sp
+    val Caption = 16.sp
+    val Small = 20.sp
+    val Body = 24.sp
+    val BodyStrong = 24.sp
+    val Title = 24.sp
+    val Heading = 24.sp
+    val Headline = 34.sp
+    val Display = 34.sp
+}
+
+/** Letter spacing paired with [HollowType] (Outrun: em-based tracking). */
+object HollowTracking {
+    val Micro = 0.03.em
+    val Caption = 0.03.em
+    val Small = 0.02.em
+    val Body = 0.03.em
+    val BodyStrong = 0.03.em
+    val Title = 0.01.em
+    val Heading = 0.01.em
+    val Headline = 0.45.sp
+    val Display = 0.45.sp
 }
 
 /** Motion tokens: durations (ms) and press-feedback scales. */

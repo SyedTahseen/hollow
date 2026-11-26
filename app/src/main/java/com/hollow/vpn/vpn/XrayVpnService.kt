@@ -92,8 +92,6 @@ class XrayVpnService : VpnService() {
     private var activeIncludeDirectStats = false
 
     @Volatile
-
-    @Volatile
     private var networkMonitor: NetworkMonitor? = null
 
     /** Root mode: the standalone Xray core running as root (null in normal VPN-service mode). */

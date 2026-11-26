@@ -1,6 +1,8 @@
 package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
@@ -78,7 +80,6 @@ import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowInk
 import com.hollow.vpn.ui.theme.HollowInkSecondary
 import com.hollow.vpn.ui.theme.HollowScreenPadding
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingCanvas
 import com.hollow.vpn.ui.theme.NothingOnCanvas
 import com.hollow.vpn.ui.theme.NothingRed
@@ -166,7 +167,7 @@ fun QrScanScreen(
                     imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
                     contentDescription = null,
                     tint = tint,
-                    modifier = Modifier.size(21.dp)
+                    modifier = Modifier.size(HollowSizes.Icon)
                 )
             }
 
@@ -177,7 +178,8 @@ fun QrScanScreen(
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Display,
-                letterSpacing = 0.9.sp,
+                lineHeight = HollowLineHeight.Display,
+                letterSpacing = HollowTracking.Display,
                 maxLines = 1,
                 color = NothingOnCanvas,
                 modifier = Modifier.weight(1f)
@@ -197,7 +199,7 @@ fun QrScanScreen(
                             imageVector = if (torchOn) Icons.Outlined.FlashOn else Icons.Outlined.FlashOff,
                             contentDescription = null,
                             tint = tint,
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
                 }
@@ -218,7 +220,7 @@ fun QrScanScreen(
                         imageVector = Icons.Outlined.PhotoLibrary,
                         contentDescription = null,
                         tint = tint,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(HollowSizes.Icon)
                     )
                 }
             }
@@ -245,13 +247,15 @@ fun QrScanScreen(
                         imageVector = Icons.Outlined.QrCodeScanner,
                         contentDescription = null,
                         tint = NothingRed,
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(HollowSizes.Field)
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Lg))
                     Text(
                         text = "Scan a QR code",
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Headline,
+                        lineHeight = HollowLineHeight.Headline,
+                        letterSpacing = HollowTracking.Headline,
                         color = HollowInk
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -262,6 +266,8 @@ fun QrScanScreen(
                             "Allow camera access to scan live"
                         },
                         fontSize = HollowType.Body,
+                        lineHeight = HollowLineHeight.Body,
+                        letterSpacing = HollowTracking.Body,
                         color = HollowInkSecondary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = HollowSpace.Xxxl)
@@ -281,6 +287,8 @@ fun QrScanScreen(
                         Text(
                             text = if (permissionDenied) "Allow camera" else "Start scanning",
                             fontSize = HollowType.Body,
+                            lineHeight = HollowLineHeight.Body,
+                            letterSpacing = HollowTracking.Body,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -290,8 +298,10 @@ fun QrScanScreen(
             notice?.let { msg ->
                 Text(
                     text = msg,
-                    fontFamily = JetBrainsMonoFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontSize = HollowType.Small,
+                    lineHeight = HollowLineHeight.Small,
+                    letterSpacing = HollowTracking.Small,
                     color = NothingRed,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -413,8 +423,10 @@ private fun ScanCameraArea(
 
         Text(
             text = "Align the QR code within the frame",
-            fontFamily = JetBrainsMonoFamily,
+            fontFamily = DotoDisplayFamily,
             fontSize = HollowType.Small,
+            lineHeight = HollowLineHeight.Small,
+            letterSpacing = HollowTracking.Small,
             color = NothingOnCanvas,
             modifier = Modifier
                 .align(Alignment.TopCenter)

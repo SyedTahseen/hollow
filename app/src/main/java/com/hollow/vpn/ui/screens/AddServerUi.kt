@@ -1,6 +1,8 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowScreenPadding
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowDialog
 import com.hollow.vpn.ui.theme.HollowModalSheet
 import com.hollow.vpn.ui.theme.HollowRadius
@@ -92,7 +94,6 @@ import com.hollow.vpn.ui.theme.HollowInk
 import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowInkSecondary
 import com.hollow.vpn.ui.theme.HollowOrange
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingOnCanvas
 import com.hollow.vpn.ui.theme.NothingSurface
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
@@ -188,7 +189,7 @@ fun AddServerButton(
                 imageVector = Icons.Rounded.Add,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(21.dp)
+                modifier = Modifier.size(HollowSizes.Icon)
             )
         }
 
@@ -244,12 +245,14 @@ private fun AddServerMenuItem(
                     imageVector = icon,
                     contentDescription = null,
                     tint = HollowInk,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(HollowSizes.IconSm)
                 )
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = HollowType.BodyStrong,
+                        lineHeight = HollowLineHeight.BodyStrong,
+                        letterSpacing = HollowTracking.BodyStrong,
                         fontWeight = FontWeight.Medium
                     ),
                     color = HollowInk
@@ -359,8 +362,10 @@ private fun AddSubscriptionDialog(
                         if (url.isEmpty()) {
                             Text(
                                 text = "https://example.com/sub",
-                                fontFamily = JetBrainsMonoFamily,
+                                fontFamily = DotoDisplayFamily,
                                 fontSize = HollowType.Body,
+                                lineHeight = HollowLineHeight.Body,
+                                letterSpacing = HollowTracking.Body,
                                 color = HollowInkMuted
                             )
                         }
@@ -369,8 +374,10 @@ private fun AddSubscriptionDialog(
                             onValueChange = { url = it },
                             singleLine = true,
                             textStyle = TextStyle(
-                                fontFamily = JetBrainsMonoFamily,
+                                fontFamily = DotoDisplayFamily,
                                 fontSize = HollowType.Body,
+                                lineHeight = HollowLineHeight.Body,
+                                letterSpacing = HollowTracking.Body,
                                 color = HollowInk
                             ),
                             cursorBrush = SolidColor(HollowOrange),
@@ -406,15 +413,17 @@ private fun AddSubscriptionDialog(
                     ) {
                         Text(
                             text = settings.updateIntervalLabel,
-                            fontFamily = JetBrainsMonoFamily,
+                            fontFamily = DotoDisplayFamily,
                             fontSize = HollowType.Small,
+                            lineHeight = HollowLineHeight.Small,
+                            letterSpacing = HollowTracking.Small,
                             color = HollowInk
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                             contentDescription = null,
                             tint = HollowInkSecondary,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(HollowSizes.IconSm)
                         )
                     }
                 }
@@ -445,6 +454,8 @@ private fun AddSubscriptionDialog(
                 Text(
                     text = "Add & fetch",
                     fontSize = HollowType.Body,
+                    lineHeight = HollowLineHeight.Body,
+                    letterSpacing = HollowTracking.Body,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
@@ -492,7 +503,9 @@ private fun SubscriptionOptionRow(
             text = label,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Medium,
-                fontSize = HollowType.BodyStrong
+                fontSize = HollowType.BodyStrong,
+                lineHeight = HollowLineHeight.BodyStrong,
+                letterSpacing = HollowTracking.BodyStrong,
             ),
             color = HollowInk,
             modifier = Modifier.weight(1f)
@@ -554,7 +567,8 @@ private fun AddManualServerSheet(
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Display,
-                letterSpacing = 0.9.sp,
+                lineHeight = HollowLineHeight.Display,
+                letterSpacing = HollowTracking.Display,
                 color = HollowInk
             )
 
@@ -742,8 +756,10 @@ private fun AddManualServerSheet(
                 onValueChange = { rawJson = it },
                 label = { Text("Optional Raw Config (JSON)") },
                 textStyle = TextStyle(
-                    fontFamily = JetBrainsMonoFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontSize = HollowType.Small,
+                    lineHeight = HollowLineHeight.Small,
+                    letterSpacing = HollowTracking.Small,
                     color = HollowInk
                 ),
                 colors = fieldColors,
@@ -792,7 +808,9 @@ private fun AddManualServerSheet(
                     text = "Save Custom Server & Ping Test",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = HollowType.BodyStrong
+                        fontSize = HollowType.BodyStrong,
+                        lineHeight = HollowLineHeight.BodyStrong,
+                        letterSpacing = HollowTracking.BodyStrong,
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

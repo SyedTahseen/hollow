@@ -1,6 +1,8 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowStroke
@@ -82,7 +84,6 @@ import com.hollow.vpn.ui.theme.HollowCreamSurface
 import com.hollow.vpn.ui.theme.HollowInk
 import com.hollow.vpn.ui.theme.HollowInkSecondary
 import com.hollow.vpn.ui.theme.HollowOrange
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingCanvas
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
@@ -91,7 +92,6 @@ import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
-import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 
 @Composable
 fun CountryServerListScreen(
@@ -182,7 +182,8 @@ fun CountryServerListScreen(
                         fontFamily = DotoDisplayFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Display,
-                        letterSpacing = 0.9.sp,
+                        lineHeight = HollowLineHeight.Display,
+                        letterSpacing = HollowTracking.Display,
                         maxLines = 1,
                         color = NothingOnCanvas
                     )
@@ -204,7 +205,7 @@ fun CountryServerListScreen(
                             imageVector = Icons.Outlined.Speed,
                             contentDescription = null,
                             tint = tint,
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
 
@@ -224,7 +225,7 @@ fun CountryServerListScreen(
                                 imageVector = Icons.Rounded.MoreVert,
                                 contentDescription = null,
                                 tint = tint,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(HollowSizes.Icon)
                             )
                         }
 
@@ -337,7 +338,7 @@ fun CountryServerListScreen(
                     }
                 },
                 tabTestTags = tabEntries.map { if (it.first == favTabKey) "server_category_favorites" else "server_category_${it.first.hashCode()}" },
-                fontSizeSp = 10.5f
+                fontSize = HollowType.Caption
             )
 
 
@@ -429,13 +430,15 @@ fun CountryServerListScreen(
                                     imageVector = Icons.Outlined.PublicOff,
                                     contentDescription = null,
                                     tint = HollowInkSecondary,
-                                    modifier = Modifier.size(30.dp)
+                                    modifier = Modifier.size(HollowSizes.IconLg)
                                 )
                                 Text(
                                     text = if (isDefaultCategory) "No default servers" else "No matching servers",
-                                    fontFamily = SpaceGroteskFamily,
+                                    fontFamily = DotoDisplayFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = HollowType.Heading,
+                                    lineHeight = HollowLineHeight.Heading,
+                                    letterSpacing = HollowTracking.Heading,
                                     color = HollowInk
                                 )
                                 val emptyMsg = when {
@@ -473,10 +476,11 @@ fun CountryServerListScreen(
                     item(key = "list_header") {
                         Text(
                             text = "$listTitle (${displayedServers.size})",
-                            fontFamily = JetBrainsMonoFamily,
+                            fontFamily = DotoDisplayFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Caption,
-                            letterSpacing = 1.2.sp,
+                            lineHeight = HollowLineHeight.Caption,
+                            letterSpacing = HollowTracking.Caption,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
@@ -548,7 +552,7 @@ fun CountryServerListScreen(
             title = {
                 Text(
                     text = "Delete all servers?",
-                    fontFamily = SpaceGroteskFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontWeight = FontWeight.Bold,
                     color = HollowInk
                 )
@@ -592,6 +596,7 @@ private fun FastestServerRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = HollowSizes.ServerRow)
             .clickable(enabled = !isTesting, onClick = onClick)
             .padding(start = 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md)
             .testTag("server_fastest_row"),
@@ -599,14 +604,14 @@ private fun FastestServerRow(
     ) {
         Box(
             modifier = Modifier
-                .size(width = 38.dp, height = 26.dp)
+                .size(width = HollowSizes.FlagWidth, height = HollowSizes.FlagHeight)
                 .clip(RoundedCornerShape(HollowRadius.Xs))
                 .background(HollowOrange),
             contentAlignment = Alignment.Center
         ) {
             if (isTesting) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(15.dp),
+                    modifier = Modifier.size(HollowSizes.IconSm),
                     strokeWidth = 2.dp,
                     color = Color.White
                 )
@@ -615,7 +620,7 @@ private fun FastestServerRow(
                     imageVector = Icons.Rounded.Bolt,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(17.dp)
+                    modifier = Modifier.size(HollowSizes.IconSm)
                 )
             }
         }
@@ -625,6 +630,8 @@ private fun FastestServerRow(
                 text = "Fastest server",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontSize = HollowType.Title,
+                    lineHeight = HollowLineHeight.Title,
+                    letterSpacing = HollowTracking.Title,
                     fontWeight = FontWeight.Medium
                 ),
                 color = HollowInk
@@ -658,12 +665,14 @@ private fun ServerOverflowMenuItem(
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(HollowSizes.IconSm)
                 )
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = HollowType.BodyStrong,
+                        lineHeight = HollowLineHeight.BodyStrong,
+                        letterSpacing = HollowTracking.BodyStrong,
                         fontWeight = FontWeight.Medium
                     ),
                     color = color

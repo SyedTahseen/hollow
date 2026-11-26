@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowSizes
 import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSpace
 import android.content.Context
@@ -243,7 +244,7 @@ fun ServerQrShareDialog(
                 Icon(
                     imageVector = Icons.Outlined.ContentCopy,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(HollowSizes.IconSm)
                 )
                 Spacer(Modifier.width(HollowSpace.Sm))
                 Text(if (server.shareUri.isNotBlank()) "Copy Share Link" else "Copy Config")

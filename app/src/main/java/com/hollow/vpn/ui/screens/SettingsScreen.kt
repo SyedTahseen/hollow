@@ -1,6 +1,8 @@
 package com.hollow.vpn.ui.screens
 
 import android.net.Uri
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import androidx.compose.material.icons.outlined.SupportAgent
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
@@ -99,7 +101,6 @@ import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowDisplay
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowCreamSurface
 import com.hollow.vpn.ui.theme.HollowInk
@@ -112,7 +113,6 @@ import com.hollow.vpn.ui.theme.NothingPillActiveBg
 import com.hollow.vpn.ui.theme.NothingPillActiveIcon
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
-import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 import com.hollow.vpn.ui.theme.nothingPressScale
 
 /** Dialogs that still open on top of the settings list (log viewer, about sheet). */
@@ -337,7 +337,8 @@ private fun SettingsOverview(
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Display,
-            letterSpacing = 0.9.sp,
+            lineHeight = HollowLineHeight.Display,
+            letterSpacing = HollowTracking.Display,
             maxLines = 1,
             color = NothingOnCanvas,
             modifier = Modifier.testTag("settings_title")
@@ -474,8 +475,10 @@ private fun SettingsOverview(
     ) {
         Text(
             text = "App version: ${BuildConfig.VERSION_NAME}",
-            fontFamily = SpaceGroteskFamily,
+            fontFamily = DotoDisplayFamily,
             fontSize = HollowType.Micro,
+            lineHeight = HollowLineHeight.Micro,
+            letterSpacing = HollowTracking.Micro,
             color = HollowInkSecondary,
             modifier = Modifier
                 .clip(RoundedCornerShape(HollowRadius.Sm))
@@ -485,8 +488,10 @@ private fun SettingsOverview(
         )
         Text(
             text = "Third party licenses",
-            fontFamily = SpaceGroteskFamily,
+            fontFamily = DotoDisplayFamily,
             fontSize = HollowType.Micro,
+            lineHeight = HollowLineHeight.Micro,
+            letterSpacing = HollowTracking.Micro,
             color = HollowOrange,
             modifier = Modifier
                 .clip(RoundedCornerShape(HollowRadius.Sm))
@@ -502,9 +507,10 @@ private fun SettingsOverview(
 internal fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
-        fontFamily = SpaceGroteskFamily,
+        fontFamily = DotoDisplayFamily,
         fontSize = HollowType.Micro,
-        letterSpacing = 0.9.sp,
+        lineHeight = HollowLineHeight.Micro,
+        letterSpacing = HollowTracking.Micro,
         color = HollowOrange,
         modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = HollowSpace.Sm, start = HollowSpace.Xxs)
     )
@@ -522,7 +528,7 @@ internal fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .minimumInteractiveComponentSize()
+            .heightIn(min = HollowSizes.SettingRowMin)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(vertical = HollowSpace.Md)
             .testTag(testTag),
@@ -532,24 +538,27 @@ internal fun SettingsRow(
             imageVector = icon,
             contentDescription = null,
             tint = HollowInk,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(HollowSizes.Icon)
         )
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontFamily = SpaceGroteskFamily,
+                fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Small,
+                lineHeight = HollowLineHeight.Small,
+                letterSpacing = HollowTracking.Small,
                 color = HollowInk
             )
             if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Text(
                     text = subtitle,
-                    fontFamily = SpaceGroteskFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontSize = HollowType.Micro,
-                    lineHeight = 14.sp,
+                    letterSpacing = HollowTracking.Micro,
+                    lineHeight = HollowLineHeight.Micro,
                     color = HollowInkSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -561,7 +570,7 @@ internal fun SettingsRow(
                 imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                 contentDescription = null,
                 tint = HollowInkSecondary,
-                modifier = Modifier.padding(start = HollowSpace.Sm).size(18.dp)
+                modifier = Modifier.padding(start = HollowSpace.Sm).size(HollowSizes.IconSm)
             )
         }
     }
@@ -612,7 +621,7 @@ private fun SettingsDetail(
                 imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(21.dp)
+                modifier = Modifier.size(HollowSizes.Icon)
             )
         }
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
@@ -621,7 +630,8 @@ private fun SettingsDetail(
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Display,
-            letterSpacing = 0.9.sp,
+            lineHeight = HollowLineHeight.Display,
+            letterSpacing = HollowTracking.Display,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             color = NothingOnCanvas
@@ -702,9 +712,11 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
     ) {
         Text(
             text = "Display size",
-            fontFamily = SpaceGroteskFamily,
+            fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
+            lineHeight = HollowLineHeight.Small,
+            letterSpacing = HollowTracking.Small,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -720,15 +732,17 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
                 imageVector = Icons.Rounded.Remove,
                 contentDescription = null,
                 tint = if (percent > HollowDisplay.MIN) tint else tint.copy(alpha = 0.3f),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(HollowSizes.Icon)
             )
         }
         Box(modifier = Modifier.widthIn(min = 56.dp), contentAlignment = Alignment.Center) {
             Text(
                 text = "$percent%",
-                fontFamily = JetBrainsMonoFamily,
+                fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = HollowType.Small,
+                lineHeight = HollowLineHeight.Small,
+                letterSpacing = HollowTracking.Small,
                 color = HollowInk,
                 maxLines = 1
             )
@@ -745,7 +759,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
                 imageVector = Icons.Rounded.Add,
                 contentDescription = null,
                 tint = if (percent < HollowDisplay.MAX) tint else tint.copy(alpha = 0.3f),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(HollowSizes.Icon)
             )
         }
     }
@@ -755,9 +769,10 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
 internal fun DetailDescription(text: String) {
     Text(
         text = text,
-        fontFamily = SpaceGroteskFamily,
+        fontFamily = DotoDisplayFamily,
         fontSize = HollowType.Micro,
-        lineHeight = 16.sp,
+        letterSpacing = HollowTracking.Micro,
+        lineHeight = HollowLineHeight.Micro,
         color = HollowInkSecondary,
         modifier = Modifier.padding(start = HollowSpace.Xxs, bottom = HollowSpace.Sm)
     )
@@ -773,7 +788,7 @@ internal fun DetailToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .minimumInteractiveComponentSize()
+            .heightIn(min = HollowSizes.SettingRowMin)
             .clickable { onCheckedChange(!checked) }
             .padding(vertical = HollowSpace.Lg)
             .testTag(testTag),
@@ -781,9 +796,11 @@ internal fun DetailToggleRow(
     ) {
         Text(
             text = title,
-            fontFamily = SpaceGroteskFamily,
+            fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
+            lineHeight = HollowLineHeight.Small,
+            letterSpacing = HollowTracking.Small,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -821,17 +838,20 @@ internal fun DetailRadioList(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = option.label,
-                        fontFamily = SpaceGroteskFamily,
+                        fontFamily = DotoDisplayFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Small,
+                        lineHeight = HollowLineHeight.Small,
+                        letterSpacing = HollowTracking.Small,
                         color = HollowInk
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = option.subtitle,
-                        fontFamily = SpaceGroteskFamily,
+                        fontFamily = DotoDisplayFamily,
                         fontSize = HollowType.Micro,
-                        lineHeight = 14.sp,
+                        letterSpacing = HollowTracking.Micro,
+                        lineHeight = HollowLineHeight.Micro,
                         color = HollowInkSecondary
                     )
                 }
@@ -962,14 +982,16 @@ private fun ThemeModeSegment(
                 imageVector = icon,
                 contentDescription = null,
                 tint = contentTint,
-                modifier = Modifier.size(15.dp)
+                modifier = Modifier.size(HollowSizes.IconSm)
             )
             Spacer(modifier = Modifier.width(HollowSpace.Xs))
             Text(
                 text = label,
-                fontFamily = SpaceGroteskFamily,
+                fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
+                lineHeight = HollowLineHeight.Caption,
+                letterSpacing = HollowTracking.Caption,
                 maxLines = 1,
                 color = contentTint
             )
@@ -1011,9 +1033,11 @@ private fun InlineModeSegment(
         ) {
             Text(
                 text = label,
-                fontFamily = SpaceGroteskFamily,
+                fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
+                lineHeight = HollowLineHeight.Caption,
+                letterSpacing = HollowTracking.Caption,
                 color = contentTint
             )
         }

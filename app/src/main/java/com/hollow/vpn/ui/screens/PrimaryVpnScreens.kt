@@ -1,6 +1,8 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowUploadAccent
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.hollowPhaseColors
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowMotion
@@ -138,7 +140,6 @@ import com.hollow.vpn.ui.theme.HollowObsidian
 import com.hollow.vpn.ui.theme.HollowObsidianDivider
 import com.hollow.vpn.ui.theme.HollowObsidianSurface
 import com.hollow.vpn.ui.theme.HollowOrange
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBackdropDot
 import com.hollow.vpn.ui.theme.NothingCanvas
 import com.hollow.vpn.ui.theme.NothingMatrixGreen
@@ -147,7 +148,6 @@ import com.hollow.vpn.ui.theme.NothingOnCanvas
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
-import com.hollow.vpn.ui.theme.SpaceGroteskFamily
 import com.hollow.vpn.ui.theme.TabularMonoBody
 import com.hollow.vpn.ui.theme.nothingPressScale
 import java.util.Locale
@@ -238,7 +238,8 @@ fun SplashFetchingScreen(
                             fontFamily = DotoDisplayFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = HollowType.Heading,
-                            letterSpacing = 0.8.sp,
+                            lineHeight = HollowLineHeight.Heading,
+                            letterSpacing = HollowTracking.Heading,
                             color = HollowInk
                         )
                         Row(
@@ -248,10 +249,11 @@ fun SplashFetchingScreen(
                             HollowBlinkingDot(color = HollowOrange)
                             Text(
                                 text = "LIVE PIPELINE",
-                                fontFamily = JetBrainsMonoFamily,
+                                fontFamily = DotoDisplayFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = HollowType.Micro,
-                                letterSpacing = 0.8.sp,
+                                lineHeight = HollowLineHeight.Micro,
+                                letterSpacing = HollowTracking.Micro,
                                 color = HollowInkSecondary
                             )
                         }
@@ -277,13 +279,15 @@ fun SplashFetchingScreen(
                             imageVector = Icons.Rounded.KeyboardArrowDown,
                             contentDescription = "Hide",
                             tint = HollowInk,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(HollowSizes.IconSm)
                         )
                         Text(
                             text = "Hide",
-                            fontFamily = SpaceGroteskFamily,
+                            fontFamily = DotoDisplayFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Body,
+                            lineHeight = HollowLineHeight.Body,
+                            letterSpacing = HollowTracking.Body,
                             color = HollowInk
                         )
                     }
@@ -322,7 +326,8 @@ fun SplashFetchingScreen(
                         fontFamily = DotoDisplayFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Heading,
-                        lineHeight = 22.sp,
+                        letterSpacing = HollowTracking.Heading,
+                        lineHeight = HollowLineHeight.Heading,
                         color = HollowInk,
                         textAlign = TextAlign.Center
                     )
@@ -384,19 +389,22 @@ fun SplashFetchingScreen(
                                     HollowBlinkingDot(color = HollowOrange)
                                     Text(
                                         text = "FETCH",
-                                        fontFamily = JetBrainsMonoFamily,
+                                        fontFamily = DotoDisplayFamily,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = HollowType.Micro,
-                                        letterSpacing = 0.8.sp,
+                                        lineHeight = HollowLineHeight.Micro,
+                                        letterSpacing = HollowTracking.Micro,
                                         color = HollowInkSecondary
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(HollowSpace.Xs))
                                 Text(
                                     text = "${progress.parsedCount} parsed",
-                                    fontFamily = JetBrainsMonoFamily,
+                                    fontFamily = DotoDisplayFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = HollowType.Body,
+                                    lineHeight = HollowLineHeight.Body,
+                                    letterSpacing = HollowTracking.Body,
                                     color = HollowInk
                                 )
                             }
@@ -407,7 +415,7 @@ fun SplashFetchingScreen(
                                 tint = HollowInkSecondary,
                                 modifier = Modifier
                                     .padding(horizontal = HollowSpace.Sm)
-                                    .size(16.dp)
+                                    .size(HollowSizes.IconSm)
                             )
 
                             Column(
@@ -423,19 +431,22 @@ fun SplashFetchingScreen(
                                     )
                                     Text(
                                         text = "TEST",
-                                        fontFamily = JetBrainsMonoFamily,
+                                        fontFamily = DotoDisplayFamily,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = HollowType.Micro,
-                                        letterSpacing = 0.8.sp,
+                                        lineHeight = HollowLineHeight.Micro,
+                                        letterSpacing = HollowTracking.Micro,
                                         color = HollowInkSecondary
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(HollowSpace.Xs))
                                 Text(
                                     text = "${progress.workingCount} ready · ${progress.testedCount} probed",
-                                    fontFamily = JetBrainsMonoFamily,
+                                    fontFamily = DotoDisplayFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = HollowType.Body,
+                                    lineHeight = HollowLineHeight.Body,
+                                    letterSpacing = HollowTracking.Body,
                                     color = if (progress.workingCount > 0) NothingMatrixGreen else HollowInk,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -499,10 +510,11 @@ fun SplashFetchingScreen(
                             Spacer(modifier = Modifier.height(HollowSpace.Md))
                             Text(
                                 text = "DISCOVERED LOCATIONS (${progress.countryCount})",
-                                fontFamily = JetBrainsMonoFamily,
+                                fontFamily = DotoDisplayFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = HollowType.Micro,
-                                letterSpacing = 0.9.sp,
+                                lineHeight = HollowLineHeight.Micro,
+                                letterSpacing = HollowTracking.Micro,
                                 color = HollowInkSecondary
                             )
                             Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -524,9 +536,11 @@ fun SplashFetchingScreen(
                                         ) {
                                             Text(
                                                 text = code,
-                                                fontFamily = JetBrainsMonoFamily,
+                                                fontFamily = DotoDisplayFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = HollowType.Caption,
+                                                lineHeight = HollowLineHeight.Caption,
+                                                letterSpacing = HollowTracking.Caption,
                                                 color = HollowInk
                                             )
                                         }
@@ -541,9 +555,11 @@ fun SplashFetchingScreen(
                                     ) {
                                         Text(
                                             text = "+$extraCountries",
-                                            fontFamily = JetBrainsMonoFamily,
+                                            fontFamily = DotoDisplayFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = HollowType.Caption,
+                                            lineHeight = HollowLineHeight.Caption,
+                                            letterSpacing = HollowTracking.Caption,
                                             color = HollowInkSecondary,
                                             modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
                                         )
@@ -570,14 +586,16 @@ fun SplashFetchingScreen(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = null,
                     tint = HollowInk,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(HollowSizes.IconSm)
                 )
                 Spacer(modifier = Modifier.width(HollowSpace.Sm))
                 Text(
                     text = "Hide",
-                    fontFamily = SpaceGroteskFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = HollowType.Title,
+                    lineHeight = HollowLineHeight.Title,
+                    letterSpacing = HollowTracking.Title,
                     color = HollowInk
                 )
             }
@@ -608,10 +626,11 @@ private fun FetchingMetricCell(
     ) {
         Text(
             text = label,
-            fontFamily = JetBrainsMonoFamily,
+            fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Micro,
-            letterSpacing = 0.7.sp,
+            lineHeight = HollowLineHeight.Micro,
+            letterSpacing = HollowTracking.Micro,
             color = HollowInkSecondary
         )
         Spacer(modifier = Modifier.height(HollowSpace.Xs))
@@ -620,6 +639,8 @@ private fun FetchingMetricCell(
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Title,
+            lineHeight = HollowLineHeight.Title,
+            letterSpacing = HollowTracking.Title,
             color = valueColor,
             maxLines = 1
         )
@@ -842,9 +863,9 @@ private fun HomeContent(
                 text = titleText,
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = if (isCompact) 21.sp else 24.sp,
-                lineHeight = if (isCompact) 25.sp else 29.sp,
-                letterSpacing = 0.5.sp,
+                fontSize = if (isCompact) HollowType.Title else HollowType.Display,
+                lineHeight = if (isCompact) HollowLineHeight.Title else HollowLineHeight.Display,
+                letterSpacing = if (isCompact) HollowTracking.Title else HollowTracking.Display,
                 color = titleColor,
                 modifier = Modifier.testTag("connection_status_text")
             )
@@ -853,7 +874,7 @@ private fun HomeContent(
 
             Row(
                 modifier = Modifier
-                    .heightIn(min = 34.dp)
+                    .heightIn(min = HollowSizes.CardRowMin)
                     .padding(vertical = HollowSpace.Xs, horizontal = HollowSpace.Xxs)
                     .testTag("row_real_ip"),
                 verticalAlignment = Alignment.CenterVertically,
@@ -861,9 +882,11 @@ private fun HomeContent(
             ) {
                 Text(
                     text = infoLine,
-                    fontFamily = JetBrainsMonoFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = HollowType.Body,
+                    lineHeight = HollowLineHeight.Body,
+                    letterSpacing = HollowTracking.Body,
                     color = infoColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -929,7 +952,7 @@ private fun HomeContent(
                     if (selectedServer == null) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(HollowSizes.Chip)
                                 .clip(RoundedCornerShape(HollowRadius.Sm))
                                 .background(NothingSurfaceElevated)
                                 .border(HollowStroke.Hairline, HollowCreamDivider, RoundedCornerShape(HollowRadius.Sm)),
@@ -939,7 +962,7 @@ private fun HomeContent(
                                 imageVector = Icons.Rounded.Add,
                                 contentDescription = null,
                                 tint = HollowInk,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(HollowSizes.Icon)
                             )
                         }
                         Spacer(modifier = Modifier.width(HollowSpace.Md))
@@ -951,9 +974,11 @@ private fun HomeContent(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = selectedServer?.countryName ?: "Add a server",
-                            fontFamily = SpaceGroteskFamily,
+                            fontFamily = DotoDisplayFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Title,
+                            lineHeight = HollowLineHeight.Title,
+                            letterSpacing = HollowTracking.Title,
                             color = pc.ink,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -984,9 +1009,11 @@ private fun HomeContent(
                         Spacer(modifier = Modifier.width(HollowSpace.Sm))
                         Text(
                             text = if (selectedServer.pingMs > 0) "${selectedServer.pingMs} ms" else "—",
-                            fontFamily = JetBrainsMonoFamily,
+                            fontFamily = DotoDisplayFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Caption,
+                            lineHeight = HollowLineHeight.Caption,
+                            letterSpacing = HollowTracking.Caption,
                             color = pingColor,
                             maxLines = 1
                         )
@@ -996,14 +1023,14 @@ private fun HomeContent(
                             imageVector = Icons.Rounded.KeyboardArrowDown,
                             contentDescription = if (detailsExpanded) "Collapse server details" else "Expand server details",
                             tint = pc.muted,
-                            modifier = Modifier.size(20.dp).rotate(chevronRotation)
+                            modifier = Modifier.size(HollowSizes.Icon).rotate(chevronRotation)
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Rounded.Add,
                             contentDescription = "Add server",
                             tint = HollowInkSecondary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
                 }
@@ -1123,18 +1150,21 @@ private fun ConnectionStatsCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Connected for",
-                    fontFamily = SpaceGroteskFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontSize = HollowType.Micro,
-                    letterSpacing = 0.7.sp,
+                    lineHeight = HollowLineHeight.Micro,
+                    letterSpacing = HollowTracking.Micro,
                     color = HollowForestMuted,
                     maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                 Text(
                     text = formatConnectedFor(telemetry.elapsedSeconds),
-                    fontFamily = SpaceGroteskFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = HollowType.BodyStrong,
+                    lineHeight = HollowLineHeight.BodyStrong,
+                    letterSpacing = HollowTracking.BodyStrong,
                     color = HollowDarkInk,
                     maxLines = 1,
                     modifier = Modifier.testTag("connection_timer_text")
@@ -1145,14 +1175,14 @@ private fun ConnectionStatsCard(
                     Text("↓", fontSize = HollowType.Caption, color = downColor)
                     Text(
                         formatSpeed2(telemetry.downloadBytesPerSec),
-                        fontFamily = SpaceGroteskFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
+                        fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
                     Text("↑", fontSize = HollowType.Caption, color = upColor)
                     Text(
                         formatSpeed2(telemetry.uploadBytesPerSec),
-                        fontFamily = SpaceGroteskFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
+                        fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
                     )
                 }
                 val chevronRotation by animateFloatAsState(if (expanded) 180f else 0f, tween(HollowMotion.Standard), label = "stats_card_chevron")
@@ -1160,7 +1190,7 @@ private fun ConnectionStatsCard(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = if (expanded) "Collapse server details" else "Expand server details",
                     tint = HollowForestMuted,
-                    modifier = Modifier.size(20.dp).rotate(chevronRotation)
+                    modifier = Modifier.size(HollowSizes.Icon).rotate(chevronRotation)
                 )
             }
         }
@@ -1226,16 +1256,20 @@ private fun ServerDetailsPanel(
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
                 Text(
                     text = label,
-                    fontFamily = SpaceGroteskFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontSize = HollowType.Caption,
+                    lineHeight = HollowLineHeight.Caption,
+                    letterSpacing = HollowTracking.Caption,
                     color = mutedColor,
                     modifier = Modifier.width(92.dp)
                 )
                 Text(
                     text = value,
-                    fontFamily = JetBrainsMonoFamily,
+                    fontFamily = DotoDisplayFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = HollowType.Caption,
+                    lineHeight = HollowLineHeight.Caption,
+                    letterSpacing = HollowTracking.Caption,
                     color = textColor,
                     modifier = Modifier.weight(1f)
                 )
@@ -1244,19 +1278,19 @@ private fun ServerDetailsPanel(
         if (loading) {
             Spacer(modifier = Modifier.height(HollowSpace.Xs))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp, color = accentColor)
+                CircularProgressIndicator(modifier = Modifier.size(HollowSizes.IconSm), strokeWidth = 1.5.dp, color = accentColor)
                 Spacer(modifier = Modifier.width(HollowSpace.Sm))
-                Text("Loading server info…", fontFamily = SpaceGroteskFamily, fontSize = HollowType.Caption, color = mutedColor)
+                Text("Loading server info…", fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = mutedColor)
             }
         } else if (details == null) {
             Spacer(modifier = Modifier.height(HollowSpace.Xs))
-            Text("Extra network info unavailable right now.", fontFamily = SpaceGroteskFamily, fontSize = HollowType.Caption, color = mutedColor)
+            Text("Extra network info unavailable right now.", fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = mutedColor)
         }
         Spacer(modifier = Modifier.height(HollowSpace.Xs))
         TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
-            Text("Manage servers", fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = HollowType.Small, color = accentColor)
+            Text("Manage servers", fontFamily = DotoDisplayFamily, fontWeight = FontWeight.SemiBold, fontSize = HollowType.Small, color = accentColor)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = accentColor, modifier = Modifier.size(14.dp))
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = accentColor, modifier = Modifier.size(HollowSizes.IconSm))
         }
     }
 }
@@ -1357,6 +1391,8 @@ fun ServerItemRowContent(
                     text = server.countryName.ifBlank { cleanProtocol },
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = HollowType.Title,
+                        lineHeight = HollowLineHeight.Title,
+                        letterSpacing = HollowTracking.Title,
                         fontWeight = FontWeight.Medium
                     ),
                     color = HollowInk,
@@ -1380,9 +1416,11 @@ fun ServerItemRowContent(
                     ) {
                         Text(
                             text = "FAST",
-                            fontFamily = JetBrainsMonoFamily,
+                            fontFamily = DotoDisplayFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = HollowType.Micro,
+                            lineHeight = HollowLineHeight.Micro,
+                            letterSpacing = HollowTracking.Micro,
                             color = HollowOrange,
                             modifier = Modifier.padding(horizontal = HollowSpace.Xs, vertical = HollowSpace.Xxs)
                         )
@@ -1428,7 +1466,7 @@ fun ServerItemRowContent(
                     imageVector = if (isFavorite) Icons.Rounded.Star else Icons.Outlined.StarBorder,
                     contentDescription = if (isFavorite) "Remove ${server.countryName} from favorites" else "Add ${server.countryName} to favorites",
                     tint = if (isFavorite) HollowOrange else HollowInkSecondary,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(HollowSizes.Icon)
                 )
             }
         }
@@ -1443,7 +1481,7 @@ fun ServerItemRowContent(
                         imageVector = Icons.Rounded.MoreVert,
                         contentDescription = "Server Options for ${server.countryName}",
                         tint = HollowInkSecondary,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(HollowSizes.Icon)
                     )
                 }
 

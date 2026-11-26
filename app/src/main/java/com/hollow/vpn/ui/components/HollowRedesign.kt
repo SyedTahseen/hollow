@@ -1,6 +1,11 @@
 package com.hollow.vpn.ui.components
 
+import com.hollow.vpn.ui.theme.HollowSizes
 import com.hollow.vpn.ui.theme.HollowMotion
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
+import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
 import androidx.compose.animation.animateColorAsState
@@ -49,7 +54,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hollow.vpn.ui.theme.HollowInk
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBackdropDot
 import com.hollow.vpn.ui.theme.NothingDottedLine
 import com.hollow.vpn.ui.theme.NothingMotion
@@ -128,7 +132,7 @@ fun NothingPillTabRow(
     onSelectTab: (Int) -> Unit,
     modifier: Modifier = Modifier,
     tabTestTags: List<String> = emptyList(),
-    fontSizeSp: Float = 10.5f
+    fontSize: androidx.compose.ui.unit.TextUnit = HollowType.Caption
 ) {
     Row(
         modifier = modifier
@@ -176,10 +180,11 @@ fun NothingPillTabRow(
                 ) {
                     Text(
                         text = title.uppercase(),
-                        fontFamily = JetBrainsMonoFamily,
+                        fontFamily = DotoDisplayFamily,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        fontSize = fontSizeSp.sp,
-                        letterSpacing = 1.0.sp,
+                        fontSize = fontSize,
+                        lineHeight = HollowLineHeight.Caption,
+                        letterSpacing = HollowTracking.Caption,
                         color = contentColor,
                         maxLines = 1,
                         modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm)
@@ -202,7 +207,7 @@ fun HollowBlinkingDot(color: Color, modifier: Modifier = Modifier) {
     )
     Box(
         modifier = modifier
-            .size(8.dp)
+            .size(HollowSizes.Dot)
             .alpha(a)
             .clip(CircleShape)
             .background(color)

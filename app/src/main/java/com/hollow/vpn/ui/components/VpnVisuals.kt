@@ -1,6 +1,9 @@
 package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowType
+import com.hollow.vpn.ui.theme.HollowSizes
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowRadius
@@ -190,7 +193,8 @@ fun HollowStatusBrandRow(
         fontFamily = DotoDisplayFamily,
         fontWeight = FontWeight.Bold,
         fontSize = HollowType.Display,
-        letterSpacing = 0.9.sp,
+        lineHeight = HollowLineHeight.Display,
+        letterSpacing = HollowTracking.Display,
         maxLines = 1,
         color = textColor,
         modifier = modifier
@@ -249,7 +253,7 @@ fun HollowTopSquareButton(
         )
         Surface(
             modifier = Modifier
-                .size(40.dp)
+                .size(HollowSizes.Chip)
                 .graphicsLayer {
                     scaleX = btnScale
                     scaleY = btnScale
@@ -336,7 +340,7 @@ fun HollowBottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 352.dp)
-                .height(58.dp),
+                .height(HollowSizes.Field),
             shape = CircleShape,
             color = animCapsuleFill,
             border = BorderStroke(HollowStroke.Hairline, animCapsuleBorder)
@@ -387,7 +391,7 @@ fun HollowBottomNavigationBar(
                             imageVector = Icons.Rounded.PowerSettingsNew,
                             contentDescription = "Connect",
                             tint = tint,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
 
@@ -405,7 +409,7 @@ fun HollowBottomNavigationBar(
                             imageVector = Icons.Outlined.Dns,
                             contentDescription = "Servers",
                             tint = tint,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
 
@@ -427,7 +431,7 @@ fun HollowBottomNavigationBar(
                             },
                             contentDescription = "Settings",
                             tint = tint,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
                 }
@@ -504,7 +508,7 @@ fun HollowSlideActionPill(
     val density = LocalDensity.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    val thumbSize = 46.dp
+    val thumbSize = HollowSizes.Field - 12.dp
     val trackPadding = 6.dp
 
     val nudgeMotion = rememberInfiniteTransition(label = "slide_nudge")
@@ -523,7 +527,7 @@ fun HollowSlideActionPill(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .height(HollowSizes.Field)
             .clip(RoundedCornerShape(HollowRadius.Pill))
             .background(trackColor)
             .border(HollowStroke.Hairline, borderColor, RoundedCornerShape(HollowRadius.Pill))
@@ -559,7 +563,8 @@ fun HollowSlideActionPill(
             fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
-            letterSpacing = 0.8.sp,
+            lineHeight = HollowLineHeight.Small,
+            letterSpacing = HollowTracking.Small,
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -622,7 +627,7 @@ fun HollowSlideActionPill(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = null,
                 tint = arrowColor,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(HollowSizes.Icon)
             )
         }
     }
@@ -658,7 +663,7 @@ fun HollowSwitch(
         label = "hollow_switch_thumb"
     )
     val thumbOffset by animateDpAsState(
-        targetValue = if (checked) 22.dp else 0.dp,
+        targetValue = if (checked) (HollowSizes.SwitchWidth - HollowSpace.Sm - HollowSizes.SwitchThumb) else 0.dp,
         animationSpec = spring(
             dampingRatio = 0.68f,
             stiffness = 520f
@@ -686,8 +691,8 @@ fun HollowSwitch(
     ) {
         Box(
             modifier = Modifier
-                .width(50.dp)
-                .height(28.dp)
+                .width(HollowSizes.SwitchWidth)
+                .height(HollowSizes.SwitchHeight)
                 .clip(RoundedCornerShape(HollowRadius.Md))
                 .background(trackColor)
                 .border(HollowStroke.Emphasis, borderColor, RoundedCornerShape(HollowRadius.Md))
@@ -697,7 +702,7 @@ fun HollowSwitch(
             Box(
                 modifier = Modifier
                     .offset(x = thumbOffset)
-                    .size(20.dp)
+                    .size(HollowSizes.SwitchThumb)
                     .graphicsLayer {
                         scaleX = thumbScale
                         scaleY = thumbScale
@@ -765,7 +770,7 @@ fun FetchingSpinnerRing(
         ) {
             Box(
                 modifier = Modifier
-                    .size(7.dp)
+                    .size(HollowSizes.Dot)
                     .clip(CircleShape)
                     .background(HollowOrange)
             )

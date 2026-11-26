@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.hollow.vpn.R
 
@@ -40,107 +41,45 @@ val DotoDisplayFamily = FontFamily(
 )
 
 /**
- * App-wide UI font: Fira Code (same typeface and weights as the Horus app).
- * Static Regular + Bold files: Normal/Medium use Regular, SemiBold and heavier use Bold.
- * The old family names stay as aliases so every existing screen picks up the new font.
+ * Doto is the only typeface in the app. Sizes, line heights and tracking follow Outrun's scale
+ * (Headline 28 · Heading/Subheadline 20 · Body 16 · Small 14 · Caption/Label 12) so both apps read the same.
  */
-val FiraCodeFamily = FontFamily(
-    Font(resId = R.font.fira_code, weight = FontWeight.Normal),
-    Font(resId = R.font.fira_code, weight = FontWeight.Medium),
-    Font(resId = R.font.fira_code_bold, weight = FontWeight.SemiBold),
-    Font(resId = R.font.fira_code_bold, weight = FontWeight.Bold),
-    Font(resId = R.font.fira_code_bold, weight = FontWeight.ExtraBold)
+
+private fun outrun(size: Int, weight: FontWeight, line: Int, spacingEm: Float = 0f) = TextStyle(
+    fontFamily = DotoDisplayFamily,
+    fontSize = size.sp,
+    fontWeight = weight,
+    lineHeight = line.sp,
+    letterSpacing = spacingEm.em
 )
 
-val SpaceGroteskFamily = FiraCodeFamily
-val JetBrainsMonoFamily = FiraCodeFamily
-
-val TabularMonoBody = TextStyle(
-    fontFamily = JetBrainsMonoFamily,
-    fontWeight = FontWeight.Medium,
-    fontSize = 12.sp,
-    lineHeight = 16.sp,
-    fontFeatureSettings = "tnum"
-)
-
-val Typography = Typography(
-    displaySmall = TextStyle(
-        fontFamily = DotoDisplayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = (-0.25).sp
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = DotoDisplayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 30.sp,
-        letterSpacing = (-0.2).sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = DotoDisplayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 21.sp,
-        lineHeight = 26.sp,
-        letterSpacing = (-0.15).sp
-    ),
-    titleLarge = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
-        letterSpacing = 0.2.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
-    ),
-    titleSmall = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        lineHeight = 16.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 18.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 11.sp,
-        lineHeight = 16.sp
-    ),
-    bodySmall = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 15.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 11.sp,
-        lineHeight = 15.sp,
-        letterSpacing = 0.6.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.7.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FiraCodeFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 9.sp,
-        lineHeight = 13.sp,
-        letterSpacing = 0.5.sp
+/** Named styles mirroring Outrun's `Type` object. Use these (or the Material slots below) in screens. */
+object HollowText {
+    val Headline = TextStyle(
+        fontFamily = DotoDisplayFamily, fontSize = 28.sp, fontWeight = FontWeight.Bold,
+        lineHeight = 34.sp, letterSpacing = 0.45.sp
     )
+    val Heading = outrun(20, FontWeight.Bold, 24, 0.01f)
+    val Subheadline = outrun(20, FontWeight.Normal, 24, 0.01f)
+    val Body = outrun(16, FontWeight.Normal, 24, 0.03f)
+    val BodyBold = outrun(16, FontWeight.Bold, 24, 0.03f)
+    val BodyMedium = outrun(16, FontWeight.Medium, 24, 0.03f)
+    val Small = outrun(14, FontWeight.Normal, 20, 0.02f)
+    val SmallMedium = outrun(14, FontWeight.Medium, 20, 0.02f)
+    val Section = outrun(14, FontWeight.Medium, 20, 0.02f)
+    val Caption = outrun(12, FontWeight.Normal, 16, 0.03f)
+    val Label = outrun(12, FontWeight.Medium, 16, 0.03f)
+    val Button = outrun(16, FontWeight.Normal, 24, 0.03f)
+    val ButtonSmall = outrun(16, FontWeight.Medium, 24, 0.03f)
+}
+
+val TabularMonoBody = HollowText.Caption.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum")
+
+/** Same slot mapping as Outrun's Theme.kt so Material components pick up identical text styles. */
+val Typography = Typography(
+    displayLarge = HollowText.Heading, displayMedium = HollowText.Heading, displaySmall = HollowText.Heading,
+    headlineLarge = HollowText.Subheadline, headlineMedium = HollowText.Subheadline, headlineSmall = HollowText.Subheadline,
+    titleLarge = HollowText.BodyMedium, titleMedium = HollowText.BodyMedium, titleSmall = HollowText.BodyMedium,
+    bodyLarge = HollowText.Body, bodyMedium = HollowText.Body, bodySmall = HollowText.Body,
+    labelLarge = HollowText.Label, labelMedium = HollowText.Label, labelSmall = HollowText.Label
 )

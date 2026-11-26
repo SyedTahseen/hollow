@@ -1,6 +1,9 @@
 package com.hollow.vpn
 
 import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowTracking
+import com.hollow.vpn.ui.theme.HollowLineHeight
+import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowStroke
@@ -105,7 +108,6 @@ import com.hollow.vpn.ui.theme.HollowObsidianDivider
 import com.hollow.vpn.ui.theme.HollowObsidianMuted
 import com.hollow.vpn.ui.theme.HollowOrange
 import com.hollow.vpn.ui.theme.HollowVpnTheme
-import com.hollow.vpn.ui.theme.JetBrainsMonoFamily
 import com.hollow.vpn.ui.theme.NothingBorder
 import com.hollow.vpn.ui.theme.NothingMatrixGreen
 import com.hollow.vpn.ui.theme.NothingMotion
@@ -415,9 +417,11 @@ fun HollowVpnApp(
                                         )
                                         Text(
                                             text = "Fetching · ${fetchingProgress.workingCount} ready",
-                                            fontFamily = JetBrainsMonoFamily,
+                                            fontFamily = DotoDisplayFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = HollowType.Small,
+                                            lineHeight = HollowLineHeight.Small,
+                                            letterSpacing = HollowTracking.Small,
                                             color = HollowInk
                                         )
                                         Surface(
@@ -426,10 +430,11 @@ fun HollowVpnApp(
                                         ) {
                                             Text(
                                                 text = "SHOW",
-                                                fontFamily = JetBrainsMonoFamily,
+                                                fontFamily = DotoDisplayFamily,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = HollowType.Micro,
-                                                letterSpacing = 0.8.sp,
+                                                lineHeight = HollowLineHeight.Micro,
+                                                letterSpacing = HollowTracking.Micro,
                                                 color = Color.White,
                                                 modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
                                             )
