@@ -74,6 +74,7 @@ data class ConnectionTelemetryState(
     val serverIpLabel: String = "—",
     val realPublicIpLabel: String = "Detecting…",
     val realPublicCountryCode: String = "XX",
+    val realPublicCity: String = "",
     val realIspLabel: String = "Detecting…",
     val preConnectionIp: String = ""
 ) {
@@ -442,6 +443,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 prev.copy(
                     realPublicIpLabel = "${info.ip} · ${info.country}",
                     realPublicCountryCode = info.countryCode,
+                    realPublicCity = info.city,
                     realIspLabel = info.isp,
                     preConnectionIp = savedPreIp
                 )

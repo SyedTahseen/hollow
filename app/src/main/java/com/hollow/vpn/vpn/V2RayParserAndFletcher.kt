@@ -52,7 +52,8 @@ data class PublicIpInfo(
     val ip: String,
     val country: String,
     val countryCode: String,
-    val isp: String
+    val isp: String,
+    val city: String = ""
 )
 
 /**
@@ -967,7 +968,8 @@ class V2RayParserAndFletcher {
                                 ip = ip,
                                 country = country.ifBlank { countryNameFromIsoCode(code) },
                                 countryCode = code,
-                                isp = isp
+                                isp = isp,
+                                city = json.optString("city", "")
                             )
                         }
                     }
@@ -997,7 +999,8 @@ class V2RayParserAndFletcher {
                             ip = ip,
                             country = country.ifBlank { countryNameFromIsoCode(code) },
                             countryCode = code,
-                            isp = isp
+                            isp = isp,
+                            city = json.optString("city", "")
                         )
                     }
                 }
@@ -1026,7 +1029,8 @@ class V2RayParserAndFletcher {
                             ip = ip,
                             country = country.ifBlank { countryNameFromIsoCode(code) },
                             countryCode = code,
-                            isp = isp
+                            isp = isp,
+                            city = json.optString("city", "")
                         )
                     }
                 }

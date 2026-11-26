@@ -111,6 +111,7 @@ import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDotMatrixBackdrop
 import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.NothingSignalDots
+import com.hollow.vpn.ui.components.HollowGlobe
 import com.hollow.vpn.ui.components.CountryFlag
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowAmber
@@ -753,14 +754,9 @@ private fun DisconnectedHomeContent(
     val cleanIpDisplay = remember(telemetry.realPublicIpLabel) {
         telemetry.realPublicIpLabel.substringBefore(" · ").ifBlank { telemetry.realPublicIpLabel }
     }
-    val originLocationLabel = remember(telemetry.realPublicIpLabel, telemetry.realPublicCountryCode) {
-        val afterDot = telemetry.realPublicIpLabel.substringAfter(" · ", "").trim()
-        when {
-            afterDot.isNotBlank() -> afterDot
-            telemetry.realPublicCountryCode.length == 2 &&
-                !telemetry.realPublicCountryCode.equals("XX", ignoreCase = true) -> telemetry.realPublicCountryCode.uppercase()
-            else -> "Current ISP"
-        }
+    // "City · 1.2.3.4" (falls back to just the IP while the city is unknown).
+    val ipLocationLine = remember(cleanIpDisplay, telemetry.realPublicCity) {
+        if (telemetry.realPublicCity.isNotBlank()) "${telemetry.realPublicCity} · $cleanIpDisplay" else cleanIpDisplay
     }
 
     BoxWithConstraints(
@@ -771,7 +767,6 @@ private fun DisconnectedHomeContent(
     ) {
         val screenMaxHeight = maxHeight
         val isCompact = screenMaxHeight < 580.dp
-        val mapCanvasHeight = (screenMaxHeight * 0.22f).coerceIn(92.dp, 152.dp)
         val cardGap = if (isCompact) 8.dp else 12.dp
 
         Column(modifier = Modifier.fillMaxSize()) {
@@ -786,11 +781,7 @@ private fun DisconnectedHomeContent(
                 onOpenSettings = onOpenSettings
             )
 
-            Spacer(
-                modifier = Modifier
-                    .weight(0.38f)
-                    .heightIn(min = 6.dp)
-            )
+            Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 28.dp))
 
             Text(
                 text = "YOUR IP IS VISIBLE.",
@@ -814,30 +805,26 @@ private fun DisconnectedHomeContent(
                 horizontalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Text(
-                    text = cleanIpDisplay,
+                    text = ipLocationLine,
                     fontFamily = JetBrainsMonoFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 13.sp,
-                    color = HollowInkSecondary
+                    color = HollowInkSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Spacer(
+            // Dotted globe fills the space the exposure card used to take; it is cropped on purpose.
+            Box(
                 modifier = Modifier
-                    .weight(0.22f)
-                    .heightIn(min = 6.dp)
-            )
-
-            HollowDisconnectedExposureCard(
-                originCountryCode = telemetry.realPublicCountryCode,
-                originLocationLabel = originLocationLabel,
-                targetCountryCode = selectedServer?.countryCode,
-                targetCountryName = selectedServer?.countryName,
-                tunModeEnabled = tunModeEnabled,
-                ispLabel = telemetry.realIspLabel,
-                mapHeight = mapCanvasHeight,
-                fillCanvasHeight = false
-            )
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp)
+                    .testTag("home_globe")
+            ) {
+                HollowGlobe(color = HollowInk)
+            }
 
             Spacer(modifier = Modifier.height(cardGap))
 
@@ -944,11 +931,7 @@ private fun DisconnectedHomeContent(
                 }
             }
 
-            Spacer(
-                modifier = Modifier
-                    .weight(0.25f)
-                    .heightIn(min = cardGap)
-            )
+            Spacer(modifier = Modifier.height(cardGap + 8.dp))
 
             HollowSlideActionPill(
                 label = "Slide to connect",
@@ -960,11 +943,7 @@ private fun DisconnectedHomeContent(
                 modifier = Modifier.testTag("bottom_disconnect_connect_button")
             )
 
-            Spacer(
-                modifier = Modifier
-                    .weight(0.15f)
-                    .heightIn(min = 10.dp)
-            )
+            Spacer(modifier = Modifier.height(14.dp))
         }
     }
 }
