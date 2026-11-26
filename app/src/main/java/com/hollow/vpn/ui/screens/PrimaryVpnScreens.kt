@@ -709,15 +709,18 @@ fun ConnectedHomeScreen(
     val palette = when (homePhase) {
         2 -> MapColors(
             background = HollowForest, sphere = HollowForest,
-            dot = Color.White.copy(alpha = 0.26f), dotActive = HollowLime
+            land = Color.White.copy(alpha = 0.07f), landActive = HollowLime.copy(alpha = 0.22f),
+            landLine = Color.White.copy(alpha = 0.14f)
         )
         1 -> MapColors(
             background = HollowObsidian, sphere = HollowObsidian,
-            dot = Color.White.copy(alpha = 0.24f), dotActive = Color.White
+            land = Color.White.copy(alpha = 0.07f), landActive = Color.White.copy(alpha = 0.20f),
+            landLine = Color.White.copy(alpha = 0.14f)
         )
         else -> MapColors(
             background = HollowCream, sphere = HollowCream,
-            dot = HollowInk.copy(alpha = 0.26f), dotActive = HollowOrange
+            land = HollowInk.copy(alpha = 0.07f), landActive = HollowOrange.copy(alpha = 0.22f),
+            landLine = HollowInk.copy(alpha = 0.16f)
         )
     }
     val pinTone = when (homePhase) { 2 -> HollowLime; 1 -> Color.White; else -> HollowOrange }
@@ -842,7 +845,7 @@ private fun DisconnectedHomeContent(
             Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 28.dp))
 
             Text(
-                text = "YOUR IP IS VISIBLE.",
+                text = "YOU ARE UNPROTECTED.",
                 fontFamily = DotoDisplayFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (isCompact) 21.sp else 24.sp,
