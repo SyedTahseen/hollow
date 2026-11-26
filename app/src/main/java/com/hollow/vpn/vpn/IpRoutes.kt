@@ -70,9 +70,11 @@ object IpRoutes {
     fun routes(v6: Boolean, exclusions: List<String>): List<Pair<String, Int>> {
         val plain = complement(v6, exclusions)
         val loop = loopback.mapNotNull { parseBlock(it) }.first { it.v6 == v6 }
-        val hitsLoopback = plain.any { (addr, _) ->
-            val a = parseBlock(addr)?.start ?: return@any false
-            a >= loop.start && a <= loop.end
+        // A route "hits" loopback if the two ranges overlap at all, not only if it starts inside it
+        // (e.g. 64.0.0.0/2 covers 127.0.0.0/8 without starting there).
+        val hitsLoopback = plain.any { (addr, len) ->
+            val a = parseBlock("$addr/$len") ?: return@any false
+            a.start <= loop.end && a.end >= loop.start
         }
         // Android rejects routes that cover loopback, so carve it out as well.
         return if (hitsLoopback) complement(v6, exclusions + loopback) else plain
