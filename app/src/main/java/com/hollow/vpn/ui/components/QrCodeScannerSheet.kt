@@ -317,7 +317,7 @@ private val qrReaderHints = mapOf(
     DecodeHintType.TRY_HARDER to true
 )
 
-private fun decodeQrFromImageProxy(imageProxy: ImageProxy): String? {
+internal fun decodeQrFromImageProxy(imageProxy: ImageProxy): String? {
     return try {
         val plane = imageProxy.planes.firstOrNull() ?: return null
         val buffer = plane.buffer

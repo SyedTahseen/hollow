@@ -98,7 +98,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.hollow.vpn.data.AppSettingsState
-import com.hollow.vpn.ui.components.CameraQrScannerDialog
+import com.hollow.vpn.ui.components.QrScanDialog
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
 import com.hollow.vpn.ui.components.NothingDotMatrixBackdrop
 import com.hollow.vpn.ui.theme.HollowScreenPadding
@@ -272,7 +272,7 @@ fun GettingStartedScreen(
         }
 
         OnboardingImportSheet.QR_SCANNER -> {
-            CameraQrScannerDialog(
+            QrScanDialog(
                 onQrDecoded = { payload ->
                     activeSheet = null
                     isImportingQr = true

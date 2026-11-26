@@ -78,14 +78,14 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hollow.vpn.data.ServerEntity
-import com.hollow.vpn.ui.AddServerTab
+import com.hollow.vpn.ui.AddServerRequest
 import com.hollow.vpn.ui.VpnScreen
 import com.hollow.vpn.ui.VpnViewModel
 import com.hollow.vpn.ui.components.HollowBlinkingDot
 import com.hollow.vpn.ui.components.HollowBottomNavigationBar
 import com.hollow.vpn.ui.components.HollowBottomTab
 import com.hollow.vpn.ui.components.ServerQrShareDialog
-import com.hollow.vpn.ui.screens.AddServerScreen
+import com.hollow.vpn.ui.screens.AddServerActions
 import com.hollow.vpn.ui.screens.ConnectedHomeScreen
 import com.hollow.vpn.ui.screens.CountryServerListScreen
 import com.hollow.vpn.ui.screens.GettingStartedScreen
@@ -147,7 +147,17 @@ fun HollowVpnApp(
     val fetchingStatus by vpnViewModel.fetchingStatusMessage.collectAsStateWithLifecycle()
     val fetchingProgress by vpnViewModel.fetchingProgress.collectAsStateWithLifecycle()
     val snackbarMessage by vpnViewModel.snackbarMessage.collectAsStateWithLifecycle()
-    val activeAddTab by vpnViewModel.activeAddTab.collectAsStateWithLifecycle()
+    val addServerRequest by vpnViewModel.addServerRequest.collectAsStateWithLifecycle()
+    val addServerActions = AddServerActions(
+        settings = settings,
+        request = addServerRequest,
+        onConsumeRequest = vpnViewModel::consumeAddServerRequest,
+        onUpdateSettings = vpnViewModel::updateSettings,
+        onAddSubscription = vpnViewModel::addAndFetchSubscriptionUrl,
+        onImportText = vpnViewModel::importFromTextOrClipboard,
+        onAddManualServer = vpnViewModel::addManualCustomServer,
+        onShowMessage = vpnViewModel::showMessage
+    )
     val inspectingJsonServer by vpnViewModel.inspectingJsonServer.collectAsStateWithLifecycle()
     val sharingQrServer by vpnViewModel.sharingQrServer.collectAsStateWithLifecycle()
     val appUpdateState by vpnViewModel.appUpdateState.collectAsStateWithLifecycle()
@@ -284,7 +294,7 @@ fun HollowVpnApp(
 
     val selectedBottomTab = when (currentScreen) {
         VpnScreen.CONNECTED_HOME -> HollowBottomTab.CONNECT
-        VpnScreen.SERVER_LIST, VpnScreen.ADD_SERVER -> HollowBottomTab.SERVERS
+        VpnScreen.SERVER_LIST -> HollowBottomTab.SERVERS
         VpnScreen.SETTINGS -> HollowBottomTab.SETTINGS
         VpnScreen.GETTING_STARTED, VpnScreen.SPLASH_FETCHING -> HollowBottomTab.CONNECT
     }
@@ -468,8 +478,8 @@ fun HollowVpnApp(
                         targetState = currentScreen,
                         transitionSpec = {
                             val ease = NothingMotion.FluidEase
-                            val isSubscreenPush = targetState == VpnScreen.SETTINGS || targetState == VpnScreen.ADD_SERVER
-                            val isSubscreenPop = initialState == VpnScreen.SETTINGS || initialState == VpnScreen.ADD_SERVER
+                            val isSubscreenPush = targetState == VpnScreen.SETTINGS
+                            val isSubscreenPop = initialState == VpnScreen.SETTINGS
                             val isModalFlow = targetState == VpnScreen.SPLASH_FETCHING ||
                                 initialState == VpnScreen.SPLASH_FETCHING ||
                                 targetState == VpnScreen.GETTING_STARTED ||
@@ -589,13 +599,7 @@ fun HollowVpnApp(
                                     onOpenSettings = {
                                         vpnViewModel.navigateTo(VpnScreen.SETTINGS)
                                     },
-                                    onOpenAddServer = {
-                                        vpnViewModel.navigateTo(VpnScreen.ADD_SERVER)
-                                    },
-                                    onOpenAddManualServer = {
-                                        vpnViewModel.setAddServerTab(AddServerTab.MANUAL)
-                                        vpnViewModel.navigateTo(VpnScreen.ADD_SERVER)
-                                    },
+                                    addServerActions = addServerActions,
                                     onPingServer = vpnViewModel::pingSingleServer,
                                     onRepingAll = vpnViewModel::repingAllSavedServers,
                                     onShowMessage = vpnViewModel::showMessage,
@@ -628,9 +632,7 @@ fun HollowVpnApp(
                                     onOpenSettings = {
                                         vpnViewModel.navigateTo(VpnScreen.SETTINGS)
                                     },
-                                    onOpenAddServer = {
-                                        vpnViewModel.navigateTo(VpnScreen.ADD_SERVER)
-                                    },
+                                    onOpenAddServer = { vpnViewModel.requestAddServer(AddServerRequest.MENU) },
                                     onRefreshRealIp = vpnViewModel::refreshRealPublicIp
                                 )
                             }
@@ -644,7 +646,7 @@ fun HollowVpnApp(
                                     bottomContentPadding = innerPadding.calculateBottomPadding(),
                                     onUpdateSettings = vpnViewModel::updateSettings,
                                     onOpenAddSubscription = {
-                                        vpnViewModel.navigateTo(VpnScreen.ADD_SERVER)
+                                        vpnViewModel.requestAddServer(AddServerRequest.SUBSCRIPTION)
                                     },
                                     onOpenGettingStarted = vpnViewModel::reopenGettingStarted,
                                     onClearXrayLogs = vpnViewModel::clearXrayLogs,
@@ -654,24 +656,6 @@ fun HollowVpnApp(
                                     onBack = {
                                         if (!vpnViewModel.navigateBack()) {
                                             vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME)
-                                        }
-                                    }
-                                )
-                            }
-
-                            VpnScreen.ADD_SERVER -> {
-                                AddServerScreen(
-                                    activeTab = activeAddTab,
-                                    settings = settings,
-                                    bottomContentPadding = innerPadding.calculateBottomPadding(),
-                                    onSelectTab = vpnViewModel::setAddServerTab,
-                                    onAddAndFetchSubscription = vpnViewModel::addAndFetchSubscriptionUrl,
-                                    onImportClipboardText = vpnViewModel::importFromTextOrClipboard,
-                                    onAddManualServer = vpnViewModel::addManualCustomServer,
-                                    onUpdateSettings = vpnViewModel::updateSettings,
-                                    onBack = {
-                                        if (!vpnViewModel.navigateBack()) {
-                                            vpnViewModel.navigateTo(VpnScreen.SERVER_LIST)
                                         }
                                     }
                                 )

@@ -52,15 +52,11 @@ enum class VpnScreen {
     SPLASH_FETCHING,
     SERVER_LIST,
     CONNECTED_HOME,
-    SETTINGS,
-    ADD_SERVER
+    SETTINGS
 }
 
-enum class AddServerTab(val title: String) {
-    SUBSCRIPTION("Subscription"),
-    MANUAL("Manual"),
-    QR_CODE("QR Code")
-}
+/** What the server list should open when another screen asks the user to add servers. */
+enum class AddServerRequest { MENU, SUBSCRIPTION, MANUAL }
 
 data class ConnectionTelemetryState(
     val isConnected: Boolean = false,
@@ -153,8 +149,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
-    private val _activeAddTab = MutableStateFlow(AddServerTab.SUBSCRIPTION)
-    val activeAddTab: StateFlow<AddServerTab> = _activeAddTab.asStateFlow()
+    private val _addServerRequest = MutableStateFlow<AddServerRequest?>(null)
+    val addServerRequest: StateFlow<AddServerRequest?> = _addServerRequest.asStateFlow()
 
     private val _inspectingJsonServer = MutableStateFlow<ServerEntity?>(null)
     val inspectingJsonServer: StateFlow<ServerEntity?> = _inspectingJsonServer.asStateFlow()
@@ -719,8 +715,14 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setAddServerTab(tab: AddServerTab) {
-        _activeAddTab.value = tab
+    /** Opens the server list with the "+" menu (or its subscription / manual surface) ready. */
+    fun requestAddServer(request: AddServerRequest = AddServerRequest.MENU) {
+        _addServerRequest.value = request
+        navigateTo(VpnScreen.SERVER_LIST)
+    }
+
+    fun consumeAddServerRequest() {
+        _addServerRequest.value = null
     }
 
     /** Selects a server without starting the VPN. Used while Android shows its consent dialog. */
@@ -779,7 +781,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         autoConnectAfterFetch = true
                     )
                 } else {
-                    navigateTo(VpnScreen.ADD_SERVER)
+                    requestAddServer(AddServerRequest.MENU)
                     showMessage("Add a subscription URL, server link, or QR code first")
                 }
                 return
@@ -873,7 +875,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         repingAllSavedServers()
                     } else if (showLoadingScreen) {
-                        navigateTo(VpnScreen.ADD_SERVER)
+                        requestAddServer(AddServerRequest.MENU)
                         showMessage("Add a subscription URL, server link, or QR code first")
                     }
                     return@launch
@@ -966,7 +968,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             showMessage("Updated latency for ${reRanked.size} reachable servers")
                         } else {
                             if (showLoadingScreen && _currentScreen.value == VpnScreen.SPLASH_FETCHING) {
-                                _currentScreen.value = VpnScreen.ADD_SERVER
+                                _currentScreen.value = VpnScreen.SERVER_LIST
+                                _addServerRequest.value = AddServerRequest.SUBSCRIPTION
                             }
                             showMessage("Fetch failed: ${error.message ?: "Check subscription URL"}")
                         }
@@ -1056,7 +1059,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     },
                     onFailure = { err ->
                         if (_currentScreen.value == VpnScreen.SPLASH_FETCHING) {
-                            _currentScreen.value = VpnScreen.ADD_SERVER
+                            _currentScreen.value = VpnScreen.SERVER_LIST
+                                _addServerRequest.value = AddServerRequest.SUBSCRIPTION
                         }
                         showMessage("Could not fetch servers: ${err.message}")
                     }

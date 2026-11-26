@@ -138,8 +138,7 @@ fun CountryServerListScreen(
     onSelectServer: (ServerEntity) -> Unit,
     onRefresh: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenAddServer: () -> Unit,
-    onOpenAddManualServer: () -> Unit = onOpenAddServer,
+    addServerActions: AddServerActions,
     onPingServer: (ServerEntity) -> Unit,
     onRepingAll: () -> Unit = {},
     onShowMessage: (String) -> Unit = {},
@@ -156,6 +155,7 @@ fun CountryServerListScreen(
     BackHandler { onBack() }
 
     var overflowMenuExpanded by remember { mutableStateOf(false) }
+    val addServerState = rememberAddServerState()
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
     var sortByPingResults by remember { mutableStateOf(true) }
@@ -199,6 +199,8 @@ fun CountryServerListScreen(
 
     val selectedTabIndex = categories.indexOfFirst { it.key == selectedCategoryKey }.let { if (it >= 0) it else 0 }
     val activeCategory = categories.getOrNull(selectedTabIndex)
+
+    AddServerOverlays(state = addServerState, actions = addServerActions)
 
     Box(
         modifier = Modifier
@@ -254,21 +256,8 @@ fun CountryServerListScreen(
                         )
                     }
 
-                    HollowTopSquareButton(
-                        containerColor = NothingTopBtnFill,
-                        contentColor = NothingOnCanvas,
-                        borderColor = NothingTopBtnBorder,
-                        contentDescription = "Add server",
-                        onClick = onOpenAddServer,
-                        modifier = Modifier.testTag("country_add")
-                    ) { tint ->
-                        Icon(
-                            imageVector = Icons.Rounded.Add,
-                            contentDescription = null,
-                            tint = tint,
-                            modifier = Modifier.size(21.dp)
-                        )
-                    }
+                    // "+" opens the add menu: Scan QR, Paste, Import file, Add manually, Add subscription
+                    AddServerButton(state = addServerState, actions = addServerActions)
 
                     Box {
                         HollowTopSquareButton(
@@ -529,7 +518,10 @@ fun CountryServerListScreen(
                                         }
                                     }
                                     Button(
-                                        onClick = if (isDefaultCategory) onOpenAddManualServer else onOpenAddServer,
+                                        onClick = {
+                                            if (isDefaultCategory) addServerState.showManual = true
+                                            else addServerState.menuOpen = true
+                                        },
                                         shape = RoundedCornerShape(14.dp),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = HollowInk,
