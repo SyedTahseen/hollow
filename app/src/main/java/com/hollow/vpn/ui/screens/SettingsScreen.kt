@@ -1,5 +1,23 @@
 package com.hollow.vpn.ui.screens
 
+import android.net.Uri
+import androidx.compose.material.icons.outlined.SupportAgent
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import com.hollow.vpn.data.AppLinks
+import com.hollow.vpn.vpn.XrayVpnService
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Widgets
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.hollow.vpn.vpn.HollowWidget
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowStroke
@@ -258,7 +276,8 @@ fun SettingsScreen(
                         activeDialog = ActiveSettingDialog.CHECK_UPDATE
                         onCheckForUpdates()
                     },
-                    onOpenAbout = { activeDialog = ActiveSettingDialog.ABOUT }
+                    onOpenAbout = { activeDialog = ActiveSettingDialog.ABOUT },
+                    onShowMessage = onShowMessage
                 )
             } else {
                 SettingsDetail(
@@ -369,8 +388,35 @@ private fun SettingsOverview(
     onOpenLogs: () -> Unit,
     onExportServers: () -> Unit,
     onCheckUpdates: () -> Unit,
-    onOpenAbout: () -> Unit
+    onOpenAbout: () -> Unit,
+    onShowMessage: (String) -> Unit
 ) {
+    val ctx = LocalContext.current
+    var notifOn by remember { mutableStateOf(NotificationManagerCompat.from(ctx).areNotificationsEnabled()) }
+    var widgetCount by remember { mutableStateOf(HollowWidget.widgetCount(ctx)) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notifOn = NotificationManagerCompat.from(ctx).areNotificationsEnabled()
+                widgetCount = HollowWidget.widgetCount(ctx)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val debugInfo = {
+        "App ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n" +
+            "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
+            "Device ${Build.MANUFACTURER} ${Build.MODEL}\n" +
+            "Status ${if (XrayVpnService.isServiceRunning.value) "Connected" else "Disconnected"}\n" +
+            "Servers $serverCount\n" +
+            "Last error ${XrayVpnService.lastError.value ?: "none"}"
+    }
+    val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        notifOn = NotificationManagerCompat.from(ctx).areNotificationsEnabled()
+    }
+
     // Same title style and 64dp header row as Home ("HOLLOW VPN") and Servers ("SERVERS").
     Box(
         modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
@@ -498,11 +544,43 @@ private fun SettingsOverview(
 
     SettingsSectionHeader("General")
     SettingsRow(
+        icon = Icons.Outlined.Notifications,
+        title = "Notifications",
+        subtitle = onOff(notifOn),
+        onClick = {
+            val prefs = ctx.getSharedPreferences("ui", Context.MODE_PRIVATE)
+            val asked = prefs.getBoolean("notif_asked", false)
+            if (!notifOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !asked) {
+                prefs.edit().putBoolean("notif_asked", true).apply()
+                notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                runCatching { ctx.startActivity(intent) }
+                    .onFailure { onShowMessage("Couldn\u2019t open notification settings") }
+            }
+        },
+        testTag = "row_notifications"
+    )
+    SettingsRow(
         icon = Icons.Outlined.SettingsBrightness,
         title = "Appearance",
         subtitle = settings.themeMode,
         onClick = { onOpenPage(SettingsPage.APPEARANCE) },
         testTag = "row_appearance"
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Widgets,
+        title = "Widget",
+        subtitle = if (widgetCount > 0) "Added to home screen" else "Add to home screen",
+        onClick = {
+            if (!HollowWidget.requestPin(ctx)) {
+                onShowMessage("To add the widget, press and hold your home screen, then select Hollow VPN from Widgets.")
+            }
+            widgetCount = HollowWidget.widgetCount(ctx)
+        },
+        testTag = "row_widget"
     )
     SettingsRow(
         icon = Icons.Outlined.VisibilityOff,
@@ -514,18 +592,34 @@ private fun SettingsOverview(
 
     SettingsSectionHeader("Support")
     SettingsRow(
+        icon = Icons.Outlined.SupportAgent,
+        title = "Support contact",
+        subtitle = null,
+        onClick = { ctx.openUrl(AppLinks.REPO_URL, onShowMessage) },
+        testTag = "row_support_contact",
+        external = true
+    )
+    SettingsRow(
+        icon = Icons.Outlined.BugReport,
+        title = "Report an issue",
+        subtitle = null,
+        onClick = { ctx.reportIssue(debugInfo(), onShowMessage) },
+        testTag = "row_report_issue",
+        external = true
+    )
+    SettingsRow(
+        icon = Icons.Outlined.Terminal,
+        title = "Debug logs",
+        subtitle = if (xrayLogs.isEmpty()) "Empty" else "${xrayLogs.size} lines",
+        onClick = onOpenLogs,
+        testTag = "row_xray_logs"
+    )
+    SettingsRow(
         icon = Icons.Outlined.Info,
         title = "Setup & permissions guide",
         subtitle = null,
         onClick = onOpenGettingStarted,
         testTag = "row_getting_started"
-    )
-    SettingsRow(
-        icon = Icons.Outlined.Terminal,
-        title = "Diagnostic logs",
-        subtitle = if (xrayLogs.isEmpty()) "Empty" else "${xrayLogs.size} lines",
-        onClick = onOpenLogs,
-        testTag = "row_xray_logs"
     )
     SettingsRow(
         icon = Icons.Outlined.FileUpload,
@@ -534,8 +628,6 @@ private fun SettingsOverview(
         onClick = onExportServers,
         testTag = "row_export_servers"
     )
-
-    SettingsSectionHeader("About")
     val updateSubtitle = when (appUpdateState) {
         AppUpdateState.Idle -> "Tap to check"
         AppUpdateState.Checking -> "Checking…"
@@ -550,13 +642,36 @@ private fun SettingsOverview(
         onClick = onCheckUpdates,
         testTag = "row_check_updates"
     )
-    SettingsRow(
-        icon = Icons.Outlined.Info,
-        title = "About Hollow VPN",
-        subtitle = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-        onClick = onOpenAbout,
-        testTag = "card_about_hollow"
-    )
+
+    Spacer(modifier = Modifier.height(HollowSpace.Xxl))
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(HollowSpace.Lg),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "App version: ${BuildConfig.VERSION_NAME}",
+            fontFamily = SpaceGroteskFamily,
+            fontSize = HollowType.Micro,
+            color = HollowInkSecondary,
+            modifier = Modifier
+                .clip(RoundedCornerShape(HollowRadius.Sm))
+                .clickable(role = Role.Button, onClick = onOpenAbout)
+                .padding(HollowSpace.Sm)
+                .testTag("card_about_hollow")
+        )
+        Text(
+            text = "Third party licenses",
+            fontFamily = SpaceGroteskFamily,
+            fontSize = HollowType.Micro,
+            color = HollowOrange,
+            modifier = Modifier
+                .clip(RoundedCornerShape(HollowRadius.Sm))
+                .clickable(role = Role.Button) { ctx.openUrl(AppLinks.LICENSE_URL, onShowMessage) }
+                .padding(HollowSpace.Sm)
+                .testTag("row_licenses")
+        )
+    }
+    Spacer(modifier = Modifier.height(HollowSpace.Xxl))
 }
 
 @Composable
@@ -577,7 +692,8 @@ internal fun SettingsRow(
     title: String,
     subtitle: String?,
     onClick: () -> Unit,
-    testTag: String
+    testTag: String,
+    external: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -615,6 +731,14 @@ internal fun SettingsRow(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+        }
+        if (external) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                contentDescription = null,
+                tint = HollowInkSecondary,
+                modifier = Modifier.padding(start = HollowSpace.Sm).size(18.dp)
+            )
         }
     }
 }
@@ -1123,4 +1247,15 @@ private fun InlineModeSegment(
             )
         }
     }
+}
+
+private fun Context.openUrl(url: String, onFail: (String) -> Unit) {
+    runCatching {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }.onFailure { onFail("Couldn\u2019t open the link") }
+}
+
+private fun Context.reportIssue(info: String, onFail: (String) -> Unit) {
+    val body = "**What happened?**\n\n\n\n**Environment**\n```\n$info\n```\n"
+    openUrl("${AppLinks.REPO_URL}/issues/new?body=${Uri.encode(body)}", onFail)
 }

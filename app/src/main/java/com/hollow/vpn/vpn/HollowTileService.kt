@@ -49,19 +49,13 @@ class HollowTileService : TileService() {
         super.onClick()
         val isRunning = XrayVpnService.isServiceRunning.value
         if (isRunning) {
-            val stopIntent = Intent(this, XrayVpnService::class.java).apply {
-                action = XrayVpnService.ACTION_DISCONNECT
-            }
-            startService(stopIntent)
+            TunnelControl.disconnect(this)
             syncTile(false)
             return
         }
 
         val snapshot = VpnPreferencesStore(applicationContext).loadActiveTunnelSnapshot()
-        val needsConsent = (snapshot?.tunMode ?: true) &&
-            !VpnPreferencesStore(applicationContext).loadSettings().rootMode &&
-            VpnService.prepare(this) != null
-        if (snapshot == null || needsConsent) {
+        if (snapshot == null || TunnelControl.needsApp(this, snapshot)) {
             val launchIntent = Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
@@ -80,35 +74,7 @@ class HollowTileService : TileService() {
             return
         }
 
-        val startIntent = Intent(this, XrayVpnService::class.java).apply {
-            action = XrayVpnService.ACTION_CONNECT
-            putExtra(XrayVpnService.EXTRA_SERVER_COUNTRY, snapshot.country)
-            putExtra(XrayVpnService.EXTRA_SERVER_HOST, snapshot.host)
-            putExtra(XrayVpnService.EXTRA_SERVER_PORT, snapshot.port)
-            putExtra(XrayVpnService.EXTRA_SERVER_PROTOCOL, snapshot.protocol)
-            putExtra(XrayVpnService.EXTRA_XRAY_JSON, snapshot.xrayJson)
-            putExtra(XrayVpnService.EXTRA_TUN_MODE, snapshot.tunMode)
-            putExtra(XrayVpnService.EXTRA_ENABLE_IPV6, snapshot.enableIpv6)
-            putExtra(XrayVpnService.EXTRA_DNS_MODE, snapshot.dnsMode)
-            putExtra(XrayVpnService.EXTRA_ROUTING_MODE, snapshot.routingMode)
-            putExtra(XrayVpnService.EXTRA_PER_APP_PROXY_ENABLED, snapshot.perAppProxyEnabled)
-            putExtra(XrayVpnService.EXTRA_BYPASS_SELECTED_APPS, snapshot.bypassSelectedApps)
-            putStringArrayListExtra(
-                XrayVpnService.EXTRA_SELECTED_APP_PACKAGES,
-                ArrayList(snapshot.selectedAppPackages)
-            )
-            putExtra(XrayVpnService.EXTRA_SMART_SWITCH_ENABLED, snapshot.smartSwitchEnabled)
-            putExtra(XrayVpnService.EXTRA_SERVER_SPEED_MBPS, snapshot.serverSpeedMbps)
-            putExtra(XrayVpnService.EXTRA_NETSHIELD_ENABLED, snapshot.netShieldEnabled)
-            putExtra(XrayVpnService.EXTRA_BLOCK_ADULT_CONTENT, snapshot.blockAdultContent)
-            putStringArrayListExtra(XrayVpnService.EXTRA_SPLIT_EXCLUDE_IPS, ArrayList(snapshot.splitExcludeIps))
-            putStringArrayListExtra(XrayVpnService.EXTRA_SPLIT_INCLUDE_IPS, ArrayList(snapshot.splitIncludeIps))
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(startIntent)
-        } else {
-            startService(startIntent)
-        }
+        TunnelControl.connect(this, snapshot)
         syncTile(true)
     }
 
@@ -135,6 +101,7 @@ class HollowTileService : TileService() {
                 )
             } catch (_: Exception) {
             }
+            HollowWidget.refresh(context)
         }
     }
 }
