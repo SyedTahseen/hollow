@@ -80,6 +80,7 @@ import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.AppUpdateState
 import com.hollow.vpn.ui.components.HollowSwitch
 import com.hollow.vpn.ui.components.HollowTopSquareButton
+import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowCreamSurface
@@ -325,16 +326,19 @@ private fun SettingsOverview(
     onCheckUpdates: () -> Unit,
     onOpenAbout: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(40.dp))
+    Spacer(modifier = Modifier.height(12.dp))
+    // Same title style as Home ("HOLLOW VPN") and Servers ("SERVERS").
     Text(
-        text = "Settings",
-        fontFamily = SpaceGroteskFamily,
+        text = "SETTINGS",
+        fontFamily = DotoDisplayFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
-        color = HollowInk,
+        fontSize = 24.sp,
+        letterSpacing = 0.9.sp,
+        maxLines = 1,
+        color = NothingOnCanvas,
         modifier = Modifier.testTag("settings_title")
     )
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     SettingsSectionHeader("Features")
     SettingsRow(
@@ -588,13 +592,14 @@ private fun SettingsDetail(
         }
         Spacer(modifier = Modifier.width(14.dp))
         Text(
-            text = title,
-            fontFamily = SpaceGroteskFamily,
+            text = title.uppercase(),
+            fontFamily = DotoDisplayFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
-            color = HollowInk,
+            letterSpacing = 0.9.sp,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            color = NothingOnCanvas
         )
     }
     Spacer(modifier = Modifier.height(16.dp))
