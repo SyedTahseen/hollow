@@ -59,10 +59,6 @@ data class SubscriptionEntity(
 
 /** A pill on the Servers screen: "All", "Default" (manually added), or one per subscription. */
 data class ServerCategory(val key: String, val label: String) {
-    /** Apps for the active split-tunneling mode (what the VPN service receives). */
-    val activeSplitApps: Set<String>
-        get() = if (bypassSelectedApps) splitExcludeApps else splitIncludeApps
-
     companion object {
         const val ALL_KEY = "all"
         const val DEFAULT_KEY = "default"
@@ -177,6 +173,10 @@ data class AppSettingsState(
     /** Advanced: send all traffic through the VPN using root instead of Android's VPN service. */
     val rootMode: Boolean = false
 ) {
+    /** Apps for the active split-tunneling mode (what the VPN service receives). */
+    val activeSplitApps: Set<String>
+        get() = if (bypassSelectedApps) splitExcludeApps else splitIncludeApps
+
     companion object {
         const val DEFAULT_TEST_URL_ID = "google"
         const val DEFAULT_MTU = 1500
