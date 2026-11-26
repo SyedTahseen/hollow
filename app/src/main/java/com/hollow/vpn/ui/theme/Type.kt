@@ -39,77 +39,22 @@ val DotoDisplayFamily = FontFamily(
     )
 )
 
-@OptIn(ExperimentalTextApi::class)
-val SpaceGroteskFamily = FontFamily(
-    Font(
-        resId = R.font.space_grotesk,
-        weight = FontWeight.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(400))
-    ),
-    Font(
-        resId = R.font.space_grotesk,
-        weight = FontWeight.Medium,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500))
-    ),
-    Font(
-        resId = R.font.space_grotesk,
-        weight = FontWeight.SemiBold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(600))
-    ),
-    Font(
-        resId = R.font.space_grotesk,
-        weight = FontWeight.Bold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(700))
-    )
+/**
+ * App-wide UI font: Fira Code (same typeface and weights as the Horus app).
+ * Static Regular + Bold files: Normal/Medium use Regular, SemiBold and heavier use Bold.
+ * The old family names stay as aliases so every existing screen picks up the new font.
+ */
+val FiraCodeFamily = FontFamily(
+    Font(resId = R.font.fira_code, weight = FontWeight.Normal),
+    Font(resId = R.font.fira_code, weight = FontWeight.Medium),
+    Font(resId = R.font.fira_code_bold, weight = FontWeight.SemiBold),
+    Font(resId = R.font.fira_code_bold, weight = FontWeight.Bold),
+    Font(resId = R.font.fira_code_bold, weight = FontWeight.ExtraBold)
 )
 
-@OptIn(ExperimentalTextApi::class)
-val PlusJakartaSansFamily = FontFamily(
-    Font(
-        resId = R.font.plus_jakarta_sans,
-        weight = FontWeight.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(400))
-    ),
-    Font(
-        resId = R.font.plus_jakarta_sans,
-        weight = FontWeight.Medium,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500))
-    ),
-    Font(
-        resId = R.font.plus_jakarta_sans,
-        weight = FontWeight.SemiBold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(600))
-    ),
-    Font(
-        resId = R.font.plus_jakarta_sans,
-        weight = FontWeight.Bold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(700))
-    )
-)
-
-@OptIn(ExperimentalTextApi::class)
-val JetBrainsMonoFamily = FontFamily(
-    Font(
-        resId = R.font.jetbrains_mono,
-        weight = FontWeight.Normal,
-        variationSettings = FontVariation.Settings(FontVariation.weight(400))
-    ),
-    Font(
-        resId = R.font.jetbrains_mono,
-        weight = FontWeight.Medium,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500))
-    ),
-    Font(
-        resId = R.font.jetbrains_mono,
-        weight = FontWeight.SemiBold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(600))
-    ),
-    Font(
-        resId = R.font.jetbrains_mono,
-        weight = FontWeight.Bold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(700))
-    )
-)
+val SpaceGroteskFamily = FiraCodeFamily
+val PlusJakartaSansFamily = FiraCodeFamily
+val JetBrainsMonoFamily = FiraCodeFamily
 
 val TabularMonoBody = TextStyle(
     fontFamily = JetBrainsMonoFamily,
@@ -150,58 +95,60 @@ val Typography = Typography(
         letterSpacing = (-0.15).sp
     ),
     titleLarge = TextStyle(
-        fontFamily = SpaceGroteskFamily,
+        fontFamily = FiraCodeFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = (-0.15).sp
+        fontSize = 16.sp,
+        lineHeight = 22.sp,
+        letterSpacing = 0.2.sp
     ),
     titleMedium = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.5.sp,
-        lineHeight = 20.sp
+        fontFamily = FiraCodeFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 13.sp,
+        lineHeight = 18.sp
     ),
     titleSmall = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
+        fontFamily = FiraCodeFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        lineHeight = 16.sp
     ),
     bodyLarge = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+        fontFamily = FiraCodeFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
+        fontSize = 12.sp,
         lineHeight = 18.sp
     ),
-    bodySmall = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+    bodyMedium = TextStyle(
+        fontFamily = FiraCodeFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 11.5.sp,
+        fontSize = 11.sp,
+        lineHeight = 16.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = FiraCodeFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
         lineHeight = 15.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
+        fontFamily = FiraCodeFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 11.sp,
+        lineHeight = 15.sp,
+        letterSpacing = 0.6.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = JetBrainsMonoFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 15.sp
+        fontFamily = FiraCodeFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.7.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = JetBrainsMonoFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 10.sp,
+        fontFamily = FiraCodeFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 9.sp,
         lineHeight = 13.sp,
         letterSpacing = 0.5.sp
     )

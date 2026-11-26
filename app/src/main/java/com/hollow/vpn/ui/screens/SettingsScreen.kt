@@ -491,12 +491,12 @@ private fun SettingsOverview(
 @Composable
 private fun SettingsSectionHeader(title: String) {
     Text(
-        text = title,
+        text = title.uppercase(),
         fontFamily = SpaceGroteskFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 16.sp,
+        fontSize = 10.sp,
+        letterSpacing = 0.9.sp,
         color = HollowOrange,
-        modifier = Modifier.padding(top = 26.dp, bottom = 4.dp)
+        modifier = Modifier.padding(top = 22.dp, bottom = 6.dp, start = 2.dp)
     )
 }
 
@@ -513,7 +513,7 @@ private fun SettingsRow(
             .fillMaxWidth()
             .minimumInteractiveComponentSize()
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(vertical = 14.dp)
+            .padding(vertical = 12.dp)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -521,23 +521,24 @@ private fun SettingsRow(
             imageVector = icon,
             contentDescription = null,
             tint = HollowInk,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(22.dp)
         )
-        Spacer(modifier = Modifier.width(20.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
                 color = HollowInk
             )
             if (!subtitle.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = subtitle,
                     fontFamily = SpaceGroteskFamily,
-                    fontSize = 14.sp,
+                    fontSize = 10.sp,
+                    lineHeight = 14.sp,
                     color = HollowInkSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -723,10 +724,10 @@ private fun DetailDescription(text: String) {
     Text(
         text = text,
         fontFamily = SpaceGroteskFamily,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 10.sp,
+        lineHeight = 15.sp,
         color = HollowInkSecondary,
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier.padding(start = 2.dp, bottom = 8.dp)
     )
 }
 
@@ -749,8 +750,8 @@ private fun DetailToggleRow(
         Text(
             text = title,
             fontFamily = SpaceGroteskFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -789,15 +790,16 @@ private fun DetailRadioList(
                     Text(
                         text = option.label,
                         fontFamily = SpaceGroteskFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
                         color = HollowInk
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
                     Text(
                         text = option.subtitle,
                         fontFamily = SpaceGroteskFamily,
-                        fontSize = 13.sp,
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp,
                         color = HollowInkSecondary
                     )
                 }
@@ -992,7 +994,7 @@ private fun ThemeModeSegment(
                 text = label,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 12.5.sp,
+                fontSize = 11.sp,
                 maxLines = 1,
                 color = contentTint
             )
@@ -1036,7 +1038,7 @@ private fun InlineModeSegment(
                 text = label,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 12.5.sp,
+                fontSize = 11.sp,
                 color = contentTint
             )
         }

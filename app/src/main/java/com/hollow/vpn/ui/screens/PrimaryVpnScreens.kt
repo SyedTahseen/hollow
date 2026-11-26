@@ -1064,7 +1064,8 @@ private fun ConnectionStatsCard(
                 Text(
                     text = "Connected for",
                     fontFamily = SpaceGroteskFamily,
-                    fontSize = 12.sp,
+                    fontSize = 10.sp,
+                    letterSpacing = 0.7.sp,
                     color = HollowForestMuted,
                     maxLines = 1
                 )
@@ -1072,8 +1073,8 @@ private fun ConnectionStatsCard(
                 Text(
                     text = formatConnectedFor(telemetry.elapsedSeconds),
                     fontFamily = SpaceGroteskFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
                     color = HollowDarkInk,
                     maxLines = 1,
                     modifier = Modifier.testTag("connection_timer_text")
@@ -1081,17 +1082,17 @@ private fun ConnectionStatsCard(
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("↓", fontSize = 13.sp, color = downColor)
+                    Text("↓", fontSize = 11.sp, color = downColor)
                     Text(
                         formatSpeed2(telemetry.downloadBytesPerSec),
-                        fontFamily = SpaceGroteskFamily, fontSize = 13.sp, color = HollowDarkInk, maxLines = 1
+                        fontFamily = SpaceGroteskFamily, fontSize = 11.sp, color = HollowDarkInk, maxLines = 1
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("↑", fontSize = 13.sp, color = upColor)
+                    Text("↑", fontSize = 11.sp, color = upColor)
                     Text(
                         formatSpeed2(telemetry.uploadBytesPerSec),
-                        fontFamily = SpaceGroteskFamily, fontSize = 13.sp, color = HollowDarkInk, maxLines = 1
+                        fontFamily = SpaceGroteskFamily, fontSize = 11.sp, color = HollowDarkInk, maxLines = 1
                     )
                 }
             }
