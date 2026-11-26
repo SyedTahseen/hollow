@@ -58,6 +58,22 @@ data class PublicIpInfo(
     val longitude: Double? = null
 )
 
+/** Extra GeoIP / network details about a proxy server's IP, shown in the expandable home server card. */
+data class ServerIpDetails(
+    val ip: String,
+    val city: String = "",
+    val region: String = "",
+    val country: String = "",
+    val countryCode: String = "",
+    val postal: String = "",
+    val timezone: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val asn: String = "",
+    val org: String = "",
+    val isp: String = ""
+)
+
 /**
  * Production V2Ray / Xray multi-protocol parser and Fletcher Auto-Fetcher.
  * Uses ResilientFetcher (direct -> optional CDN mirrors -> disk cache), Beta source scoring,
@@ -80,6 +96,7 @@ class V2RayParserAndFletcher {
     private val resilientFetcher = ResilientFetcher(httpClient)
     private val resolvedIpCache = ConcurrentHashMap<String, String>()
     private val geoIpCache = ConcurrentHashMap<String, Pair<String, String>>()
+    private val serverDetailsCache = ConcurrentHashMap<String, ServerIpDetails>()
 
     @Volatile
     private var coreEnvInitialized = false
@@ -1190,6 +1207,74 @@ class V2RayParserAndFletcher {
                 }
             }
         }.awaitAll().filterNotNull().toMap()
+    }
+
+    /**
+     * Full GeoIP + ASN details for a server IP (city, region, postal, timezone, coordinates, ASN, ISP).
+     * HTTPS only: ipwho.is first, ipapi.co as backup. Successful results are cached per IP.
+     */
+    suspend fun fetchServerIpDetails(ip: String): ServerIpDetails? = withContext(Dispatchers.IO) {
+        if (ip.isBlank() || ip.contains(":")) return@withContext null
+        serverDetailsCache[ip]?.let { return@withContext it }
+        try {
+            val req = Request.Builder().url("https://ipwho.is/$ip").header("Accept", "application/json").build()
+            geoHttpClient.newCall(req).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val j = JSONObject(resp.body?.string().orEmpty())
+                    if (j.optBoolean("success", true)) {
+                        val conn = j.optJSONObject("connection")
+                        val tz = j.optJSONObject("timezone")
+                        val asnNum = conn?.optInt("asn", 0) ?: 0
+                        val d = ServerIpDetails(
+                            ip = ip,
+                            city = j.optString("city").trim(),
+                            region = j.optString("region").trim(),
+                            country = j.optString("country").trim(),
+                            countryCode = j.optString("country_code").uppercase().trim(),
+                            postal = j.optString("postal").trim(),
+                            timezone = tz?.optString("id").orEmpty().trim(),
+                            latitude = if (j.has("latitude")) j.optDouble("latitude") else null,
+                            longitude = if (j.has("longitude")) j.optDouble("longitude") else null,
+                            asn = if (asnNum > 0) "AS$asnNum" else "",
+                            org = conn?.optString("org").orEmpty().trim(),
+                            isp = conn?.optString("isp").orEmpty().trim()
+                        )
+                        serverDetailsCache[ip] = d
+                        return@withContext d
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
+        try {
+            val req = Request.Builder().url("https://ipapi.co/$ip/json/").header("Accept", "application/json").build()
+            geoHttpClient.newCall(req).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val j = JSONObject(resp.body?.string().orEmpty())
+                    if (!j.optBoolean("error", false) && j.optString("ip").isNotBlank()) {
+                        val org = j.optString("org").trim()
+                        val d = ServerIpDetails(
+                            ip = ip,
+                            city = j.optString("city").trim(),
+                            region = j.optString("region").trim(),
+                            country = j.optString("country_name").trim(),
+                            countryCode = j.optString("country_code").uppercase().trim(),
+                            postal = j.optString("postal").trim(),
+                            timezone = j.optString("timezone").trim(),
+                            latitude = if (j.has("latitude")) j.optDouble("latitude") else null,
+                            longitude = if (j.has("longitude")) j.optDouble("longitude") else null,
+                            asn = j.optString("asn").trim(),
+                            org = org,
+                            isp = org
+                        )
+                        serverDetailsCache[ip] = d
+                        return@withContext d
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
+        null
     }
 
     private fun lookupSingleGeoCountryForIp(ip: String): Pair<String, String>? {

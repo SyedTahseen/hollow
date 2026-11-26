@@ -640,7 +640,8 @@ fun HollowVpnApp(
                                         vpnViewModel.navigateTo(VpnScreen.SETTINGS)
                                     },
                                     addServerActions = addServerActions,
-                                    onRefreshRealIp = vpnViewModel::refreshRealPublicIp
+                                    onRefreshRealIp = vpnViewModel::refreshRealPublicIp,
+                                    onLoadServerDetails = vpnViewModel::loadServerIpDetails
                                 )
                             }
 

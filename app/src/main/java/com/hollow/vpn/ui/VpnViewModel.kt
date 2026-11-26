@@ -427,6 +427,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun loadServerIpDetails(ip: String): com.hollow.vpn.vpn.ServerIpDetails? =
+        fletcher.fetchServerIpDetails(ip)
+
     fun refreshRealPublicIp() {
         viewModelScope.launch {
             val wasTunnelActive = _telemetry.value.isConnected || _telemetry.value.isConnecting

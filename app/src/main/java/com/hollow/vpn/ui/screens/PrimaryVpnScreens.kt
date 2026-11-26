@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -80,6 +81,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import com.hollow.vpn.vpn.ServerIpDetails
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
@@ -638,7 +644,8 @@ fun ConnectedHomeScreen(
     onOpenServerList: () -> Unit,
     onOpenSettings: () -> Unit,
     addServerActions: AddServerActions,
-    onRefreshRealIp: () -> Unit = {}
+    onRefreshRealIp: () -> Unit = {},
+    onLoadServerDetails: suspend (String) -> ServerIpDetails? = { null }
 ) {
     val addServerState = rememberAddServerState()
     val homePhase = when {
@@ -750,7 +757,8 @@ fun ConnectedHomeScreen(
                     onOpenSettings = onOpenSettings,
                     addServerState = addServerState,
                     addServerActions = addServerActions,
-                    onRefreshRealIp = onRefreshRealIp
+                    onRefreshRealIp = onRefreshRealIp,
+                    onLoadServerDetails = onLoadServerDetails
                 )
             }
         }
@@ -768,8 +776,22 @@ private fun HomeContent(
     addServerState: AddServerState,
     addServerActions: AddServerActions,
     onOpenSettings: () -> Unit,
-    onRefreshRealIp: () -> Unit
+    onRefreshRealIp: () -> Unit,
+    onLoadServerDetails: suspend (String) -> ServerIpDetails?
 ) {
+    // Tapping the server card expands it in place to show details about the proxy.
+    var detailsExpanded by remember { mutableStateOf(false) }
+    val lookupIp = remember(selectedServer?.id, selectedServer?.resolvedIp, selectedServer?.host) {
+        selectedServer?.let { it.resolvedIp.ifBlank { it.host } }.orEmpty()
+    }
+    val detailsLoad by produceState<Pair<Boolean, ServerIpDetails?>>(false to null, lookupIp, detailsExpanded) {
+        if (detailsExpanded && IPV4_REGEX.matches(lookupIp)) {
+            value = false to null
+            value = true to onLoadServerDetails(lookupIp)
+        } else if (!IPV4_REGEX.matches(lookupIp)) {
+            value = true to null
+        }
+    }
     val cleanIpDisplay = remember(telemetry.realPublicIpLabel) {
         telemetry.realPublicIpLabel.substringBefore(" · ").ifBlank { telemetry.realPublicIpLabel }
     }
@@ -866,8 +888,23 @@ private fun HomeContent(
             if (protectedPhase) {
                 ConnectionStatsCard(
                     telemetry = telemetry,
-                    onClick = onOpenServerList,
-                    modifier = Modifier.testTag("active_server_pill")
+                    expanded = detailsExpanded,
+                    onClick = { if (selectedServer != null) detailsExpanded = !detailsExpanded else onOpenServerList() },
+                    modifier = Modifier.testTag("active_server_pill"),
+                    expandedContent = {
+                        if (selectedServer != null) {
+                            ServerDetailsPanel(
+                                server = selectedServer,
+                                details = detailsLoad.second,
+                                loading = !detailsLoad.first,
+                                textColor = HollowDarkInk,
+                                mutedColor = HollowForestMuted,
+                                dividerColor = HollowForestDivider,
+                                accentColor = HollowLime,
+                                onManageServers = onOpenServerList
+                            )
+                        }
+                    }
                 )
             } else Surface(
                 modifier = Modifier
@@ -880,13 +917,14 @@ private fun HomeContent(
                         indication = androidx.compose.material3.ripple(),
                         role = Role.Button
                     ) {
-                        if (selectedServer != null) onOpenServerList() else addServerState.menuOpen = true
+                        if (selectedServer != null) detailsExpanded = !detailsExpanded else addServerState.menuOpen = true
                     }
                     .testTag("active_server_pill"),
                 shape = RoundedCornerShape(20.dp),
                 color = if (connectingPhase) HollowObsidianSurface else HollowCreamSurface,
                 border = BorderStroke(1.dp, if (connectingPhase) HollowObsidianDivider else HollowCreamDivider)
             ) {
+                Column(modifier = Modifier.fillMaxWidth().animateContentSize(tween(220))) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -957,6 +995,14 @@ private fun HomeContent(
                             color = pingColor,
                             maxLines = 1
                         )
+                        Spacer(modifier = Modifier.width(HollowSpace.Xs))
+                        val chevronRotation by animateFloatAsState(if (detailsExpanded) 180f else 0f, tween(220), label = "server_card_chevron")
+                        Icon(
+                            imageVector = Icons.Rounded.KeyboardArrowDown,
+                            contentDescription = if (detailsExpanded) "Collapse server details" else "Expand server details",
+                            tint = if (connectingPhase) HollowObsidianMuted else HollowInkSecondary,
+                            modifier = Modifier.size(20.dp).rotate(chevronRotation)
+                        )
                     } else {
                         Icon(
                             imageVector = Icons.Rounded.Add,
@@ -965,6 +1011,21 @@ private fun HomeContent(
                             modifier = Modifier.size(20.dp)
                         )
                     }
+                }
+                if (selectedServer != null) {
+                    AnimatedVisibility(visible = detailsExpanded, enter = fadeIn(tween(200)) + expandVertically(tween(220)), exit = fadeOut(tween(120)) + shrinkVertically(tween(200))) {
+                        ServerDetailsPanel(
+                            server = selectedServer,
+                            details = detailsLoad.second,
+                            loading = !detailsLoad.first,
+                            textColor = if (connectingPhase) HollowDarkInk else HollowInk,
+                            mutedColor = if (connectingPhase) HollowObsidianMuted else HollowInkSecondary,
+                            dividerColor = if (connectingPhase) HollowObsidianDivider else HollowCreamDivider,
+                            accentColor = HollowOrange,
+                            onManageServers = onOpenServerList
+                        )
+                    }
+                }
                 }
             }
 
@@ -1040,8 +1101,10 @@ private fun formatSpeed2(bytesPerSec: Long): String {
 @Composable
 private fun ConnectionStatsCard(
     telemetry: ConnectionTelemetryState,
+    expanded: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    expandedContent: @Composable () -> Unit = {}
 ) {
     val downColor = HollowLime
     val upColor = Color(0xFFF28B9B)
@@ -1054,6 +1117,7 @@ private fun ConnectionStatsCard(
         color = HollowForestCard,
         border = BorderStroke(1.dp, HollowForestDivider)
     ) {
+        Column(modifier = Modifier.fillMaxWidth().animateContentSize(tween(220))) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1095,7 +1159,108 @@ private fun ConnectionStatsCard(
                         fontFamily = SpaceGroteskFamily, fontSize = 11.sp, color = HollowDarkInk, maxLines = 1
                     )
                 }
+                val chevronRotation by animateFloatAsState(if (expanded) 180f else 0f, tween(220), label = "stats_card_chevron")
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse server details" else "Expand server details",
+                    tint = HollowForestMuted,
+                    modifier = Modifier.size(20.dp).rotate(chevronRotation)
+                )
             }
+        }
+        AnimatedVisibility(visible = expanded, enter = fadeIn(tween(200)) + expandVertically(tween(220)), exit = fadeOut(tween(120)) + shrinkVertically(tween(200))) {
+            expandedContent()
+        }
+        }
+    }
+}
+
+private val IPV4_REGEX = Regex("""^\d{1,3}(\.\d{1,3}){3}$""")
+
+private fun formatServerLocalTime(timezone: String): String? {
+    if (timezone.isBlank()) return null
+    return try {
+        ZonedDateTime.now(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("EEE, MMM d · hh:mm a", Locale.US))
+    } catch (_: Exception) {
+        null
+    }
+}
+
+/** Expanded details of the selected proxy: location, network (ISP / ASN), timezone, coordinates and connection info. */
+@Composable
+private fun ServerDetailsPanel(
+    server: ServerEntity,
+    details: ServerIpDetails?,
+    loading: Boolean,
+    textColor: Color,
+    mutedColor: Color,
+    dividerColor: Color,
+    accentColor: Color,
+    onManageServers: () -> Unit
+) {
+    val ip = server.resolvedIp.ifBlank { server.host }
+    val rows = buildList {
+        add("IP address" to ip)
+        add("Port" to server.port.toString())
+        val location = listOf(details?.city, details?.region, details?.country ?: server.countryName.takeIf { it.isNotBlank() })
+            .filter { !it.isNullOrBlank() }.distinct().joinToString(", ")
+        if (location.isNotBlank()) add("Location" to location)
+        details?.isp?.takeIf { it.isNotBlank() }?.let { add("ISP" to it) }
+        details?.org?.takeIf { it.isNotBlank() && !it.equals(details?.isp, ignoreCase = true) }?.let { add("Company" to it) }
+        details?.asn?.takeIf { it.isNotBlank() }?.let { add("ASN" to it) }
+        details?.postal?.takeIf { it.isNotBlank() }?.let { add("Postal" to it) }
+        details?.timezone?.takeIf { it.isNotBlank() }?.let { tz ->
+            add("Timezone" to tz)
+            formatServerLocalTime(tz)?.let { add("Local time" to it) }
+        }
+        if (details?.latitude != null && details.longitude != null) {
+            add("Coordinates" to String.format(
+                Locale.US, "%.4f° %s, %.4f° %s",
+                kotlin.math.abs(details.latitude), if (details.latitude >= 0) "N" else "S",
+                kotlin.math.abs(details.longitude), if (details.longitude >= 0) "E" else "W"
+            ))
+        }
+        add("Protocol" to formatConsumerProtocol(server.protocolCore, server.transport))
+        add("Latency" to if (server.pingMs > 0) "${server.pingMs} ms" else "—")
+    }
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = HollowSpace.Lg).padding(bottom = HollowSpace.Md)) {
+        HorizontalDivider(color = dividerColor)
+        Spacer(modifier = Modifier.height(HollowSpace.Sm))
+        rows.forEach { (label, value) ->
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
+                Text(
+                    text = label,
+                    fontFamily = SpaceGroteskFamily,
+                    fontSize = 11.5.sp,
+                    color = mutedColor,
+                    modifier = Modifier.width(92.dp)
+                )
+                Text(
+                    text = value,
+                    fontFamily = JetBrainsMonoFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 11.5.sp,
+                    color = textColor,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        if (loading) {
+            Spacer(modifier = Modifier.height(HollowSpace.Xs))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp, color = accentColor)
+                Spacer(modifier = Modifier.width(HollowSpace.Sm))
+                Text("Loading server info…", fontFamily = SpaceGroteskFamily, fontSize = 11.sp, color = mutedColor)
+            }
+        } else if (details == null) {
+            Spacer(modifier = Modifier.height(HollowSpace.Xs))
+            Text("Extra network info unavailable right now.", fontFamily = SpaceGroteskFamily, fontSize = 11.sp, color = mutedColor)
+        }
+        Spacer(modifier = Modifier.height(HollowSpace.Xs))
+        TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+            Text("Manage servers", fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp, color = accentColor)
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = accentColor, modifier = Modifier.size(14.dp))
         }
     }
 }
