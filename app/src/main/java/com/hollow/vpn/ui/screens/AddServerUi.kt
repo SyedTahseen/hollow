@@ -405,7 +405,7 @@ private fun AddSubscriptionDialog(
                         horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
                     ) {
                         Text(
-                            text = settings.subUpdateInterval,
+                            text = settings.updateIntervalLabel,
                             fontFamily = JetBrainsMonoFamily,
                             fontSize = HollowType.Small,
                             color = HollowInk
@@ -461,9 +461,9 @@ private fun AddSubscriptionDialog(
         SettingOptionPickerDialog(
             title = "Select Update Interval",
             options = UPDATE_INTERVAL_OPTIONS,
-            selectedValue = settings.subUpdateInterval,
+            selectedValue = settings.updateIntervalLabel,
             onSelect = { chosen ->
-                onUpdateSettings { it.copy(updateIntervalLabel = chosen, subUpdateInterval = chosen) }
+                onUpdateSettings { it.copy(updateIntervalLabel = chosen) }
                 showIntervalPicker = false
             },
             onDismiss = { showIntervalPicker = false }

@@ -657,7 +657,7 @@ class XrayVpnService : VpnService() {
                         routingMode = settings.routingMode,
                         perAppProxyEnabled = settings.perAppProxyEnabled,
                         bypassSelectedApps = settings.bypassSelectedApps,
-                        selectedAppPackages = settings.selectedAppPackages,
+                        selectedAppPackages = settings.activeSplitApps,
                         smartSwitchEnabled = settings.smartSwitchEnabled,
                         serverSpeedMbps = chosen.lastSpeedMbps,
                         netShieldEnabled = settings.netShieldEnabled,
@@ -1105,7 +1105,7 @@ class XrayVpnService : VpnService() {
             putExtra(EXTRA_ROUTING_MODE, settings.routingMode)
             putExtra(EXTRA_PER_APP_PROXY_ENABLED, settings.perAppProxyEnabled)
             putExtra(EXTRA_BYPASS_SELECTED_APPS, settings.bypassSelectedApps)
-            putStringArrayListExtra(EXTRA_SELECTED_APP_PACKAGES, ArrayList(settings.selectedAppPackages))
+            putStringArrayListExtra(EXTRA_SELECTED_APP_PACKAGES, ArrayList(settings.activeSplitApps))
             putExtra(EXTRA_SMART_SWITCH_ENABLED, settings.smartSwitchEnabled)
             putExtra(EXTRA_SERVER_SPEED_MBPS, server.lastSpeedMbps)
             putExtra(EXTRA_NETSHIELD_ENABLED, settings.netShieldEnabled)

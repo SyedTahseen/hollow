@@ -262,8 +262,8 @@ internal fun XrayDiagnosticLogsDialog(
 @Composable
 internal fun PerAppProxyPickerDialog(
     selectedPackages: Set<String>,
-    bypassSelectedApps: Boolean = true,
-    onSave: (Set<String>, Boolean) -> Unit,
+    including: Boolean = false,
+    onSave: (Set<String>) -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -298,7 +298,6 @@ internal fun PerAppProxyPickerDialog(
 
     var searchQuery by remember { mutableStateOf("") }
     var workingSelection by remember(selectedPackages) { mutableStateOf(selectedPackages) }
-    var workingBypassMode by remember(bypassSelectedApps) { mutableStateOf(bypassSelectedApps) }
     var showSelectedOnly by remember { mutableStateOf(false) }
 
     val filteredApps = remember(apps, searchQuery, showSelectedOnly, workingSelection) {
@@ -330,7 +329,7 @@ internal fun PerAppProxyPickerDialog(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Per-app routing",
+                        text = if (including) "Included apps" else "Excluded apps",
                         fontFamily = SpaceGroteskFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Display,
@@ -338,10 +337,10 @@ internal fun PerAppProxyPickerDialog(
                     )
                     Spacer(Modifier.height(HollowSpace.Xxs))
                     Text(
-                        text = if (workingBypassMode) {
-                            "Checked apps skip VPN and use normal internet"
+                        text = if (including) {
+                            "Only these apps connect through the VPN."
                         } else {
-                            "Only checked apps go through the VPN tunnel"
+                            "These apps connect directly, bypassing the VPN."
                         },
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Small),
                         color = HollowInkSecondary
@@ -364,34 +363,6 @@ internal fun PerAppProxyPickerDialog(
             }
 
             Spacer(Modifier.height(HollowSpace.Lg))
-
-            // 2-Segment Mode Switcher
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(HollowRadius.Md),
-                color = HollowCreamSurface,
-                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(HollowSpace.Xs),
-                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
-                ) {
-                    PerAppModeChip(
-                        label = "Skip VPN",
-                        selected = workingBypassMode,
-                        onClick = { workingBypassMode = true },
-                        modifier = Modifier.weight(1f)
-                    )
-                    PerAppModeChip(
-                        label = "VPN only",
-                        selected = !workingBypassMode,
-                        onClick = { workingBypassMode = false },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
 
             Spacer(Modifier.height(HollowSpace.Md))
 
@@ -588,7 +559,7 @@ internal fun PerAppProxyPickerDialog(
                     Text("Cancel", fontWeight = FontWeight.SemiBold)
                 }
                 Button(
-                    onClick = { onSave(workingSelection, workingBypassMode) },
+                    onClick = { onSave(workingSelection) },
                     shape = RoundedCornerShape(HollowRadius.Md),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = HollowInk,
@@ -604,33 +575,6 @@ internal fun PerAppProxyPickerDialog(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun PerAppModeChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .height(HollowSizes.Chip)
-            .clip(RoundedCornerShape(HollowRadius.Sm))
-            .clickable(role = Role.RadioButton, onClick = onClick),
-        shape = RoundedCornerShape(HollowRadius.Sm),
-        color = if (selected) HollowInk else Color.Transparent
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = HollowType.Body,
-                color = if (selected) HollowCream else HollowInkSecondary
-            )
         }
     }
 }

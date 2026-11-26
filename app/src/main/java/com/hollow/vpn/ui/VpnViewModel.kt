@@ -441,7 +441,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             _screenStack.value = listOf(VpnScreen.CONNECTED_HOME)
             _currentScreen.value = VpnScreen.CONNECTED_HOME
 
-            if (configuredSubUrl.isNotBlank() && (existing.isEmpty() || _settings.value.autoConfigure)) {
+            if (configuredSubUrl.isNotBlank() && (existing.isEmpty() || _settings.value.subAutoUpdate)) {
                 runFetcherAutoFetchAndPingSweep(
                     returnScreen = VpnScreen.CONNECTED_HOME,
                     autoConnectAfterFetch = canAutoConnect,
@@ -1408,7 +1408,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             subAutoUpdateChanged = updated.subAutoUpdate != current.subAutoUpdate
             perAppChanged = updated.perAppProxyEnabled != current.perAppProxyEnabled ||
                 updated.bypassSelectedApps != current.bypassSelectedApps ||
-                updated.selectedAppPackages != current.selectedAppPackages
+                updated.splitExcludeApps != current.splitExcludeApps ||
+                updated.splitIncludeApps != current.splitIncludeApps
             routingChanged = updated.netShieldEnabled != current.netShieldEnabled ||
                 updated.blockAdultContent != current.blockAdultContent ||
                 updated.splitExcludeIps != current.splitExcludeIps ||

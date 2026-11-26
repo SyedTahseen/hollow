@@ -335,19 +335,18 @@ fun SettingsScreen(
     }
 
     if (showPerAppPicker) {
+        val including = settings.perAppProxyEnabled && !settings.bypassSelectedApps
         PerAppProxyPickerDialog(
-            selectedPackages = settings.selectedAppPackages,
-            bypassSelectedApps = !settings.perAppProxyEnabled || settings.bypassSelectedApps,
-            onSave = { packages, bypassMode ->
+            selectedPackages = settings.activeSplitApps,
+            including = including,
+            onSave = { packages ->
                 onShowMessage(
                     if (packages.isEmpty()) "No apps selected for split tunneling"
                     else "Split tunneling saved for ${packages.size} app(s)"
                 )
                 onUpdateSettings {
-                    it.copy(
-                        bypassSelectedApps = bypassMode,
-                        selectedAppPackages = packages
-                    )
+                    if (including) it.copy(splitIncludeApps = packages)
+                    else it.copy(splitExcludeApps = packages)
                 }
                 showPerAppPicker = false
             },
@@ -404,11 +403,7 @@ private fun SettingsOverview(
     SettingsRow(
         icon = Icons.Outlined.Apps,
         title = "Split tunneling",
-        subtitle = if (settings.perAppProxyEnabled) {
-            val ipCount = if (settings.bypassSelectedApps) settings.splitExcludeIps.size else settings.splitIncludeIps.size
-            "On · ${if (settings.bypassSelectedApps) "skipping" else "VPN only"} · " +
-                "${settings.selectedAppPackages.size} apps" + if (ipCount > 0) " · $ipCount IPs" else ""
-        } else "Off",
+        subtitle = if (settings.perAppProxyEnabled) "On" else "Off",
         onClick = { onOpenPage(SettingsPage.SPLIT_TUNNELING) },
         testTag = "row_per_app_selection"
     )
@@ -445,7 +440,7 @@ private fun SettingsOverview(
     SettingsRow(
         icon = Icons.Outlined.CloudQueue,
         title = "Auto-update subscriptions",
-        subtitle = if (settings.autoConfigure) "On · every ${settings.updateIntervalLabel}" else "Off",
+        subtitle = if (settings.subAutoUpdate) "On · every ${settings.updateIntervalLabel}" else "Off",
         onClick = { onOpenPage(SettingsPage.AUTO_UPDATE) },
         testTag = "row_update_interval"
     )
@@ -642,7 +637,7 @@ private fun SettingsDetail(
         SettingsPage.NET_SHIELD -> "NetShield"
         SettingsPage.SPLIT_TUNNELING -> "Split tunneling"
         SettingsPage.SPLIT_IPS ->
-            if (settings.bypassSelectedApps) "Skipped IP addresses" else "VPN-only IP addresses"
+            if (settings.bypassSelectedApps) "Excluded IP addresses" else "Included IP addresses"
         SettingsPage.USAGE_HISTORY -> "Usage & history"
         SettingsPage.KILL_SWITCH -> "Kill switch"
         SettingsPage.PRIVATE_DNS -> "Private DNS"
@@ -752,12 +747,12 @@ private fun SettingsDetail(
 
         SettingsPage.AUTO_UPDATE -> {
             DetailDescription("Keep your server list fresh by refreshing subscriptions in the background.")
-            DetailToggleRow("Auto-update subscriptions", settings.autoConfigure, { v -> onUpdateSettings { it.copy(autoConfigure = v) } }, "switch_auto_configure")
-            if (settings.autoConfigure) {
+            DetailToggleRow("Auto-update subscriptions", settings.subAutoUpdate, { v -> onUpdateSettings { it.copy(subAutoUpdate = v) } }, "switch_auto_configure")
+            if (settings.subAutoUpdate) {
                 Spacer(modifier = Modifier.height(HollowSpace.Sm))
                 SettingsSectionHeader("Update interval")
                 DetailRadioList(UPDATE_INTERVAL_OPTIONS, settings.updateIntervalLabel) { chosen ->
-                    onUpdateSettings { it.copy(updateIntervalLabel = chosen, subUpdateInterval = chosen) }
+                    onUpdateSettings { it.copy(updateIntervalLabel = chosen) }
                 }
             }
         }
@@ -951,63 +946,6 @@ internal fun DetailRadioList(
 }
 
 // ─────────────────────────────── Segmented selectors ───────────────────────────────
-
-@Composable
-internal fun PerAppInlineModeRow(
-    bypassSelectedApps: Boolean,
-    onSelectBypass: (Boolean) -> Unit
-) {
-    val selectedIndex = if (bypassSelectedApps) 0 else 1
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = HollowSpace.Md)
-            .testTag("switch_bypass_selected_apps"),
-        shape = RoundedCornerShape(HollowRadius.Sm),
-        color = HollowCreamSurface,
-        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-    ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(HollowSpace.Xs)
-        ) {
-            val gap = 4.dp
-            val slotWidth = ((maxWidth - gap) / 2f).coerceAtLeast(1.dp)
-            val pillOffset by animateDpAsState(
-                targetValue = (slotWidth + gap) * selectedIndex,
-                animationSpec = NothingMotion.snappySpring(),
-                label = "per_app_pill_glide"
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .offset(x = pillOffset)
-                    .width(slotWidth)
-                    .height(HollowSizes.Chip)
-                    .clip(RoundedCornerShape(HollowRadius.Xs))
-                    .background(NothingPillActiveBg)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(gap)
-            ) {
-                InlineModeSegment(
-                    label = "Skip VPN",
-                    selected = bypassSelectedApps,
-                    onClick = { onSelectBypass(true) },
-                    modifier = Modifier.weight(1f)
-                )
-                InlineModeSegment(
-                    label = "VPN only",
-                    selected = !bypassSelectedApps,
-                    onClick = { onSelectBypass(false) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun ThemeModeInlineSelector(

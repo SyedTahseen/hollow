@@ -59,6 +59,10 @@ data class SubscriptionEntity(
 
 /** A pill on the Servers screen: "All", "Default" (manually added), or one per subscription. */
 data class ServerCategory(val key: String, val label: String) {
+    /** Apps for the active split-tunneling mode (what the VPN service receives). */
+    val activeSplitApps: Set<String>
+        get() = if (bypassSelectedApps) splitExcludeApps else splitIncludeApps
+
     companion object {
         const val ALL_KEY = "all"
         const val DEFAULT_KEY = "default"
@@ -126,7 +130,6 @@ sealed interface AppUpdateState {
 }
 
 data class AppSettingsState(
-    val autoConfigure: Boolean = true,
     val updateIntervalLabel: String = "1 hour",
     val protocolPreference: String = "Auto (V2Ray)",
     val routingMode: String = "Global",
@@ -136,12 +139,14 @@ data class AppSettingsState(
     val startOnAppOpen: Boolean = false,
     val hideFromRecentApps: Boolean = false,
     val subAutoUpdate: Boolean = true,
-    val subUpdateInterval: String = "1 hour",
     val subReplaceExisting: Boolean = true,
     val activeSubscriptionUrl: String = DEFAULT_SUBSCRIPTION_URL,
     val perAppProxyEnabled: Boolean = false,
     val bypassSelectedApps: Boolean = false,
-    val selectedAppPackages: Set<String> = emptySet(),
+    /** Split tunneling, "Exclude" mode: these apps connect directly. */
+    val splitExcludeApps: Set<String> = emptySet(),
+    /** Split tunneling, "Include" mode: only these apps use the VPN. */
+    val splitIncludeApps: Set<String> = emptySet(),
     val hasCompletedOnboarding: Boolean = false,
     val smartSwitchEnabled: Boolean = false,
     val mirrorsEnabled: Boolean = false,
@@ -242,7 +247,6 @@ class VpnPreferencesStore(context: Context) {
         val rawSubUrl = prefs.getString("active_sub_url", "")?.trim().orEmpty()
         val cleanSubUrl = if (rawSubUrl == AppSettingsState.LEGACY_DEFAULT_SUBSCRIPTION_URL) "" else rawSubUrl
         return AppSettingsState(
-            autoConfigure = prefs.getBoolean("auto_configure", true),
             updateIntervalLabel = prefs.getString("update_interval", "1 hour") ?: "1 hour",
             protocolPreference = prefs.getString("protocol_pref", "Auto (V2Ray)") ?: "Auto (V2Ray)",
             routingMode = prefs.getString("routing_mode", "Global") ?: "Global",
@@ -251,13 +255,14 @@ class VpnPreferencesStore(context: Context) {
             ipv6Enabled = prefs.getBoolean("ipv6_enabled", false),
             startOnAppOpen = prefs.getBoolean("start_on_open_v2", false),
             hideFromRecentApps = prefs.getBoolean("hide_recents", false),
-            subAutoUpdate = prefs.getBoolean("sub_auto_update", true),
-            subUpdateInterval = prefs.getString("sub_update_interval", "1 hour") ?: "1 hour",
+            // Merged from the old duplicate "auto_configure" toggle: off if either was off.
+            subAutoUpdate = prefs.getBoolean("sub_auto_update", true) && prefs.getBoolean("auto_configure", true),
             subReplaceExisting = prefs.getBoolean("sub_replace_existing", true),
             activeSubscriptionUrl = cleanSubUrl,
             perAppProxyEnabled = prefs.getBoolean("per_app_proxy", false),
             bypassSelectedApps = prefs.getBoolean("bypass_selected_apps", false),
-            selectedAppPackages = prefs.getStringSet("per_app_packages", emptySet()) ?: emptySet(),
+            splitExcludeApps = prefs.getStringSet("per_app_packages", emptySet()) ?: emptySet(),
+            splitIncludeApps = prefs.getStringSet("split_include_apps", emptySet()) ?: emptySet(),
             hasCompletedOnboarding = prefs.getBoolean("has_completed_onboarding", false),
             smartSwitchEnabled = prefs.getBoolean("smart_switch_enabled", false),
             mirrorsEnabled = prefs.getBoolean("mirrors_enabled", false),
@@ -285,7 +290,8 @@ class VpnPreferencesStore(context: Context) {
 
     fun saveSettings(state: AppSettingsState) {
         prefs.edit()
-            .putBoolean("auto_configure", state.autoConfigure)
+            .remove("auto_configure")
+            .remove("sub_update_interval")
             .putString("update_interval", state.updateIntervalLabel)
             .putString("protocol_pref", state.protocolPreference)
             .putString("routing_mode", state.routingMode)
@@ -295,12 +301,12 @@ class VpnPreferencesStore(context: Context) {
             .putBoolean("start_on_open_v2", state.startOnAppOpen)
             .putBoolean("hide_recents", state.hideFromRecentApps)
             .putBoolean("sub_auto_update", state.subAutoUpdate)
-            .putString("sub_update_interval", state.subUpdateInterval)
             .putBoolean("sub_replace_existing", state.subReplaceExisting)
             .putString("active_sub_url", state.activeSubscriptionUrl)
             .putBoolean("per_app_proxy", state.perAppProxyEnabled)
             .putBoolean("bypass_selected_apps", state.bypassSelectedApps)
-            .putStringSet("per_app_packages", state.selectedAppPackages)
+            .putStringSet("per_app_packages", state.splitExcludeApps)
+            .putStringSet("split_include_apps", state.splitIncludeApps)
             .putBoolean("has_completed_onboarding", state.hasCompletedOnboarding)
             .putBoolean("smart_switch_enabled", state.smartSwitchEnabled)
             .putBoolean("mirrors_enabled", state.mirrorsEnabled)

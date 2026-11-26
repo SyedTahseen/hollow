@@ -46,7 +46,8 @@ class HollowVpnRobolectricTest {
             ipv6Enabled = true,
             perAppProxyEnabled = true,
             bypassSelectedApps = true,
-            selectedAppPackages = setOf("com.android.chrome", "org.mozilla.firefox")
+            splitExcludeApps = setOf("com.android.chrome", "org.mozilla.firefox"),
+            splitIncludeApps = setOf("com.android.vending")
         )
         store.saveSettings(custom)
         val loaded = store.loadSettings()
@@ -57,7 +58,24 @@ class HollowVpnRobolectricTest {
         assertEquals(true, loaded.ipv6Enabled)
         assertEquals(true, loaded.perAppProxyEnabled)
         assertEquals(true, loaded.bypassSelectedApps)
-        assertTrue(loaded.selectedAppPackages.contains("com.android.chrome"))
+        assertTrue(loaded.splitExcludeApps.contains("com.android.chrome"))
+        assertEquals(setOf("com.android.vending"), loaded.splitIncludeApps)
+        // Exclude and include apps are separate lists; the service gets the active one.
+        assertEquals(loaded.splitExcludeApps, loaded.activeSplitApps)
+        assertEquals(setOf("com.android.vending"), loaded.copy(bypassSelectedApps = false).activeSplitApps)
+    }
+
+    @Test
+    fun `old duplicate auto update keys merge into one setting`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.getSharedPreferences("v2ray_vpn_prefs", Context.MODE_PRIVATE).edit()
+            .putBoolean("auto_configure", false)
+            .putBoolean("sub_auto_update", true)
+            .commit()
+        val store = VpnPreferencesStore(context)
+        assertEquals(false, store.loadSettings().subAutoUpdate)
+        store.saveSettings(store.loadSettings().copy(subAutoUpdate = true))
+        assertEquals(true, store.loadSettings().subAutoUpdate)
     }
 
     @Test

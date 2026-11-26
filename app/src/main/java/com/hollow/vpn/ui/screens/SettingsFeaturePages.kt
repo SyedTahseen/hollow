@@ -401,14 +401,17 @@ internal fun SplitTunnelingPage(
     onOpenIps: () -> Unit
 ) {
     val ctx = LocalContext.current
-    val skipping = settings.bypassSelectedApps
-    val appNames = remember(settings.selectedAppPackages) {
+    val including = !settings.bypassSelectedApps
+    val word = if (including) "Included" else "Excluded"
+    val chosenApps = settings.activeSplitApps
+    val appNames = remember(chosenApps) {
         val pm = ctx.packageManager
-        settings.selectedAppPackages
+        chosenApps
             .mapNotNull { runCatching { pm.getApplicationInfo(it, 0).loadLabel(pm).toString() }.getOrNull() }
             .sortedBy { it.lowercase() }
     }
-    val ips = if (skipping) settings.splitExcludeIps else settings.splitIncludeIps
+    val ips = if (including) settings.splitIncludeIps else settings.splitExcludeIps
+    var modeDialog by remember { mutableStateOf(false) }
 
     FeatureHero(Icons.Outlined.CallSplit)
     Spacer(Modifier.height(HollowSpace.Md))
@@ -430,29 +433,47 @@ internal fun SplitTunnelingPage(
     )
 
     if (settings.perAppProxyEnabled) {
-        PerAppInlineModeRow(
-            bypassSelectedApps = skipping,
-            onSelectBypass = { bypass -> onUpdateSettings { it.copy(bypassSelectedApps = bypass) } }
-        )
-        FeatureCaption(
-            if (skipping) "Selected apps and IP addresses are excluded from the VPN connection."
-            else "Only selected apps and IP addresses connect through the VPN. All other traffic is unprotected."
+        SettingsRow(
+            icon = Icons.Outlined.CallSplit,
+            title = "Mode",
+            subtitle = if (including) "Include" else "Exclude",
+            onClick = { modeDialog = true },
+            testTag = "row_split_mode"
         )
         SettingsRow(
             icon = Icons.Outlined.Apps,
-            title = if (skipping) "Skipped apps" else "Apps using VPN",
+            title = "$word apps",
             subtitle = formatItems(appNames),
             onClick = onOpenAppPicker,
             testTag = "row_per_app_selection_picker"
         )
         SettingsRow(
             icon = Icons.Outlined.Terminal,
-            title = if (skipping) "Skipped IP addresses" else "VPN-only IP addresses",
+            title = "$word IP addresses",
             subtitle = formatItems(ips),
             onClick = onOpenIps,
             testTag = "row_split_ips"
         )
-        FeatureCaption("Applies the next time you connect.")
+        FeatureCaption(
+            "Applies the next time you connect." +
+                if (!including) " Excluding IP addresses needs Android 13 or newer." else ""
+        )
+    }
+
+    if (modeDialog) {
+        SettingOptionPickerDialog(
+            title = "Mode",
+            options = listOf(
+                SettingChoiceOption("Exclude", "Selected apps and IP addresses are excluded from VPN connection."),
+                SettingChoiceOption("Include", "Only selected apps and IP addresses connect through VPN, all other traffic is unprotected.")
+            ),
+            selectedValue = if (including) "Include" else "Exclude",
+            onSelect = { chosen ->
+                onUpdateSettings { it.copy(bypassSelectedApps = chosen == "Exclude") }
+                modeDialog = false
+            },
+            onDismiss = { modeDialog = false }
+        )
     }
 }
 
