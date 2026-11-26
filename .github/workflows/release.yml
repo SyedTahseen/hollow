@@ -94,10 +94,14 @@ jobs:
             echo "RELEASE_SIGNING=false" >> "$GITHUB_ENV"
           fi
 
+      - name: Build world map asset (Natural Earth borders)
+        run: |
+          [ -f app/src/main/assets/world.bin ] || python3 scripts/build-map.py
+
       - name: Build release APKs
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          ./gradlew :app:assembleRelease --stacktrace
 
       - name: Prepare release assets
         id: assets

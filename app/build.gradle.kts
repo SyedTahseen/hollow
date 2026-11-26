@@ -22,6 +22,12 @@ if (isReleaseOrBundleTask) {
   buildNumberFile.writeText(buildNumber.toString())
 }
 
+// CI only ships arm64, so it passes -PabiOnly=arm64-v8a to skip packaging/stripping the other ABIs.
+val shippedAbis: List<String> = providers.gradleProperty("abiOnly").orNull
+  ?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+  ?: listOf("armeabi-v7a", "arm64-v8a")
+val skippedAbis = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64") - shippedAbis.toSet()
+
 android {
   namespace = "com.hollow.vpn"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -49,7 +55,7 @@ android {
     abi {
       isEnable = isReleaseOrBundleTask
       reset()
-      include("armeabi-v7a", "arm64-v8a")
+      include(*shippedAbis.toTypedArray())
       isUniversalApk = false
     }
   }
@@ -106,6 +112,8 @@ android {
   }
   packaging {
     jniLibs {
+      // Release never ships x86/x86_64 (and optionally other ABIs): don't merge/strip them at all.
+      if (isReleaseOrBundleTask) excludes += skippedAbis.map { "**/$it/**" }
       // Compress native libraries inside the APK (the Go core compresses very well) -> much smaller APK.
       useLegacyPackaging = true
     }

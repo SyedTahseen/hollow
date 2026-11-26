@@ -71,6 +71,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,7 +112,11 @@ import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDotMatrixBackdrop
 import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.NothingSignalDots
-import com.hollow.vpn.ui.components.HollowGlobe
+import com.hollow.vpn.ui.map.GeoPoint
+import com.hollow.vpn.ui.map.MapColors
+import com.hollow.vpn.ui.map.MapPin
+import com.hollow.vpn.ui.map.WorldGeo
+import com.hollow.vpn.ui.map.WorldMap
 import com.hollow.vpn.ui.components.CountryFlag
 import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
@@ -682,60 +687,115 @@ fun ConnectedHomeScreen(
         label = "home_bg_color"
     )
 
+    // ── World map layer (full-bleed, drawn behind the status bar; all content above is transparent) ──
+    val appContext = LocalContext.current
+    val geoReady by produceState(initialValue = WorldGeo.cached != null) {
+        WorldGeo.load(appContext)
+        value = WorldGeo.cached != null
+    }
+    val realPoint = remember(telemetry.realPublicLat, telemetry.realPublicLon, telemetry.realPublicCountryCode, geoReady) {
+        val lat = telemetry.realPublicLat
+        val lon = telemetry.realPublicLon
+        if (lat != null && lon != null) GeoPoint(lon, lat)
+        else telemetry.realPublicCountryCode.takeIf { it.length == 2 && !it.equals("XX", true) }
+            ?.let { WorldGeo.centerOf(it) }
+    }
+    val serverPoint = remember(selectedServer?.countryCode, geoReady) {
+        selectedServer?.countryCode?.takeIf { it.length == 2 }?.let { WorldGeo.centerOf(it) }
+    }
+    val mapTarget = if (homePhase == 0) realPoint ?: serverPoint else serverPoint ?: realPoint
+    val mapCountry = if (homePhase == 0) telemetry.realPublicCountryCode.takeIf { it.length == 2 && !it.equals("XX", true) }
+        else selectedServer?.countryCode?.takeIf { it.length == 2 }
+    val palette = when (homePhase) {
+        2 -> MapColors(
+            background = HollowForest, sphere = HollowForest,
+            land = Color.White.copy(alpha = 0.07f), landActive = HollowLime.copy(alpha = 0.22f),
+            landLine = Color.White.copy(alpha = 0.14f)
+        )
+        1 -> MapColors(
+            background = HollowObsidian, sphere = HollowObsidian,
+            land = Color.White.copy(alpha = 0.07f), landActive = Color.White.copy(alpha = 0.20f),
+            landLine = Color.White.copy(alpha = 0.14f)
+        )
+        else -> MapColors(
+            background = HollowCream, sphere = HollowCream,
+            land = HollowInk.copy(alpha = 0.07f), landActive = HollowOrange.copy(alpha = 0.22f),
+            landLine = HollowInk.copy(alpha = 0.16f)
+        )
+    }
+    val pinTone = when (homePhase) { 2 -> HollowLime; 1 -> Color.White; else -> HollowOrange }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
-            .statusBarsPadding()
-            .padding(bottom = bottomContentPadding)
     ) {
-        NothingDotMatrixBackdrop(
-            dotColor = when (homePhase) {
-                2 -> HollowLime.copy(alpha = 0.032f)
-                1 -> Color.White.copy(alpha = 0.026f)
-                else -> NothingBackdropDot
-            }
-        )
-        AnimatedContent(
-            targetState = homePhase,
-            transitionSpec = {
-                val ease = NothingMotion.FluidEase
-                (fadeIn(tween(260, easing = ease)) +
-                    scaleIn(tween(300, easing = ease), initialScale = 0.96f) +
-                    slideInVertically(tween(300, easing = ease)) { it / 22 })
-                    .togetherWith(
-                        fadeOut(tween(180, easing = ease)) +
-                            scaleOut(tween(220, easing = ease), targetScale = 0.97f)
+        if (mapTarget != null) {
+            WorldMap(
+                target = mapTarget,
+                countryCode = mapCountry,
+                dotColor = pinTone,
+                colors = palette,
+                centerY = 0.40f,
+                pin = when (homePhase) { 2 -> MapPin.Connected; 1 -> MapPin.Connecting; else -> MapPin.Selected },
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            NothingDotMatrixBackdrop(
+                dotColor = when (homePhase) {
+                    2 -> HollowLime.copy(alpha = 0.032f)
+                    1 -> Color.White.copy(alpha = 0.026f)
+                    else -> NothingBackdropDot
+                }
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(bottom = bottomContentPadding)
+        ) {
+            AnimatedContent(
+                targetState = homePhase,
+                transitionSpec = {
+                    val ease = NothingMotion.FluidEase
+                    (fadeIn(tween(260, easing = ease)) +
+                        scaleIn(tween(300, easing = ease), initialScale = 0.96f) +
+                        slideInVertically(tween(300, easing = ease)) { it / 22 })
+                        .togetherWith(
+                            fadeOut(tween(180, easing = ease)) +
+                                scaleOut(tween(220, easing = ease), targetScale = 0.97f)
+                        )
+                },
+                label = "home_phase_motion"
+            ) { phase ->
+                when (phase) {
+                    1 -> ConnectingHomeContent(
+                        selectedServer = selectedServer,
+                        telemetry = telemetry,
+                        onCancel = onToggleConnect,
+                        onOpenAddServer = onOpenAddServer,
+                        onOpenSettings = onOpenSettings
                     )
-            },
-            label = "home_phase_motion"
-        ) { phase ->
-            when (phase) {
-                1 -> ConnectingHomeContent(
-                    selectedServer = selectedServer,
-                    telemetry = telemetry,
-                    onCancel = onToggleConnect,
-                    onOpenAddServer = onOpenAddServer,
-                    onOpenSettings = onOpenSettings
-                )
-                2 -> ProtectedHomeContent(
-                    selectedServer = selectedServer,
-                    telemetry = telemetry,
-                    onDisconnect = onToggleConnect,
-                    onOpenServerList = onOpenServerList,
-                    onOpenAddServer = onOpenAddServer,
-                    onOpenSettings = onOpenSettings
-                )
-                else -> DisconnectedHomeContent(
-                    selectedServer = selectedServer,
-                    telemetry = telemetry,
-                    tunModeEnabled = tunModeEnabled,
-                    onConnect = onToggleConnect,
-                    onOpenServerList = onOpenServerList,
-                    onOpenAddServer = onOpenAddServer,
-                    onOpenSettings = onOpenSettings,
-                    onRefreshRealIp = onRefreshRealIp
-                )
+                    2 -> ProtectedHomeContent(
+                        selectedServer = selectedServer,
+                        telemetry = telemetry,
+                        onDisconnect = onToggleConnect,
+                        onOpenServerList = onOpenServerList,
+                        onOpenAddServer = onOpenAddServer,
+                        onOpenSettings = onOpenSettings
+                    )
+                    else -> DisconnectedHomeContent(
+                        selectedServer = selectedServer,
+                        telemetry = telemetry,
+                        tunModeEnabled = tunModeEnabled,
+                        onConnect = onToggleConnect,
+                        onOpenServerList = onOpenServerList,
+                        onOpenAddServer = onOpenAddServer,
+                        onOpenSettings = onOpenSettings,
+                        onRefreshRealIp = onRefreshRealIp
+                    )
+                }
             }
         }
     }
@@ -816,16 +876,12 @@ private fun DisconnectedHomeContent(
                 )
             }
 
-            // Dotted globe fills the space the exposure card used to take; it is cropped on purpose.
-            Box(
+            // Empty, transparent space: the world map behind the whole screen shows through here.
+            Spacer(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
                     .heightIn(min = 120.dp)
-                    .testTag("home_globe")
-            ) {
-                HollowGlobe(color = HollowInk)
-            }
+            )
 
             Spacer(modifier = Modifier.height(cardGap))
 

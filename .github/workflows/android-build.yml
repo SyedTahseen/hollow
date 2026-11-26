@@ -10,52 +10,97 @@ on:
 permissions:
   contents: write
 
+# A newer push cancels the older still-running build instead of queueing behind it.
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LIBV2RAY_VERSION: v26.10.31
+
 jobs:
-  verify:
-    name: Test and assemble debug APK
+  # Unit tests run in parallel with the APK build, so they no longer delay the APK.
+  test:
+    name: Unit tests
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: "21"
           distribution: temurin
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
 
-      - name: Accept Android SDK licenses
-        run: |
-          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
-          if [ -n "$SDK_ROOT" ] && [ -x "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
-            yes | "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          fi
+      - name: Cache libv2ray.aar
+        uses: actions/cache@v4
+        with:
+          path: app/libs/libv2ray.aar
+          key: libv2ray-${{ env.LIBV2RAY_VERSION }}
+
+      # Robolectric downloads its android-all jars on every run unless they are cached.
+      - name: Cache Robolectric jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Create debug keystore
         run: |
-          keytool -genkeypair -noprompt \
-            -keystore debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
+          keytool -genkeypair -noprompt -keystore debug.keystore -storepass android \
+            -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
       - name: Run unit tests
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+          ./gradlew :app:testDebugUnitTest --stacktrace
 
-      # Build the minified (R8) release variant, signed with the temporary keystore.
-      # Debug builds are not minified, so they are ~2x bigger. This gives one small APK per CPU type.
-      - name: Assemble minified APKs (arm64-v8a / armeabi-v7a)
-        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+  build:
+    name: Assemble minified arm64 APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache libv2ray.aar
+        uses: actions/cache@v4
+        with:
+          path: app/libs/libv2ray.aar
+          key: libv2ray-${{ env.LIBV2RAY_VERSION }}
+
+      - name: Cache world map asset
+        id: mapcache
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/assets/world.bin
+          key: world-bin-${{ hashFiles('scripts/build-map.py') }}
+
+      - name: Build world map asset (Natural Earth borders)
+        if: steps.mapcache.outputs.cache-hit != 'true'
+        run: |
+          [ -f app/src/main/assets/world.bin ] || python3 scripts/build-map.py
+
+      - name: Create debug keystore
+        run: |
+          keytool -genkeypair -noprompt -keystore debug.keystore -storepass android \
+            -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      # Only arm64 is published, so only arm64 is built (-PabiOnly). No --no-daemon: the JVM is reused.
+      - name: Assemble minified arm64 APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleRelease -PabiOnly=arm64-v8a --stacktrace
 
       - name: Pick arm64-v8a APK
         run: |
@@ -72,9 +117,23 @@ jobs:
           path: dist/HollowVPN-arm64-v8a.apk
           if-no-files-found: error
 
-      # Direct, un-zipped APK download: Releases page -> "debug-latest" -> HollowVPN-debug.apk
+  # Publishing only happens when BOTH the tests and the build passed.
+  publish:
+    name: Publish to GitHub Release
+    needs: [test, build]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: hollow-vpn-arm64-apk
+          path: dist
+
+      # Direct, un-zipped APK download: Releases page -> "debug-latest" -> HollowVPN-arm64-v8a.apk
       - name: Move debug-latest tag to this commit
-        if: github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -82,7 +141,6 @@ jobs:
           git push -f origin refs/tags/debug-latest
 
       - name: Publish APK to GitHub Release
-        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: debug-latest

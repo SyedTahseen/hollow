@@ -53,7 +53,9 @@ data class PublicIpInfo(
     val country: String,
     val countryCode: String,
     val isp: String,
-    val city: String = ""
+    val city: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 /**
@@ -969,7 +971,9 @@ class V2RayParserAndFletcher {
                                 country = country.ifBlank { countryNameFromIsoCode(code) },
                                 countryCode = code,
                                 isp = isp,
-                                city = json.optString("city", "")
+                                city = json.optString("city", ""),
+                                latitude = json.optDouble("latitude", Double.NaN).takeIf { !it.isNaN() },
+                                longitude = json.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }
                             )
                         }
                     }
@@ -1000,7 +1004,9 @@ class V2RayParserAndFletcher {
                             country = country.ifBlank { countryNameFromIsoCode(code) },
                             countryCode = code,
                             isp = isp,
-                            city = json.optString("city", "")
+                            city = json.optString("city", ""),
+                            latitude = json.optDouble("latitude", Double.NaN).takeIf { !it.isNaN() },
+                            longitude = json.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }
                         )
                     }
                 }
@@ -1030,7 +1036,9 @@ class V2RayParserAndFletcher {
                             country = country.ifBlank { countryNameFromIsoCode(code) },
                             countryCode = code,
                             isp = isp,
-                            city = json.optString("city", "")
+                            city = json.optString("city", ""),
+                            latitude = json.optDouble("latitude", Double.NaN).takeIf { !it.isNaN() },
+                            longitude = json.optDouble("longitude", Double.NaN).takeIf { !it.isNaN() }
                         )
                     }
                 }
