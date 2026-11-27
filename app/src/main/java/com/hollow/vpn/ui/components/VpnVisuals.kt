@@ -655,6 +655,7 @@ fun FetchingSpinnerRing(
     )
 
     val spinnerInkColor = HollowInk
+    val spinnerLeadColor = com.hollow.vpn.ui.theme.HollowDisplayInk
 
     Box(
         modifier = modifier.size(size),
@@ -673,7 +674,7 @@ fun FetchingSpinnerRing(
                     val isLead = i == 0
                     val trailFade = ((dotCount - i).toFloat() / dotCount.toFloat()).coerceIn(0.22f, 1f)
                     drawCircle(
-                        color = if (isLead) com.hollow.vpn.ui.theme.HollowDisplayInk else spinnerInkColor.copy(alpha = trailFade * 0.78f),
+                        color = if (isLead) spinnerLeadColor else spinnerInkColor.copy(alpha = trailFade * 0.78f),
                         radius = if (isLead) 3.4.dp.toPx() else 2.0.dp.toPx(),
                         center = Offset(dx, dy)
                     )

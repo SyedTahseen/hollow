@@ -329,7 +329,7 @@ internal fun AboutHollowSheet(
                     Canvas(modifier = Modifier.matchParentSize()) {
                         val center = Offset(size.width * 0.88f, size.height * 0.25f)
                         drawCircle(
-                            color = HollowInk.copy(alpha = 0.16f),
+                            color = sheetRingInk.copy(alpha = 0.16f),
                             radius = 68.dp.toPx(),
                             center = center,
                             style = Stroke(width = 1.dp.toPx())
