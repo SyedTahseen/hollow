@@ -540,7 +540,7 @@ private fun HomeContent(
                     thumbColor = NothingInvertedSurface,
                     arrowColor = NothingOnInvertedSurface,
                     labelColor = HollowInk,
-                    chevronColor = HollowInkSecondary,
+                    chevronColor = HollowInk,
                     borderColor = com.hollow.vpn.ui.theme.HollowBar.Border,
                     reverse = true,
                     onSlideComplete = onToggleConnect,
@@ -572,7 +572,7 @@ private fun HomeContent(
                     thumbColor = NothingInvertedSurface,
                     arrowColor = NothingOnInvertedSurface,
                     labelColor = HollowInk,
-                    chevronColor = HollowInkSecondary,
+                    chevronColor = HollowInk,
                     borderColor = com.hollow.vpn.ui.theme.HollowBar.Border,
                     onSlideComplete = onToggleConnect,
                     modifier = Modifier.testTag("bottom_disconnect_connect_button")
@@ -594,10 +594,10 @@ private fun formatConnectedFor(seconds: Long): String {
 private fun formatSpeed2(bytesPerSec: Long): String {
     val b = bytesPerSec.coerceAtLeast(0L).toDouble()
     return when {
-        b < 1024.0 -> String.format(Locale.US, "%.2f B/s", b)
-        b < 1024.0 * 1024.0 -> String.format(Locale.US, "%.2f KB/s", b / 1024.0)
-        b < 1024.0 * 1024.0 * 1024.0 -> String.format(Locale.US, "%.2f MB/s", b / (1024.0 * 1024.0))
-        else -> String.format(Locale.US, "%.2f GB/s", b / (1024.0 * 1024.0 * 1024.0))
+        b < 1024.0 -> String.format(Locale.US, "%.1f B/s", b)
+        b < 1024.0 * 1024.0 -> String.format(Locale.US, "%.1f KB/s", b / 1024.0)
+        b < 1024.0 * 1024.0 * 1024.0 -> String.format(Locale.US, "%.1f MB/s", b / (1024.0 * 1024.0))
+        else -> String.format(Locale.US, "%.1f GB/s", b / (1024.0 * 1024.0 * 1024.0))
     }
 }
 
@@ -663,7 +663,10 @@ private fun ConnectionStatsCard(
                             formatSpeed2(telemetry.downloadBytesPerSec),
                             fontFamily = HollowMonoFamily, fontWeight = FontWeight.Normal,
                             fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small,
-                            color = HollowInk, maxLines = 1
+                            color = HollowInk, maxLines = 1, softWrap = false,
+                            textAlign = TextAlign.End,
+                            // Fixed slot (10 mono chars) so digits/units never shift the neighbours.
+                            modifier = Modifier.widthIn(min = 84.dp)
                         )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
@@ -672,7 +675,10 @@ private fun ConnectionStatsCard(
                             formatSpeed2(telemetry.uploadBytesPerSec),
                             fontFamily = HollowMonoFamily, fontWeight = FontWeight.Normal,
                             fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small,
-                            color = HollowInk, maxLines = 1
+                            color = HollowInk, maxLines = 1, softWrap = false,
+                            textAlign = TextAlign.End,
+                            // Fixed slot (10 mono chars) so digits/units never shift the neighbours.
+                            modifier = Modifier.widthIn(min = 84.dp)
                         )
                     }
                 }
@@ -929,13 +935,7 @@ fun ServerItemRowContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (server.isSelected) Modifier
-                    .background(NothingSurfaceElevated)
-                    .drawBehind { drawRect(NothingRed, size = androidx.compose.ui.geometry.Size(2.dp.toPx(), size.height)) }
-                else Modifier
-            )
-            .padding(start = if (server.isSelected) HollowSpace.Md else 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md),
+            .padding(start = 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isSelectionMode) {
@@ -968,10 +968,12 @@ fun ServerItemRowContent(
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 if (server.isSelected) {
-                    com.hollow.vpn.ui.components.HollowStateDotView(
-                        com.hollow.vpn.ui.components.HollowStateDot.Live,
-                        size = HollowSizes.Dot,
-                        modifier = Modifier.semantics { contentDescription = "Active server" }
+                    Box(
+                        modifier = Modifier
+                            .size(HollowSizes.Dot)
+                            .clip(CircleShape)
+                            .background(NothingMatrixGreen)
+                            .semantics { contentDescription = "Active server" }
                     )
                 } else if (showLightningBadge) {
                     Surface(

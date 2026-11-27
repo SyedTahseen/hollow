@@ -518,7 +518,7 @@ internal fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
         style = HollowText.Section,
-        color = HollowInkSecondary,
+        color = com.hollow.vpn.ui.theme.HollowAccentText,
         modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = HollowSpace.Sm, start = HollowSpace.Xxs)
     )
 }

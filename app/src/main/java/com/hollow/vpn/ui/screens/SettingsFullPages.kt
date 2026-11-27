@@ -173,7 +173,7 @@ private fun ListHeader(title: String, note: String? = null) {
         Text(
             title.uppercase(),
             style = HollowText.Section,
-            color = HollowInkSecondary,
+            color = com.hollow.vpn.ui.theme.HollowAccentText,
             modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = if (note != null) HollowSpace.Xs else HollowSpace.Sm)
         )
         if (note != null) Text(note, style = HollowText.Small, color = HollowInkSecondary)

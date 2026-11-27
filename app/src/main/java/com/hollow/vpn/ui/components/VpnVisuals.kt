@@ -426,7 +426,7 @@ fun HollowSlideActionPill(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1400, easing = LinearEasing),
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "slide_chevron_wave"
@@ -462,16 +462,19 @@ fun HollowSlideActionPill(
             modifier = Modifier
                 .align(endAlign)
                 .padding(horizontal = HollowSpace.Xl)
-                .size(width = 24.dp, height = 16.dp)
+                .size(width = 32.dp, height = 20.dp)
                 .alpha((1f - progress * 2f).coerceIn(0f, 1f))
         ) {
             val chevW = size.width / 3.4f
             val gap = (size.width - chevW) / 2f
-            val stroke = 2.dp.toPx()
+            val stroke = 2.5.dp.toPx()
+            // Resting emphasis: 1st strongest, 2nd slightly softer, 3rd normal.
+            val rest = floatArrayOf(1f, 0.7f, 0.45f)
+            // A bright pulse travels 1st -> 2nd -> 3rd, then repeats.
+            val pos = wave * 3f
             for (i in 0..2) {
-                val base = 0.25f + 0.375f * i
-                val phase = ((wave * 3f) - i).let { d -> 1f - kotlin.math.abs(d - 1f).coerceAtMost(1f) }
-                val a = (base + phase * 0.25f).coerceIn(0f, 1f)
+                val pulse = (1f - kotlin.math.abs(pos - (i + 0.5f))).coerceIn(0f, 1f)
+                val a = (rest[i] * 0.45f + pulse * 0.55f).coerceIn(0f, 1f)
                 val left = i * gap
                 val path = Path().apply {
                     if (!reverse) {

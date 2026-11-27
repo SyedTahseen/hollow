@@ -451,10 +451,10 @@ fun CountryServerListScreen(
                 enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
                 exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
             ) {
-                com.hollow.vpn.ui.components.HollowIndeterminateBar(
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().padding(top = HollowSpace.Sm).height(HollowSizes.Spinner),
                     color = HollowDisplayInk,
-                    track = NothingBorder,
-                    modifier = Modifier.padding(top = HollowSpace.Sm)
+                    trackColor = NothingBorder
                 )
             }
 
@@ -548,7 +548,7 @@ fun CountryServerListScreen(
                         Text(
                             text = "ALL SERVERS [${displayedServers.size}]",
                             style = HollowText.Section,
-                            color = HollowInkSecondary,
+                            color = com.hollow.vpn.ui.theme.HollowAccentText,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
                     }
