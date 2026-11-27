@@ -52,7 +52,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -104,6 +104,7 @@ import com.hollow.vpn.ui.theme.HollowObsidian
 import com.hollow.vpn.ui.theme.HollowOrange
 import com.hollow.vpn.ui.theme.NothingBlack
 import com.hollow.vpn.ui.theme.NothingCanvas
+import com.hollow.vpn.ui.theme.NothingRed
 import com.hollow.vpn.ui.theme.NothingPillActiveBg
 import com.hollow.vpn.ui.theme.NothingPillActiveIcon
 import com.hollow.vpn.ui.theme.NothingPillNavBorder
@@ -275,14 +276,14 @@ fun HollowTopSquareButton(
     }
 }
 
-private val NavCapsuleFill = Color(0xFF0C0B0E)
-private val NavCapsuleBorder = Color(0xFF1C1C20)
-private val NavActiveLime = Color(0xFFA8FB20)
-private val NavActiveContent = Color(0xFF0C0B0E)
+private val NavCapsuleFill = com.hollow.vpn.ui.theme.HollowBar.Fill
+private val NavCapsuleBorder = com.hollow.vpn.ui.theme.HollowBar.Border
+private val NavActiveAccent = NothingRed
+private val NavActiveContent = Color.White
 private val NavInactiveContent = Color(0xFF8E8E92)
 
 /**
- * Bottom bar: a dark capsule where the selected tab expands into a lime pill showing icon + label,
+ * Bottom bar: a dark capsule where the selected tab expands into a accent-red pill showing icon + label,
  * and the other tabs collapse to muted icon-only buttons.
  *
  * The color parameters are kept for call-site compatibility; the look is fixed by the design.
@@ -321,9 +322,8 @@ fun HollowBottomNavigationBar(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 352.dp)
-                .height(HollowSizes.Field + 4.dp),
-            shape = CircleShape,
+                .height(com.hollow.vpn.ui.theme.HollowBar.Height),
+            shape = com.hollow.vpn.ui.theme.HollowBar.Shape,
             color = NavCapsuleFill,
             border = BorderStroke(HollowStroke.Hairline, NavCapsuleBorder)
         ) {
@@ -335,13 +335,13 @@ fun HollowBottomNavigationBar(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 HollowBottomNavItem(
-                    label = "Connect",
+                    label = "Home",
                     selected = selectedTab == HollowBottomTab.CONNECT,
                     onClick = onSelectConnect,
                     modifier = Modifier.testTag("nav_tab_connect")
                 ) { tint ->
                     Icon(
-                        imageVector = Icons.Outlined.PowerSettingsNew,
+                        imageVector = Icons.Outlined.Home,
                         contentDescription = null,
                         tint = tint,
                         modifier = Modifier.size(HollowSizes.Icon)
@@ -400,7 +400,7 @@ private fun RowScope.HollowBottomNavItem(
         label = "nav_label_alpha"
     )
     val pillBg by animateColorAsState(
-        targetValue = if (selected) NavActiveLime else Color.Transparent,
+        targetValue = if (selected) NavActiveAccent else Color.Transparent,
         animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_pill_bg"
     )
@@ -444,7 +444,7 @@ private fun RowScope.HollowBottomNavItem(
                     text = label,
                     color = NavActiveContent,
                     fontFamily = HollowSansFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 16.sp,
                     lineHeight = 20.sp,
                     maxLines = 1,
@@ -485,7 +485,7 @@ fun HollowSlideActionPill(
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val trackPadding = 6.dp
-    val thumbHeight = HollowSizes.Field - trackPadding * 2
+    val thumbHeight = com.hollow.vpn.ui.theme.HollowBar.Height - trackPadding * 2
     val thumbWidth = thumbHeight * 1.32f
     val dir = if (reverse) -1f else 1f
 
@@ -511,12 +511,12 @@ fun HollowSlideActionPill(
     )
 
     val interactionSource = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(HollowRadius.Pill)
+    val shape = com.hollow.vpn.ui.theme.HollowBar.Shape
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(HollowSizes.Field)
+            .height(com.hollow.vpn.ui.theme.HollowBar.Height)
             .clip(shape)
             .background(trackColor)
             .border(HollowStroke.Hairline, borderColor, shape)
@@ -579,9 +579,9 @@ fun HollowSlideActionPill(
         Text(
             text = label,
             fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 20.sp,
-            lineHeight = 24.sp,
+            fontWeight = FontWeight.Normal,
+            fontSize = 16.sp,
+            lineHeight = 20.sp,
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -219,7 +219,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         fastestJob = viewModelScope.launch {
             _isTestingFastest.value = true
             try {
-                showMessage("Testing ${candidates.size} server(s)…")
                 val semaphore = Semaphore(8)
                 val tested = coroutineScope {
                     candidates.map { server ->
@@ -235,7 +234,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val fastest = tested.filter { it.pingMs > 0 }.minByOrNull { it.pingMs }
                 if (fastest != null) {
-                    showMessage("Fastest: ${fastest.countryName} (${fastest.pingMs} ms)")
                     onFastest(fastest)
                 } else {
                     showMessage("No server passed the connection test")
@@ -486,9 +484,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 _screenStack.value = listOf(target)
                 _currentScreen.value = target
             }
-            if (_fetchingProgress.value.isActive) {
-                showMessage("Fetching & testing in background")
-            }
         }
     }
 
@@ -566,14 +561,11 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             stopAndroidVpnService()
-            val name = selectedServer.value?.countryName ?: "VPN"
-            showMessage("Disconnected from $name")
         } else {
             val active = selectedServer.value
             if (active == null) {
                 val configuredSub = _settings.value.activeSubscriptionUrl.trim()
                 if (configuredSub.isNotBlank()) {
-                    showMessage("Fetching servers from your subscription…")
                     runFetcherAutoFetchAndPingSweep(
                         returnScreen = VpnScreen.CONNECTED_HOME,
                         autoConnectAfterFetch = true
@@ -636,7 +628,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         startAndroidVpnService(updatedServer)
-        showMessage("Connecting to ${server.countryName} ($livePing ms)…")
     }
 
     /**
@@ -729,10 +720,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         } else if (fastest != null) {
                             val ip = fetcher.resolveServerIpAddress(fastest.host)
                             _telemetry.update { it.copy(serverIpLabel = ip) }
-                            val countryCount = withSelected.map { it.countryName }.distinct().size
-                            showMessage(
-                                "Ranked ${withSelected.size} verified servers across $countryCount countries · #1 ${fastest.countryName} (${fastest.pingMs} ms)"
-                            )
                         }
                     },
                     onFailure = { error ->
@@ -755,7 +742,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             if (showLoadingScreen && _currentScreen.value == VpnScreen.SPLASH_FETCHING) {
                                 _currentScreen.value = returnScreen
                             }
-                            showMessage("Updated latency for ${reRanked.size} reachable servers")
                         } else {
                             if (showLoadingScreen) {
                                 _currentScreen.value = VpnScreen.SERVER_LIST
@@ -788,7 +774,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 updateSettings { it.copy(activeSubscriptionUrl = "") }
             }
             if (_selectedCategory.value == key) _selectedCategory.value = ServerCategory.ALL_KEY
-            showMessage(if (count == 1) "Subscription and 1 server deleted" else "Subscription and $count servers deleted")
         }
     }
 
@@ -866,10 +851,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             _screenStack.value = listOf(VpnScreen.CONNECTED_HOME, VpnScreen.SERVER_LIST)
                             _currentScreen.value = VpnScreen.SERVER_LIST
                         }
-                        val countryCount = marked.map { it.countryName }.distinct().size
-                        showMessage(
-                            "Saved ${marked.size} verified servers across $countryCount countries · Fastest: ${fastest?.countryName ?: ""} (${fastest?.pingMs ?: 0} ms)"
-                        )
                     },
                     onFailure = { err ->
                         _addServerRequest.value = AddServerRequest.SUBSCRIPTION
@@ -898,7 +879,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             val candidatePool = fetcher.selectDiverseCandidatePool(parsed, maxCandidates = 360)
-            showMessage("Verifying latency for ${candidatePool.size} imported server(s)…")
             val benchmarked = fetcher.benchmarkAndRankTop15(
                 servers = candidatePool,
                 context = getApplication(),
@@ -914,8 +894,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             }
             dao.insertServers(toInsert)
             navigateTo(VpnScreen.SERVER_LIST)
-            val best = toInsert.first()
-            showMessage("Imported ${toInsert.size} verified server(s) · Fastest: ${best.countryName} (${best.pingMs} ms)")
         }
     }
 
@@ -1008,7 +986,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             )
             val testableServer = baseServer.copy(rawConfigJson = generatedJson)
 
-            showMessage("Verifying proxy connection to $cleanHost:$port…")
             val verifiedPing = verifyServerLatencyOrNull(testableServer)
             if (verifiedPing == null) {
                 showMessage("Host $cleanHost:$port failed Xray proxy handshake")
@@ -1028,7 +1005,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             dao.insertServer(finalServer)
             _selectedCategory.value = ServerCategory.DEFAULT_KEY
             navigateTo(VpnScreen.SERVER_LIST)
-            showMessage("Added ${finalServer.countryName} · ${finalServer.resolvedIp} ($verifiedPing ms)")
         }
     }
 
@@ -1037,7 +1013,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             val livePing = verifyServerLatencyOrNull(server)
             if (livePing != null) {
                 dao.updateServer(server.copy(pingMs = livePing))
-                showMessage("${server.countryName} verified: $livePing ms")
             } else {
                 dao.updateServer(server.copy(pingMs = 0))
                 showMessage("${server.countryName} (${server.host}:${server.port}) failed proxy handshake")
@@ -1058,7 +1033,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 showMessage("No saved servers to test")
                 return@launch
             }
-            showMessage("Testing ${existing.size} saved server(s)…")
             val semaphore = Semaphore(8)
             val updated = coroutineScope {
                 existing.map { server ->
@@ -1072,13 +1046,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }.awaitAll()
             }
-            val reachable = updated.filter { it.pingMs > 0 }
-            val fastest = reachable.minByOrNull { it.pingMs }
-            if (fastest != null) {
-                showMessage(
-                    "Verified ${reachable.size}/${existing.size} servers · Fastest: ${fastest.countryName} (${fastest.pingMs} ms)"
-                )
-            } else {
+            if (updated.none { it.pingMs > 0 }) {
                 showMessage("Tested ${existing.size} server(s), none passed proxy check")
             }
             } finally {
@@ -1100,7 +1068,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteServer(server: ServerEntity) {
         viewModelScope.launch {
             dao.deleteServerById(server.id)
-            showMessage("Removed ${server.countryName}")
         }
     }
 
@@ -1108,7 +1075,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         if (ids.isEmpty()) return
         viewModelScope.launch {
             ids.forEach { dao.deleteServerById(it) }
-            showMessage("Removed ${ids.size} server(s)")
         }
     }
 
@@ -1128,7 +1094,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 showMessage("No duplicate servers found")
             } else {
                 duplicates.forEach { dao.deleteServerById(it.id) }
-                showMessage("Removed ${duplicates.size} duplicate server(s)")
             }
         }
     }
@@ -1193,7 +1158,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearXrayLogs() {
         XrayVpnService.clearLogs()
-        showMessage("Cleared Xray diagnostic logs")
     }
 
     fun openJsonInspector(server: ServerEntity) {
@@ -1214,7 +1178,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             dao.updateServer(server.copy(rawConfigJson = updatedJson.trim()))
             _inspectingJsonServer.value = null
-            showMessage("Saved config for ${server.countryName}")
         }
     }
 
@@ -1248,7 +1211,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             dao.updateServer(updated)
-            showMessage("Saved ${updated.countryName.ifBlank { updated.host }}")
         }
         return null
     }

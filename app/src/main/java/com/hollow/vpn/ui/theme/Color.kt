@@ -241,12 +241,13 @@ val HollowObsidianDivider = Color(0xFF29292E)
 val HollowObsidianMuted = Color(0xFF94949C)
 val HollowAmber = Color(0xFFFFB020)
 
-// Connected Phase (.ok — Deep Matrix Black + Glyph Lime)
-val HollowForest = Color(0xFF050D08)
-val HollowForestCard = Color(0xFF0E1B13)
-val HollowForestDivider = Color(0xFF1E3728)
-val HollowForestMuted = Color(0xFF8FB8A0)
-val HollowLime = Color(0xFFB8F85C)
+// Connected Phase — neutral black surfaces + the same green as the connected map pin / "fastest" flag.
+// (Names kept for compatibility with existing call sites.)
+val HollowForest = Color(0xFF050506)
+val HollowForestCard = Color(0xFF0C0B0E)
+val HollowForestDivider = Color(0xFF1C1C20)
+val HollowForestMuted = Color(0xFF8E8E92)
+val HollowLime = DarkMatrixGreen
 
 val ExpressiveLightColorScheme = lightColorScheme(
     primary = LightInk,

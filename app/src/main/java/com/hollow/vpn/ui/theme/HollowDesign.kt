@@ -205,6 +205,17 @@ fun hollowPhaseColors(phase: Int): HollowPhaseColors = when (phase) {
     )
 }
 
+/**
+ * Shared look for the three "bar" components (connected stats card, slide-to-connect pill, bottom nav)
+ * so they always match in fill, border, height and corner radius — in every connection phase.
+ */
+object HollowBar {
+    val Fill = androidx.compose.ui.graphics.Color(0xFF0C0B0E)
+    val Border = androidx.compose.ui.graphics.Color(0xFF1C1C20)
+    val Height = 60.dp
+    val Shape = androidx.compose.foundation.shape.RoundedCornerShape(30.dp)
+}
+
 /** Upload-speed accent (soft rose) paired with the lime download accent. */
 val HollowUploadAccent = Color(0xFFF28B9B)
 

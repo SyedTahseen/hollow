@@ -82,6 +82,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -336,21 +337,16 @@ private fun HomeContent(
     val cleanIpDisplay = remember(telemetry.realPublicIpLabel) {
         telemetry.realPublicIpLabel.substringBefore(" · ").ifBlank { telemetry.realPublicIpLabel }
     }
-    // "City · 1.2.3.4" (falls back to just the IP while the city is unknown).
-    val ipLocationLine = remember(cleanIpDisplay, telemetry.realPublicCity) {
-        if (telemetry.realPublicCity.isNotBlank()) "${telemetry.realPublicCity} · $cleanIpDisplay" else cleanIpDisplay
-    }
-
     val serverIp = selectedServer?.resolvedIp?.ifBlank { selectedServer.host } ?: telemetry.serverIpLabel
-    // The app only knows the server's country (no city field), so that is the "city" label for the VPN.
-    val vpnLocationLine = "${selectedServer?.countryName ?: "VPN"} · $serverIp"
-    val infoLine = if (phase == 0) ipLocationLine else vpnLocationLine
+    // Same idea as Outrun: unprotected + connecting show YOUR city · IP (connecting scrambles it),
+    // protected shows the VPN's location · IP. The app only knows the server's country, so that is the VPN's "city".
+    val chipPlace = if (phase == 2) selectedServer?.countryName ?: "VPN" else telemetry.realPublicCity
+    val chipIp = if (phase == 2) serverIp else cleanIpDisplay
 
     val protectedPhase = phase == 2
     val titleText = when (phase) { 2 -> "YOU ARE PROTECTED."; 1 -> "CONNECTING."; else -> "YOU ARE UNPROTECTED." }
     val pc = hollowPhaseColors(phase)
     val titleColor = pc.accent
-    val infoColor = pc.muted
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     BoxWithConstraints(
@@ -397,26 +393,17 @@ private fun HomeContent(
 
             Spacer(modifier = Modifier.height(HollowSpace.Xxs))
 
-            Row(
-                modifier = Modifier
-                    .heightIn(min = HollowSizes.CardRowMin)
-                    .padding(vertical = HollowSpace.Xs, horizontal = HollowSpace.Xxs)
-                    .testTag("row_real_ip"),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-            ) {
-                Text(
-                    text = infoLine,
-                    fontFamily = HollowSansFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = HollowType.Body,
-                    lineHeight = HollowLineHeight.Body,
-                    letterSpacing = HollowTracking.Body,
-                    color = infoColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Spacer(modifier = Modifier.height(HollowSpace.Xs))
+            HomeInfoChip(
+                place = chipPlace,
+                ip = chipIp,
+                scramble = phase == 1,
+                fill = pc.surface,
+                border = pc.border,
+                placeColor = pc.ink,
+                ipColor = pc.muted,
+                modifier = Modifier.testTag("row_real_ip")
+            )
 
             // Empty, transparent space: the world map behind the whole screen shows through here.
             Spacer(
@@ -621,8 +608,8 @@ private fun HomeContent(
     }
 }
 
-private val SlidePillTrack = Color(0xFF111113)
-private val SlidePillBorder = Color(0xFF1F1F23)
+private val SlidePillTrack = com.hollow.vpn.ui.theme.HollowBar.Fill
+private val SlidePillBorder = com.hollow.vpn.ui.theme.HollowBar.Border
 private val SlidePillGrip = Color(0xFFB5B5B8)
 
 private fun formatConnectedFor(seconds: Long): String {
@@ -655,74 +642,190 @@ private fun ConnectionStatsCard(
 ) {
     val pc = hollowPhaseColors(2)
     val downColor = pc.accent
-    val upColor = HollowUploadAccent
+    val upColor = Color.White
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(HollowRadius.Lg))
+            .clip(com.hollow.vpn.ui.theme.HollowBar.Shape)
             .clickable(role = Role.Button, onClick = onClick),
-        shape = RoundedCornerShape(HollowRadius.Lg),
-        color = pc.surface,
-        border = BorderStroke(HollowStroke.Hairline, pc.border)
+        shape = com.hollow.vpn.ui.theme.HollowBar.Shape,
+        color = com.hollow.vpn.ui.theme.HollowBar.Fill,
+        border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowBar.Border)
     ) {
         Column(modifier = Modifier.fillMaxWidth().animateContentSize(tween(HollowMotion.Standard))) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
-            verticalAlignment = Alignment.CenterVertically
+                .height(com.hollow.vpn.ui.theme.HollowBar.Height)
+                .padding(horizontal = HollowSpace.Lg),
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            // Row 1: caption + expand chevron
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "Connected for",
                     fontFamily = HollowSansFamily,
                     fontSize = HollowType.Micro,
                     lineHeight = HollowLineHeight.Micro,
                     letterSpacing = HollowTracking.Micro,
-                    color = HollowForestMuted,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(HollowSpace.Xxs))
-                Text(
-                    text = formatConnectedFor(telemetry.elapsedSeconds),
-                    fontFamily = HollowSansFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = HollowType.BodyStrong,
-                    lineHeight = HollowLineHeight.BodyStrong,
-                    letterSpacing = HollowTracking.BodyStrong,
-                    color = HollowDarkInk,
+                    color = Color(0xFF8E8E92),
                     maxLines = 1,
-                    modifier = Modifier.testTag("connection_timer_text")
+                    modifier = Modifier.weight(1f)
                 )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
-                    Text("↓", fontSize = HollowType.Caption, color = downColor)
-                    Text(
-                        formatSpeed2(telemetry.downloadBytesPerSec),
-                        fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
-                    Text("↑", fontSize = HollowType.Caption, color = upColor)
-                    Text(
-                        formatSpeed2(telemetry.uploadBytesPerSec),
-                        fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
-                    )
-                }
                 val chevronRotation by animateFloatAsState(if (expanded) 180f else 0f, tween(HollowMotion.Standard), label = "stats_card_chevron")
                 Icon(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = if (expanded) "Collapse server details" else "Expand server details",
-                    tint = HollowForestMuted,
+                    tint = Color(0xFF8E8E92),
                     modifier = Modifier.size(HollowSizes.Icon).rotate(chevronRotation)
                 )
+            }
+            Spacer(modifier = Modifier.height(HollowSpace.Xxs))
+            // Row 2: connection time (left) and download / upload (right), same size + baseline
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = formatConnectedFor(telemetry.elapsedSeconds),
+                    fontFamily = HollowSansFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = HollowType.Small,
+                    lineHeight = HollowLineHeight.Small,
+                    color = HollowDarkInk,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("connection_timer_text")
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
+                        Text("↓", fontFamily = HollowSansFamily, fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small, color = downColor)
+                        Text(
+                            formatSpeed2(telemetry.downloadBytesPerSec),
+                            fontFamily = HollowSansFamily, fontWeight = FontWeight.Medium,
+                            fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small,
+                            color = HollowDarkInk, maxLines = 1
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
+                        Text("↑", fontFamily = HollowSansFamily, fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small, color = upColor)
+                        Text(
+                            formatSpeed2(telemetry.uploadBytesPerSec),
+                            fontFamily = HollowSansFamily, fontWeight = FontWeight.Medium,
+                            fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small,
+                            color = HollowDarkInk, maxLines = 1
+                        )
+                    }
+                }
             }
         }
         AnimatedVisibility(visible = expanded, enter = fadeIn(tween(HollowMotion.Fast)) + expandVertically(tween(HollowMotion.Standard)), exit = fadeOut(tween(HollowMotion.Quick)) + shrinkVertically(tween(HollowMotion.Fast))) {
             expandedContent()
         }
         }
+    }
+}
+
+/**
+ * "City · IP" chip (Outrun-style): a translucent bordered capsule with the place in the main text color and
+ * the IP muted. While [scramble] is on (connecting) the characters are progressively masked with '*'.
+ * A new label fades in (500 ms) like Outrun's status transition.
+ */
+@Composable
+private fun HomeInfoChip(
+    place: String,
+    ip: String,
+    scramble: Boolean,
+    fill: Color,
+    border: Color,
+    placeColor: Color,
+    ipColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(HollowRadius.Md)
+    val placeText = place.trim()
+    val label = when {
+        ip.isBlank() && placeText.isBlank() -> "Locating…"
+        placeText.isBlank() -> ip
+        ip.isBlank() -> placeText
+        else -> "$placeText · $ip"
+    }
+    val highlight = if (placeText.isNotBlank()) placeText else ""
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { shown = true }
+    AnimatedVisibility(
+        visible = shown,
+        enter = fadeIn(tween(500)),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(shape)
+                .background(fill.copy(alpha = 0.86f))
+                .border(HollowStroke.Hairline, border, shape)
+                .padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val style = androidx.compose.ui.text.TextStyle(
+                fontFamily = HollowSansFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = HollowType.Body,
+                lineHeight = HollowLineHeight.Body,
+                letterSpacing = HollowTracking.Body
+            )
+            if (scramble) {
+                ScrambleText(label, highlight, style, normal = placeColor, weak = ipColor)
+            } else {
+                Text(
+                    text = androidx.compose.ui.text.buildAnnotatedString {
+                        append(label)
+                        if (highlight.isNotEmpty()) addStyle(androidx.compose.ui.text.SpanStyle(color = placeColor), 0, highlight.length)
+                    },
+                    style = style,
+                    color = ipColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+/** Replaces the characters of [text] one by one (random order, 50 ms apart) with '*', keeping '.', ' ' and '-'. */
+@Composable
+private fun ScrambleText(
+    text: String,
+    highlight: String,
+    style: androidx.compose.ui.text.TextStyle,
+    normal: Color,
+    weak: Color
+) {
+    var shown by remember(text) { mutableStateOf(text) }
+    LaunchedEffect(text) {
+        val order = text.indices.filter { text[it] != '.' && text[it] != ' ' && text[it] != '-' && text[it] != '·' }.shuffled()
+        val chars = text.toCharArray()
+        for (i in order) {
+            kotlinx.coroutines.delay(50)
+            chars[i] = '*'
+            shown = String(chars)
+        }
+    }
+    val start = if (highlight.isNotEmpty()) text.indexOf(highlight) else -1
+    val annotated = androidx.compose.ui.text.buildAnnotatedString {
+        append(shown)
+        if (start >= 0) addStyle(androidx.compose.ui.text.SpanStyle(color = normal), start, start + highlight.length)
+    }
+    Box {
+        // Invisible full-length copy keeps the chip width stable while characters are masked.
+        Text(text, style = style, color = Color.Transparent, maxLines = 1)
+        Text(annotated, style = style, color = weak, maxLines = 1)
     }
 }
 
