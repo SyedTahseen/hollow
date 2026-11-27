@@ -41,7 +41,7 @@ val DotoDisplayFamily = FontFamily(
 )
 
 /** Family used for body / UI text. Doto everywhere; set to FontFamily.SansSerif to get Outrun's system font back. */
-val HollowSansFamily: FontFamily = DotoDisplayFamily
+val HollowSansFamily: FontFamily = FontFamily.SansSerif
 
 /**
  * Doto is used for all text. Sizes, line heights and tracking follow Outrun's scale
