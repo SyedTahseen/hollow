@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.HollowDisplayInk
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
@@ -425,21 +426,13 @@ internal fun AboutHollowSheet(
                         title = "Xray-core Tunnel Engine",
                         detail = "Real Xray outbound latency verification & high-speed multi-transport routing"
                     )
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = HollowCreamDivider,
-                        modifier = Modifier.padding(vertical = HollowSpace.Md)
-                    )
+                    NothingDottedDivider(modifier = Modifier.padding(vertical = HollowSpace.Md))
                     AboutFeatureRow(
                         icon = HollowIcons.Lock,
                         title = "Zero-Log Local State",
                         detail = "All servers, subscriptions, and routing preferences stay strictly on-device"
                     )
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = HollowCreamDivider,
-                        modifier = Modifier.padding(vertical = HollowSpace.Md)
-                    )
+                    NothingDottedDivider(modifier = Modifier.padding(vertical = HollowSpace.Md))
                     AboutFeatureRow(
                         icon = HollowIcons.Dns,
                         title = "Encrypted DNS & Split Apps",

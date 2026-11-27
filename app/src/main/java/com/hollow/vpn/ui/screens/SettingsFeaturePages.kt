@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
 import com.hollow.vpn.ui.theme.HollowError
@@ -776,12 +777,7 @@ internal fun UsageHistoryPage() {
 
 @Composable
 private fun UsageDivider() {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(HollowStroke.Hairline)
-            .background(HollowCreamDivider)
-    )
+    NothingDottedDivider()
 }
 
 @Composable

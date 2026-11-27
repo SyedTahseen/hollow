@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.components.NothingClock
+import com.hollow.vpn.ui.components.NothingDottedDivider
 import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.components.HollowStateDot
 import com.hollow.vpn.ui.theme.HollowInkMuted
@@ -818,7 +819,7 @@ private fun ServerDetailsPanel(
         add("Latency" to if (server.pingMs > 0) "${server.pingMs} ms" else "—")
     }
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = HollowSpace.Lg).padding(bottom = HollowSpace.Md)) {
-        HorizontalDivider(color = dividerColor)
+        NothingDottedDivider(color = dividerColor)
         Spacer(modifier = Modifier.height(HollowSpace.Sm))
         rows.forEach { (label, value) ->
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = HollowSpace.Xs), verticalAlignment = Alignment.Top) {

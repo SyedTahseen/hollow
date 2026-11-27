@@ -100,18 +100,29 @@ fun NothingDotMatrixBackdrop(
     }
 }
 
-/** List divider: a solid 1dp hairline in the `line` token (name kept for existing call sites). */
+/** List divider: a row of small round dots (Nothing OS style), in the `line` token. */
 @Composable
 fun NothingDottedDivider(
     modifier: Modifier = Modifier,
     color: Color = com.hollow.vpn.ui.theme.NothingBorder
 ) {
-    Box(
+    androidx.compose.foundation.Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(1.dp)
-            .background(color)
-    )
+            .height(2.dp)
+    ) {
+        val dot = 1.5.dp.toPx()
+        val step = 5.dp.toPx()
+        // Zero-length dashes with round caps render as evenly spaced round dots.
+        drawLine(
+            color = color,
+            start = androidx.compose.ui.geometry.Offset(dot / 2f, size.height / 2f),
+            end = androidx.compose.ui.geometry.Offset(size.width - dot / 2f, size.height / 2f),
+            strokeWidth = dot,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(0.01f, step), 0f)
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
