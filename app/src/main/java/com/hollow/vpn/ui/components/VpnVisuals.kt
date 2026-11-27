@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +52,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -92,6 +94,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowCreamDivider
 import com.hollow.vpn.ui.theme.HollowForest
 import com.hollow.vpn.ui.theme.HollowForestCard
@@ -272,6 +275,20 @@ fun HollowTopSquareButton(
     }
 }
 
+private val NavCapsuleFill = Color(0xFF0C0B0E)
+private val NavCapsuleBorder = Color(0xFF1C1C20)
+private val NavActiveLime = Color(0xFFA8FB20)
+private val NavActiveContent = Color(0xFF0C0B0E)
+private val NavInactiveContent = Color(0xFF8E8E92)
+
+/**
+ * Bottom bar: a dark capsule where the selected tab expands into a lime pill showing icon + label,
+ * and the other tabs collapse to muted icon-only buttons.
+ *
+ * The color parameters are kept for call-site compatibility; the look is fixed by the design.
+ * [backgroundColor] is only used for the optional full-width backdrop.
+ */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun HollowBottomNavigationBar(
     selectedTab: HollowBottomTab,
@@ -287,46 +304,11 @@ fun HollowBottomNavigationBar(
     /** false = no full-width backdrop behind the pill, so whatever is behind the bar (the map) shows through. */
     showBackdrop: Boolean = true
 ) {
-    val isDarkPhaseBg = backgroundColor == HollowForest || backgroundColor == HollowObsidian
-    val capsuleFill = when (backgroundColor) {
-        HollowForest -> HollowForestCard
-        HollowObsidian -> Color(0xFF141417)
-        else -> NothingPillNavFill
-    }
-    val capsuleBorder = when (backgroundColor) {
-        HollowForest -> HollowForestDivider
-        HollowObsidian -> Color(0xFF26262C)
-        else -> NothingPillNavBorder
-    }
-    val activePillBg = if (isDarkPhaseBg) Color.White else NothingPillActiveBg
-    val activeIconTint = if (isDarkPhaseBg) NothingBlack else NothingPillActiveIcon
-
     val animBg by animateColorAsState(
         targetValue = backgroundColor,
         animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_bar_bg"
     )
-    val animCapsuleFill by animateColorAsState(
-        targetValue = capsuleFill,
-        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
-        label = "nav_capsule_fill"
-    )
-    val animCapsuleBorder by animateColorAsState(
-        targetValue = capsuleBorder,
-        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
-        label = "nav_capsule_border"
-    )
-    val animActivePillBg by animateColorAsState(
-        targetValue = activePillBg,
-        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
-        label = "nav_active_pill"
-    )
-
-    val selectedIndex = when (selectedTab) {
-        HollowBottomTab.CONNECT -> 0
-        HollowBottomTab.SERVERS -> 1
-        HollowBottomTab.SETTINGS -> 2
-    }
 
     Box(
         modifier = modifier
@@ -340,100 +322,56 @@ fun HollowBottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 352.dp)
-                .height(HollowSizes.Field),
+                .height(HollowSizes.Field + 4.dp),
             shape = CircleShape,
-            color = animCapsuleFill,
-            border = BorderStroke(HollowStroke.Hairline, animCapsuleBorder)
+            color = NavCapsuleFill,
+            border = BorderStroke(HollowStroke.Hairline, NavCapsuleBorder)
         ) {
-            BoxWithConstraints(
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Sm)
+                    .padding(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                val itemGap = 6.dp
-                val slotWidth = ((maxWidth - itemGap * 2) / 3f).coerceAtLeast(1.dp)
-                val targetIndicatorOffset = (slotWidth + itemGap) * selectedIndex
-                val animatedIndicatorOffset by animateDpAsState(
-                    targetValue = targetIndicatorOffset,
-                    animationSpec = spring(
-                        dampingRatio = 0.78f,
-                        stiffness = 460f
-                    ),
-                    label = "nav_capsule_glide"
-                )
-
-                // Gliding Nothing OS 3.0 active capsule indicator
-                Box(
-                    modifier = Modifier
-                        .offset(x = animatedIndicatorOffset)
-                        .width(slotWidth)
-                        .fillMaxHeight()
-                        .clip(CircleShape)
-                        .background(animActivePillBg)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(itemGap)
-                ) {
-                    HollowBottomNavItem(
-                        label = "Connect",
-                        selected = selectedTab == HollowBottomTab.CONNECT,
-                        activeIconColor = activeIconTint,
-                        inactiveContentColor = inactiveContentColor,
-                        onClick = onSelectConnect,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("nav_tab_connect")
-                    ) { tint ->
-                        Icon(
-                            imageVector = Icons.Rounded.PowerSettingsNew,
-                            contentDescription = "Connect",
-                            tint = tint,
-                            modifier = Modifier.size(HollowSizes.Icon)
-                        )
-                    }
-
-                    HollowBottomNavItem(
-                        label = "Servers",
-                        selected = selectedTab == HollowBottomTab.SERVERS,
-                        activeIconColor = activeIconTint,
-                        inactiveContentColor = inactiveContentColor,
-                        onClick = onSelectServers,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("nav_tab_servers")
-                    ) { tint ->
-                        Icon(
-                            imageVector = Icons.Outlined.Dns,
-                            contentDescription = "Servers",
-                            tint = tint,
-                            modifier = Modifier.size(HollowSizes.Icon)
-                        )
-                    }
-
-                    HollowBottomNavItem(
-                        label = "Settings",
-                        selected = selectedTab == HollowBottomTab.SETTINGS,
-                        activeIconColor = activeIconTint,
-                        inactiveContentColor = inactiveContentColor,
-                        onClick = onSelectSettings,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("nav_tab_settings")
-                    ) { tint ->
-                        Icon(
-                            imageVector = if (selectedTab == HollowBottomTab.SETTINGS) {
-                                Icons.Rounded.Settings
-                            } else {
-                                Icons.Outlined.Settings
-                            },
-                            contentDescription = "Settings",
-                            tint = tint,
-                            modifier = Modifier.size(HollowSizes.Icon)
-                        )
-                    }
+                HollowBottomNavItem(
+                    label = "Connect",
+                    selected = selectedTab == HollowBottomTab.CONNECT,
+                    onClick = onSelectConnect,
+                    modifier = Modifier.testTag("nav_tab_connect")
+                ) { tint ->
+                    Icon(
+                        imageVector = Icons.Outlined.PowerSettingsNew,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(HollowSizes.Icon)
+                    )
+                }
+                HollowBottomNavItem(
+                    label = "Servers",
+                    selected = selectedTab == HollowBottomTab.SERVERS,
+                    onClick = onSelectServers,
+                    modifier = Modifier.testTag("nav_tab_servers")
+                ) { tint ->
+                    Icon(
+                        imageVector = Icons.Outlined.Dns,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(HollowSizes.Icon)
+                    )
+                }
+                HollowBottomNavItem(
+                    label = "Settings",
+                    selected = selectedTab == HollowBottomTab.SETTINGS,
+                    onClick = onSelectSettings,
+                    modifier = Modifier.testTag("nav_tab_settings")
+                ) { tint ->
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(HollowSizes.Icon)
+                    )
                 }
             }
         }
@@ -441,36 +379,52 @@ fun HollowBottomNavigationBar(
 }
 
 @Composable
-private fun HollowBottomNavItem(
+private fun RowScope.HollowBottomNavItem(
     label: String,
     selected: Boolean,
-    activeIconColor: Color,
-    inactiveContentColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: @Composable (Color) -> Unit
 ) {
-    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val spec = tween<Float>(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)
+    val weight by animateFloatAsState(
+        targetValue = if (selected) 2.2f else 1f,
+        animationSpec = spring(dampingRatio = 0.8f, stiffness = 420f),
+        label = "nav_item_weight"
+    )
+    val labelAlpha by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = spec,
+        label = "nav_label_alpha"
+    )
+    val pillBg by animateColorAsState(
+        targetValue = if (selected) NavActiveLime else Color.Transparent,
+        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        label = "nav_pill_bg"
+    )
     val iconTint by animateColorAsState(
-        targetValue = if (selected) activeIconColor else inactiveContentColor,
-        animationSpec = tween(durationMillis = HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        targetValue = if (selected) NavActiveContent else NavInactiveContent,
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_pill_tint"
     )
-    val iconScale by animateFloatAsState(
-        targetValue = when {
-            isPressed -> 0.86f
-            selected -> 1.08f
-            else -> 0.96f
-        },
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1f,
         animationSpec = com.hollow.vpn.ui.theme.NothingMotion.tactileSpring(),
-        label = "nav_icon_scale"
+        label = "nav_press_scale"
     )
     Box(
         modifier = modifier
+            .weight(weight)
             .fillMaxHeight()
             .minimumInteractiveComponentSize()
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .clip(CircleShape)
+            .background(pillBg)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -480,19 +434,38 @@ private fun HollowBottomNavItem(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.graphicsLayer {
-                scaleX = iconScale
-                scaleY = iconScale
-            }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             icon(iconTint)
+            if (selected || labelAlpha > 0.01f) {
+                Text(
+                    text = label,
+                    color = NavActiveContent,
+                    fontFamily = HollowSansFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .alpha(labelAlpha)
+                )
+            }
         }
     }
 }
 
 /**
- * Interactive Nothing OS slide-to-connect / slide-to-disconnect pill.
+ * Slide-to-connect / slide-to-disconnect pill.
+ *
+ * Connect:    white thumb on the left, centered label, chevrons ">>>" on the right (drag right).
+ * Disconnect: white thumb on the right, centered red label, chevrons "<<<" on the left (drag left).
+ *
+ * [arrowColor] tints the grip dots on the thumb, [labelColor] the label, and the chevrons
+ * use [chevronColor]. [reverse] flips the layout and drag direction.
  */
 @Composable
 fun HollowSlideActionPill(
@@ -503,13 +476,18 @@ fun HollowSlideActionPill(
     labelColor: Color,
     onSlideComplete: () -> Unit,
     modifier: Modifier = Modifier,
-    borderColor: Color = HollowCreamDivider
+    borderColor: Color = HollowCreamDivider,
+    reverse: Boolean = false,
+    chevronColor: Color = Color.White,
+    contentLabel: String = label
 ) {
     val density = LocalDensity.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    val thumbSize = HollowSizes.Field - 12.dp
     val trackPadding = 6.dp
+    val thumbHeight = HollowSizes.Field - trackPadding * 2
+    val thumbWidth = thumbHeight * 1.32f
+    val dir = if (reverse) -1f else 1f
 
     val nudgeMotion = rememberInfiniteTransition(label = "slide_nudge")
     val nudgeOffsetDp by nudgeMotion.animateFloat(
@@ -521,73 +499,112 @@ fun HollowSlideActionPill(
         ),
         label = "slide_nudge_x"
     )
+    // Chevron "wave": brightness sweeps in the direction of travel.
+    val wave by nudgeMotion.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "slide_chevron_wave"
+    )
 
-    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val interactionSource = remember { MutableInteractionSource() }
+    val shape = RoundedCornerShape(HollowRadius.Pill)
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .height(HollowSizes.Field)
-            .clip(RoundedCornerShape(HollowRadius.Pill))
+            .clip(shape)
             .background(trackColor)
-            .border(HollowStroke.Hairline, borderColor, RoundedCornerShape(HollowRadius.Pill))
+            .border(HollowStroke.Hairline, borderColor, shape)
             .clickable(
                 interactionSource = interactionSource,
-                indication = androidx.compose.material3.ripple(),
+                indication = ripple(),
                 role = Role.Button,
                 onClick = onSlideComplete
             )
-            .semantics { contentDescription = label }
+            .semantics { contentDescription = contentLabel }
     ) {
         val maxOffsetPx = with(density) {
-            (maxWidth - thumbSize - trackPadding * 2).toPx().coerceAtLeast(1f)
+            (maxWidth - thumbWidth - trackPadding * 2).toPx().coerceAtLeast(1f)
         }
-        val offsetX = remember(label) { Animatable(0f) }
+        val offsetX = remember(label, reverse) { Animatable(0f) }
         val progress = (offsetX.value / maxOffsetPx).coerceIn(0f, 1f)
         val nudgePx = with(density) { nudgeOffsetDp.dp.toPx() }
         val nudgeFactor = (1f - progress * 10f).coerceIn(0f, 1f)
+        val startAlign = if (reverse) Alignment.CenterEnd else Alignment.CenterStart
+        val endAlign = if (reverse) Alignment.CenterStart else Alignment.CenterEnd
 
-        // Progressive Nothing OS track fill glow while dragging
-        if (progress > 0.01f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(with(density) { (offsetX.value + thumbSize.toPx() + trackPadding.toPx() * 2).toDp() })
-                    .clip(RoundedCornerShape(HollowRadius.Pill))
-                    .background(thumbColor.copy(alpha = 0.14f + progress * 0.22f))
-            )
+        // Chevrons sit at the far end of the track (the side the thumb travels toward).
+        Canvas(
+            modifier = Modifier
+                .align(endAlign)
+                .padding(horizontal = 22.dp)
+                .size(width = 26.dp, height = 16.dp)
+                .alpha((1f - progress * 2f).coerceIn(0f, 1f))
+        ) {
+            val chevW = size.width / 3.4f
+            val gap = (size.width - chevW) / 2f
+            val stroke = 2.dp.toPx()
+            for (i in 0..2) {
+                // i = 0 is the chevron closest to the thumb → dimmest, i = 2 brightest.
+                val base = 0.25f + 0.375f * i
+                val phase = ((wave * 3f) - i).let { d -> 1f - kotlin.math.abs(d - 1f).coerceAtMost(1f) }
+                val a = (base + phase * 0.25f).coerceIn(0f, 1f)
+                val left = i * gap
+                val path = Path().apply {
+                    if (!reverse) {
+                        moveTo(left, 0f)
+                        lineTo(left + chevW, size.height / 2f)
+                        lineTo(left, size.height)
+                    } else {
+                        // mirrored: bright chevron is the one furthest from the thumb (leftmost)
+                        val x = size.width - left
+                        moveTo(x, 0f)
+                        lineTo(x - chevW, size.height / 2f)
+                        lineTo(x, size.height)
+                    }
+                }
+                drawPath(
+                    path = path,
+                    color = chevronColor.copy(alpha = a),
+                    style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+            }
         }
 
         Text(
-            text = label.uppercase(),
-            fontFamily = DotoDisplayFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
+            text = label,
+            fontFamily = HollowSansFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 20.sp,
+            lineHeight = 24.sp,
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(start = 58.dp, end = 38.dp)
+                .padding(horizontal = 72.dp)
                 .alpha((1f - progress * 1.45f).coerceIn(0f, 1f))
         )
 
-        val thumbScale = 1f + progress * 0.06f
+        val thumbScale = 1f + progress * 0.04f
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
+                .align(startAlign)
                 .padding(horizontal = trackPadding)
-                .offset { IntOffset((offsetX.value + nudgePx * nudgeFactor).roundToInt(), 0) }
-                .size(thumbSize)
+                .offset { IntOffset((dir * (offsetX.value + nudgePx * nudgeFactor)).roundToInt(), 0) }
+                .size(width = thumbWidth, height = thumbHeight)
                 .graphicsLayer {
                     scaleX = thumbScale
                     scaleY = thumbScale
                 }
-                .clip(CircleShape)
+                .clip(shape)
                 .background(thumbColor)
-                .pointerInput(maxOffsetPx, label) {
+                .pointerInput(maxOffsetPx, label, reverse) {
                     detectHorizontalDragGestures(
                         onDragEnd = {
                             scope.launch {
@@ -608,14 +625,12 @@ fun HollowSlideActionPill(
                             }
                         },
                         onDragCancel = {
-                            scope.launch {
-                                offsetX.animateTo(0f, spring())
-                            }
+                            scope.launch { offsetX.animateTo(0f, spring()) }
                         },
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
                             scope.launch {
-                                val next = (offsetX.value + dragAmount).coerceIn(0f, maxOffsetPx)
+                                val next = (offsetX.value + dragAmount * dir).coerceIn(0f, maxOffsetPx)
                                 offsetX.snapTo(next)
                             }
                         }
@@ -623,12 +638,20 @@ fun HollowSlideActionPill(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                contentDescription = null,
-                tint = arrowColor,
-                modifier = Modifier.size(HollowSizes.Icon)
-            )
+            // 2 × 3 grip dots
+            Canvas(modifier = Modifier.size(width = 18.dp, height = 10.dp)) {
+                val r = 1.3.dp.toPx()
+                for (row in 0..1) for (col in 0..2) {
+                    drawCircle(
+                        color = arrowColor,
+                        radius = r,
+                        center = Offset(
+                            x = col * (size.width / 2f),
+                            y = row * size.height
+                        )
+                    )
+                }
+            }
         }
     }
 }

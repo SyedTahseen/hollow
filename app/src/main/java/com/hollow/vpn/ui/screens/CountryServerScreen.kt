@@ -394,25 +394,6 @@ fun CountryServerListScreen(
                                         }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.CheckCircle,
-                                        label = "Select several",
-                                        color = HollowInk,
-                                        onClick = {
-                                            overflowMenuExpanded = false
-                                            isSelectionMode = true
-                                            selectedIds = emptySet()
-                                        }
-                                    )
-                                    ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.FileUpload,
-                                        label = "Export all",
-                                        color = HollowInk,
-                                        onClick = {
-                                            overflowMenuExpanded = false
-                                            onExportAllServers()
-                                        }
-                                    )
-                                    ServerOverflowMenuItem(
                                         icon = Icons.Outlined.DeleteOutline,
                                         label = "Delete",
                                         color = HollowOrange,

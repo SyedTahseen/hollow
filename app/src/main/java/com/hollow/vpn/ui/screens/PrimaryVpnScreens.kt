@@ -146,6 +146,7 @@ import com.hollow.vpn.ui.theme.NothingCanvas
 import com.hollow.vpn.ui.theme.NothingMatrixGreen
 import com.hollow.vpn.ui.theme.NothingMotion
 import com.hollow.vpn.ui.theme.NothingOnCanvas
+import com.hollow.vpn.ui.theme.NothingRed
 import com.hollow.vpn.ui.theme.NothingSurfaceElevated
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
@@ -571,12 +572,14 @@ private fun HomeContent(
 
             when (phase) {
                 2 -> HollowSlideActionPill(
-                    label = "Slide to disconnect",
-                    trackColor = HollowForestCard,
-                    thumbColor = pc.accent,
-                    arrowColor = pc.onAccent,
-                    labelColor = HollowDarkInk,
-                    borderColor = HollowForestDivider,
+                    label = "Disconnect",
+                    contentLabel = "Slide to disconnect",
+                    trackColor = SlidePillTrack,
+                    thumbColor = Color.White,
+                    arrowColor = SlidePillGrip,
+                    labelColor = NothingRed,
+                    borderColor = SlidePillBorder,
+                    reverse = true,
                     onSlideComplete = onToggleConnect,
                     modifier = Modifier.testTag("bottom_disconnect_connect_button")
                 )
@@ -600,11 +603,13 @@ private fun HomeContent(
                     }
                 }
                 else -> HollowSlideActionPill(
-                    label = "Slide to connect",
-                    trackColor = NothingSurfaceElevated,
-                    thumbColor = pc.accent,
-                    arrowColor = pc.onAccent,
-                    labelColor = HollowInk,
+                    label = "Connect",
+                    contentLabel = "Slide to connect",
+                    trackColor = SlidePillTrack,
+                    thumbColor = Color.White,
+                    arrowColor = SlidePillGrip,
+                    labelColor = Color.White,
+                    borderColor = SlidePillBorder,
                     onSlideComplete = onToggleConnect,
                     modifier = Modifier.testTag("bottom_disconnect_connect_button")
                 )
@@ -615,6 +620,10 @@ private fun HomeContent(
     }
     }
 }
+
+private val SlidePillTrack = Color(0xFF111113)
+private val SlidePillBorder = Color(0xFF1F1F23)
+private val SlidePillGrip = Color(0xFFB5B5B8)
 
 private fun formatConnectedFor(seconds: Long): String {
     val s = seconds.coerceAtLeast(0L)
