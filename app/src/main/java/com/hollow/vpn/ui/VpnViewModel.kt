@@ -391,6 +391,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private fun startSubscriptionAutoUpdateLoop() {
         autoUpdateJob?.cancel()
         autoUpdateJob = viewModelScope.launch {
+            var lastAttemptAt = 0L
             while (true) {
                 delay(60_000L)
                 val current = _settings.value
@@ -404,9 +405,13 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 val lastFetched = latestSub?.lastFetchedAt ?: 0L
                 val fallbackUrls = listOfNotNull(current.activeSubscriptionUrl.trim().takeIf { it.isNotBlank() })
 
-                if (lastFetched > 0L && System.currentTimeMillis() - lastFetched >= intervalMs &&
+                val nowMs = System.currentTimeMillis()
+                val retryGapMs = intervalMs.coerceIn(5 * 60_000L, 30 * 60_000L)
+                if (lastFetched > 0L && nowMs - lastFetched >= intervalMs &&
+                    nowMs - lastAttemptAt >= retryGapMs &&
                     (enabledSubs.isNotEmpty() || fallbackUrls.isNotEmpty())
                 ) {
+                    lastAttemptAt = nowMs
                     val result = fetcher.fetchMultipleSubscriptionsAndRankTop15(
                         subscriptions = enabledSubs,
                         fallbackUrls = fallbackUrls,
@@ -1210,7 +1215,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         var latestSettings = _settings.value
         _settings.update { current ->
             val updated = transform(current)
-            subAutoUpdateChanged = updated.subAutoUpdate != current.subAutoUpdate
+            subAutoUpdateChanged = updated.subAutoUpdate != current.subAutoUpdate ||
+                updated.updateIntervalLabel != current.updateIntervalLabel
             perAppChanged = updated.perAppProxyEnabled != current.perAppProxyEnabled ||
                 updated.bypassSelectedApps != current.bypassSelectedApps ||
                 updated.splitExcludeApps != current.splitExcludeApps ||
@@ -1218,7 +1224,14 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             routingChanged = updated.netShieldEnabled != current.netShieldEnabled ||
                 updated.blockAdultContent != current.blockAdultContent ||
                 updated.splitExcludeIps != current.splitExcludeIps ||
-                updated.splitIncludeIps != current.splitIncludeIps
+                updated.splitIncludeIps != current.splitIncludeIps ||
+                updated.routingMode != current.routingMode ||
+                updated.ipv6Enabled != current.ipv6Enabled ||
+                updated.blockQuic != current.blockQuic ||
+                updated.mtu != current.mtu ||
+                updated.customDnsEnabled != current.customDnsEnabled ||
+                updated.customDnsList != current.customDnsList ||
+                updated.rootMode != current.rootMode
             latestSettings = updated
             prefsStore.saveSettings(updated)
             updated

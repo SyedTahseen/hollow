@@ -9,6 +9,7 @@ import android.content.Context
 import com.hollow.vpn.data.AppSettingsState
 import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
+import com.hollow.vpn.data.withMeta
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -106,7 +107,12 @@ class HollowBackgroundJobService : JobService() {
             val dao = VpnDatabase.getInstance(context).vpnDao()
             val existing = dao.getAllServersOnce()
             val now = System.currentTimeMillis()
-            if (existing.isNotEmpty()) {
+            val lastFetched = dao.getSubscriptionsOnce()
+                .filter { it.isEnabled && it.url.isNotBlank() }
+                .maxOfOrNull { it.lastFetchedAt } ?: 0L
+            val intervalMs = HollowJobScheduler.intervalMillis(settings.updateIntervalLabel)
+            val stale = lastFetched > 0L && now - lastFetched >= (intervalMs * 0.9).toLong()
+            if (existing.isNotEmpty() && !stale) {
                 val aliveRecently = existing.count {
                     it.pingMs > 0 && it.lastAliveAt > 0L && now - it.lastAliveAt <= ALIVE_TTL_MILLIS
                 }
@@ -128,7 +134,12 @@ class HollowBackgroundJobService : JobService() {
                 fallbackUrls = urls,
                 context = context,
                 settings = settings,
-                onSubscriptionStats = { sub, ok, count ->
+                onSubscriptionMeta = { url, meta ->
+                    val row = dao.getSubscriptionByUrl(url.trim()) ?: dao.getSubscriptionByUrl(url)
+                    if (row != null) dao.updateSubscription(row.withMeta(meta))
+                },
+                onSubscriptionStats = { staleSub, ok, count ->
+                    val sub = dao.getSubscriptionByUrl(staleSub.url) ?: staleSub
                     val updated = if (ok) {
                         sub.copy(
                             successPulls = sub.successPulls + 1,
@@ -159,8 +170,14 @@ object HollowJobScheduler {
     const val JOB_ID_CATCHUP = 4103
 
     private const val PULSE_INTERVAL_MS = 3L * 60 * 60 * 1000
-    private const val REFRESH_INTERVAL_MS = 6L * 60 * 60 * 1000
+    private const val MIN_REFRESH_INTERVAL_MS = 15L * 60 * 1000
     private const val CATCHUP_DELAY_MS = 3L * 60 * 1000
+
+    fun intervalMillis(label: String): Long {
+        val lower = label.lowercase()
+        val num = Regex("\\d+").find(lower)?.value?.toLongOrNull() ?: 1L
+        return if (lower.contains("min")) num * 60_000L else num * 3_600_000L
+    }
 
     fun schedulePeriodicMaintenance(context: Context, settings: AppSettingsState) {
         val scheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as? JobScheduler ?: return
@@ -176,7 +193,7 @@ object HollowJobScheduler {
         if (settings.subAutoUpdate) {
             val refreshJob = JobInfo.Builder(JOB_ID_REFRESH, component)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPeriodic(REFRESH_INTERVAL_MS)
+                .setPeriodic(intervalMillis(settings.updateIntervalLabel).coerceAtLeast(MIN_REFRESH_INTERVAL_MS))
                 .setPersisted(true)
                 .build()
             scheduler.schedule(refreshJob)
