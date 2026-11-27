@@ -34,7 +34,7 @@ class HollowWidget : AppWidgetProvider() {
     companion object {
         const val ACTION_TOGGLE = "com.hollow.vpn.widget.TOGGLE"
 
-        private val GREEN = 0xFF2EE59D.toInt()
+        private val GREEN = 0xFF7BE38A.toInt()
         private val WHITE = Color.WHITE
 
         fun widgetCount(context: Context): Int = runCatching {

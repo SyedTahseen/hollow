@@ -1,5 +1,9 @@
 package com.hollow.vpn
 
+import com.hollow.vpn.ui.theme.HollowDisplayInk
+import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.theme.NothingInvertedSurface
+import com.hollow.vpn.ui.theme.NothingSurface
 import com.hollow.vpn.ui.theme.HollowSizes
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.LinearProgressIndicator
@@ -304,30 +308,12 @@ fun HollowVpnApp(
         VpnScreen.SPLASH_FETCHING -> HollowBottomTab.CONNECT
     }
 
-    val navBackgroundColor = when {
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnecting -> HollowObsidian
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnected -> HollowForest
-        else -> HollowCream
-    }
-    val navBorderColor = when {
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnecting -> HollowObsidianDivider
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnected -> HollowForestDivider
-        else -> HollowCreamDivider
-    }
-    val navIndicatorColor = when {
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnecting -> HollowAmber
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnected -> HollowLime
-        else -> HollowOrange
-    }
-    val navActiveTextColor = when {
-        currentScreen == VpnScreen.CONNECTED_HOME && (telemetry.isConnecting || telemetry.isConnected) -> HollowDarkInk
-        else -> HollowInk
-    }
-    val navInactiveTextColor = when {
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnecting -> HollowObsidianMuted
-        currentScreen == VpnScreen.CONNECTED_HOME && telemetry.isConnected -> HollowForestMuted
-        else -> HollowInkSecondary
-    }
+    // One token set for every phase: canvas / hairline / display-inversion. No per-phase hues.
+    val navBackgroundColor = HollowCream
+    val navBorderColor = HollowCreamDivider
+    val navIndicatorColor = NothingInvertedSurface
+    val navActiveTextColor = NothingOnInvertedSurface
+    val navInactiveTextColor = HollowInkSecondary
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val useNavigationRail = showBottomNav && maxWidth >= 600.dp
@@ -341,10 +327,10 @@ fun HollowVpnApp(
                     Spacer(Modifier.weight(1f))
                     val railColors = NavigationRailItemDefaults.colors(
                         selectedIconColor = navActiveTextColor,
-                        selectedTextColor = navActiveTextColor,
+                        selectedTextColor = HollowInk,
                         unselectedIconColor = navInactiveTextColor,
                         unselectedTextColor = navInactiveTextColor,
-                        indicatorColor = navIndicatorColor.copy(alpha = 0.22f)
+                        indicatorColor = navIndicatorColor
                     )
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.CONNECT,
@@ -380,9 +366,9 @@ fun HollowVpnApp(
                         Snackbar(
                             snackbarData = data,
                             shape = RoundedCornerShape(HollowRadius.Md),
-                            containerColor = NothingSurfaceElevated,
+                            containerColor = NothingSurface,
                             contentColor = HollowInk,
-                            actionColor = HollowOrange
+                            actionColor = HollowDisplayInk
                         )
                     }
                 },

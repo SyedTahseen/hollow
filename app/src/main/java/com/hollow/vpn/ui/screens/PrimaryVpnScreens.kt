@@ -1,11 +1,21 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowText
 import com.hollow.vpn.ui.theme.HollowUploadAccent
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.hollowPhaseColors
+import com.hollow.vpn.ui.theme.HollowDisplayInk
+import com.hollow.vpn.ui.theme.HollowSuccess
+import com.hollow.vpn.ui.theme.HollowWarning
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.NothingInvertedSurface
+import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.theme.NothingSurface
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowStroke
@@ -198,11 +208,7 @@ fun ConnectedHomeScreen(
     }
 
     val backgroundColor by animateColorAsState(
-        targetValue = when (homePhase) {
-            1 -> HollowObsidian
-            2 -> HollowForest
-            else -> HollowCream
-        },
+        targetValue = HollowCream,
         animationSpec = tween(durationMillis = HollowMotion.Standard),
         label = "home_bg_color"
     )
@@ -225,24 +231,14 @@ fun ConnectedHomeScreen(
     val mapTarget = if (homePhase == 0) realPoint ?: serverPoint else serverPoint ?: realPoint
     val mapCountry = if (homePhase == 0) telemetry.realPublicCountryCode.takeIf { it.length == 2 && !it.equals("XX", true) }
         else selectedServer?.countryCode?.takeIf { it.length == 2 }
-    val palette = when (homePhase) {
-        2 -> MapColors(
-            background = HollowForest, sphere = HollowForest,
-            land = Color.White.copy(alpha = 0.07f), landActive = HollowLime.copy(alpha = 0.22f),
-            landLine = Color.White.copy(alpha = 0.14f)
-        )
-        1 -> MapColors(
-            background = HollowObsidian, sphere = HollowObsidian,
-            land = Color.White.copy(alpha = 0.07f), landActive = Color.White.copy(alpha = 0.20f),
-            landLine = Color.White.copy(alpha = 0.14f)
-        )
-        else -> MapColors(
-            background = HollowCream, sphere = HollowCream,
-            land = HollowInk.copy(alpha = 0.07f), landActive = HollowOrange.copy(alpha = 0.22f),
-            landLine = HollowInk.copy(alpha = 0.16f)
-        )
-    }
-    val pinTone = when (homePhase) { 2 -> HollowLime; 1 -> Color.White; else -> HollowOrange }
+    val displayInk = HollowDisplayInk
+    val palette = MapColors(
+        background = HollowCream, sphere = HollowCream,
+        land = displayInk.copy(alpha = 0.07f), landActive = displayInk.copy(alpha = 0.18f),
+        landLine = displayInk.copy(alpha = 0.14f)
+    )
+    // Pin = state dot: success when protected, warning while connecting, display when idle.
+    val pinTone = when (homePhase) { 2 -> HollowSuccess; 1 -> HollowWarning; else -> displayInk }
 
     Box(
         modifier = Modifier
@@ -261,11 +257,7 @@ fun ConnectedHomeScreen(
             )
         } else {
             NothingDotMatrixBackdrop(
-                dotColor = when (homePhase) {
-                    2 -> HollowLime.copy(alpha = 0.032f)
-                    1 -> Color.White.copy(alpha = 0.026f)
-                    else -> NothingBackdropDot
-                }
+                dotColor = NothingBackdropDot
             )
         }
         AddServerOverlays(state = addServerState, actions = addServerActions, handleRequests = false)
@@ -279,13 +271,8 @@ fun ConnectedHomeScreen(
                 targetState = homePhase,
                 transitionSpec = {
                     val ease = NothingMotion.FluidEase
-                    (fadeIn(tween(HollowMotion.Standard, easing = ease)) +
-                        scaleIn(tween(HollowMotion.Emphasized, easing = ease), initialScale = 0.96f) +
-                        slideInVertically(tween(HollowMotion.Emphasized, easing = ease)) { it / 22 })
-                        .togetherWith(
-                            fadeOut(tween(HollowMotion.Fast, easing = ease)) +
-                                scaleOut(tween(HollowMotion.Standard, easing = ease), targetScale = 0.97f)
-                        )
+                    fadeIn(tween(HollowMotion.Emphasized, easing = ease))
+                        .togetherWith(fadeOut(tween(HollowMotion.Fast, easing = ease)))
                 },
                 label = "home_phase_motion"
             ) { phase ->
@@ -343,7 +330,7 @@ private fun HomeContent(
     val protectedPhase = phase == 2
     val titleText = when (phase) { 2 -> "YOU ARE PROTECTED."; 1 -> "CONNECTING."; else -> "YOU ARE UNPROTECTED." }
     val pc = hollowPhaseColors(phase)
-    val titleColor = pc.accent
+    val titleColor = if (phase == 2) HollowSuccess else HollowDisplayInk
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     BoxWithConstraints(
@@ -357,33 +344,21 @@ private fun HomeContent(
         val cardGap = if (isCompact) 8.dp else 12.dp
 
         Column(modifier = Modifier.fillMaxSize()) {
-            when (phase) {
-                2 -> HomeTopBar(
-                    dotColor = HollowLime, textColor = HollowDarkInk,
-                    buttonContainer = HollowForestCard, buttonContent = HollowDarkInk, buttonBorder = HollowForestDivider,
-                    addServerState = addServerState, addServerActions = addServerActions, onOpenSettings = onOpenSettings
-                )
-                1 -> HomeTopBar(
-                    dotColor = HollowAmber, textColor = HollowDarkInk,
-                    buttonContainer = HollowObsidianSurface, buttonContent = HollowDarkInk, buttonBorder = HollowObsidianDivider,
-                    addServerState = addServerState, addServerActions = addServerActions, onOpenSettings = onOpenSettings
-                )
-                else -> HomeTopBar(
-                    dotColor = HollowOrange, textColor = HollowInk,
-                    buttonContainer = NothingTopBtnFill, buttonContent = NothingOnCanvas, buttonBorder = NothingTopBtnBorder,
-                    addServerState = addServerState, addServerActions = addServerActions, onOpenSettings = onOpenSettings
-                )
-            }
+            HomeTopBar(
+                dotColor = pc.accent, textColor = HollowDisplayInk,
+                buttonContainer = NothingTopBtnFill, buttonContent = NothingOnCanvas, buttonBorder = NothingTopBtnBorder,
+                addServerState = addServerState, addServerActions = addServerActions, onOpenSettings = onOpenSettings
+            )
 
             Spacer(modifier = Modifier.height(if (isCompact) HollowSpace.Lg else HollowSpace.Xxl))
 
             Text(
                 text = titleText,
                 fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = if (isCompact) HollowType.Title else HollowType.Display,
-                lineHeight = if (isCompact) HollowLineHeight.Title else HollowLineHeight.Display,
-                letterSpacing = if (isCompact) HollowTracking.Title else HollowTracking.Display,
+                fontWeight = FontWeight.Medium,
+                fontSize = if (isCompact) HollowType.Title else HollowType.Heading,
+                lineHeight = if (isCompact) HollowLineHeight.Title else HollowLineHeight.Heading,
+                letterSpacing = HollowTracking.Heading,
                 color = titleColor,
                 modifier = Modifier.testTag("connection_status_text")
             )
@@ -506,7 +481,7 @@ private fun HomeContent(
                         val pingColor = when {
                             selectedServer.pingMs in 1..150 -> NothingMatrixGreen
                             selectedServer.pingMs in 151..450 -> HollowInk
-                            selectedServer.pingMs > 450 -> HollowOrange
+                            selectedServer.pingMs > 450 -> HollowError
                             else -> HollowInkSecondary
                         }
                         Spacer(modifier = Modifier.width(HollowSpace.Sm))
@@ -529,7 +504,7 @@ private fun HomeContent(
                     TrayHandle(
                         color = pc.muted,
                         expanded = detailsExpanded,
-                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 5.dp)
+                        modifier = Modifier.align(Alignment.TopCenter).padding(top = HollowSpace.Xs)
                     )
                 }
                 }
@@ -556,11 +531,12 @@ private fun HomeContent(
                 2 -> HollowSlideActionPill(
                     label = "Disconnect",
                     contentLabel = "Slide to disconnect",
-                    trackColor = SlidePillTrack,
-                    thumbColor = Color.White,
-                    arrowColor = SlidePillGrip,
-                    labelColor = NothingRed,
-                    borderColor = SlidePillBorder,
+                    trackColor = com.hollow.vpn.ui.theme.HollowBar.Fill,
+                    thumbColor = NothingInvertedSurface,
+                    arrowColor = NothingOnInvertedSurface,
+                    labelColor = HollowInk,
+                    chevronColor = HollowInkSecondary,
+                    borderColor = com.hollow.vpn.ui.theme.HollowBar.Border,
                     reverse = true,
                     onSlideComplete = onToggleConnect,
                     modifier = Modifier.testTag("bottom_disconnect_connect_button")
@@ -574,12 +550,12 @@ private fun HomeContent(
                         .testTag("bottom_disconnect_connect_button"),
                     shape = RoundedCornerShape(HollowRadius.Md),
                     color = pc.surface,
-                    border = BorderStroke(HollowStroke.Hairline, pc.border)
+                    border = BorderStroke(HollowStroke.Hairline, HollowLine2)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
-                            text = "Cancel",
-                            style = HollowText.BodyMedium,
+                            text = "CANCEL",
+                            style = HollowText.Button,
                             color = pc.ink
                         )
                     }
@@ -587,11 +563,12 @@ private fun HomeContent(
                 else -> HollowSlideActionPill(
                     label = "Connect",
                     contentLabel = "Slide to connect",
-                    trackColor = SlidePillTrack,
-                    thumbColor = Color.White,
-                    arrowColor = SlidePillGrip,
-                    labelColor = Color.White,
-                    borderColor = SlidePillBorder,
+                    trackColor = com.hollow.vpn.ui.theme.HollowBar.Fill,
+                    thumbColor = NothingInvertedSurface,
+                    arrowColor = NothingOnInvertedSurface,
+                    labelColor = HollowInk,
+                    chevronColor = HollowInkSecondary,
+                    borderColor = com.hollow.vpn.ui.theme.HollowBar.Border,
                     onSlideComplete = onToggleConnect,
                     modifier = Modifier.testTag("bottom_disconnect_connect_button")
                 )
@@ -603,17 +580,10 @@ private fun HomeContent(
     }
 }
 
-private val SlidePillTrack = com.hollow.vpn.ui.theme.HollowBar.Fill
-private val SlidePillBorder = com.hollow.vpn.ui.theme.HollowBar.Border
-private val SlidePillGrip = Color(0xFFB5B5B8)
 
 private fun formatConnectedFor(seconds: Long): String {
     val s = seconds.coerceAtLeast(0L)
-    return when {
-        s < 60L -> "$s sec"
-        s < 3600L -> "${s / 60} min ${s % 60} sec"
-        else -> "${s / 3600} hr ${(s % 3600) / 60} min"
-    }
+    return String.format(Locale.US, "%02d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
 }
 
 private fun formatSpeed2(bytesPerSec: Long): String {
@@ -630,7 +600,7 @@ private fun formatSpeed2(bytesPerSec: Long): String {
 private fun TrayHandle(color: Color, expanded: Boolean, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .width(36.dp)
+            .width(40.dp)
             .height(4.dp)
             .clip(CircleShape)
             .background(color.copy(alpha = 0.55f))
@@ -646,9 +616,8 @@ private fun ConnectionStatsCard(
     modifier: Modifier = Modifier,
     expandedContent: @Composable () -> Unit = {}
 ) {
-    val pc = hollowPhaseColors(2)
-    val downColor = pc.accent
-    val upColor = Color.White
+    val downColor = HollowSuccess
+    val upColor = HollowInk
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -673,11 +642,8 @@ private fun ConnectionStatsCard(
             ) {
                 Text(
                     text = formatConnectedFor(telemetry.elapsedSeconds),
-                    fontFamily = HollowSansFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = HollowType.Small,
-                    lineHeight = HollowLineHeight.Small,
-                    color = HollowDarkInk,
+                    style = HollowText.NumeralSm,
+                    color = HollowDisplayInk,
                     maxLines = 1,
                     modifier = Modifier
                         .weight(1f)
@@ -688,30 +654,30 @@ private fun ConnectionStatsCard(
                     horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
-                        Text("↓", fontFamily = HollowSansFamily, fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small, color = downColor)
+                        Text("↓", fontFamily = HollowMonoFamily, fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small, color = downColor)
                         Text(
                             formatSpeed2(telemetry.downloadBytesPerSec),
-                            fontFamily = HollowSansFamily, fontWeight = FontWeight.Medium,
+                            fontFamily = HollowMonoFamily, fontWeight = FontWeight.Normal,
                             fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small,
-                            color = HollowDarkInk, maxLines = 1
+                            color = HollowInk, maxLines = 1
                         )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
-                        Text("↑", fontFamily = HollowSansFamily, fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small, color = upColor)
+                        Text("↑", fontFamily = HollowMonoFamily, fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small, color = upColor)
                         Text(
                             formatSpeed2(telemetry.uploadBytesPerSec),
-                            fontFamily = HollowSansFamily, fontWeight = FontWeight.Medium,
+                            fontFamily = HollowMonoFamily, fontWeight = FontWeight.Normal,
                             fontSize = HollowType.Small, lineHeight = HollowLineHeight.Small,
-                            color = HollowDarkInk, maxLines = 1
+                            color = HollowInk, maxLines = 1
                         )
                     }
                 }
             }
         }
         TrayHandle(
-            color = Color(0xFF8E8E92),
+            color = HollowInkMuted,
             expanded = expanded,
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 5.dp)
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = HollowSpace.Xs)
         )
         }
         AnimatedVisibility(visible = expanded, enter = fadeIn(tween(HollowMotion.Fast)) + expandVertically(tween(HollowMotion.Standard)), exit = fadeOut(tween(HollowMotion.Quick)) + shrinkVertically(tween(HollowMotion.Fast))) {
@@ -747,11 +713,11 @@ private fun HomeInfoChip(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val style = androidx.compose.ui.text.TextStyle(
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontWeight = FontWeight.Normal,
-                fontSize = HollowType.Body,
-                lineHeight = HollowLineHeight.Body,
-                letterSpacing = HollowTracking.Body
+                fontSize = HollowType.Small,
+                lineHeight = HollowLineHeight.Small,
+                letterSpacing = HollowTracking.Small
             )
             if (scramble) {
                 ScrambleText(label, highlight, style, normal = placeColor, weak = ipColor)
@@ -851,20 +817,20 @@ private fun ServerDetailsPanel(
         HorizontalDivider(color = dividerColor)
         Spacer(modifier = Modifier.height(HollowSpace.Sm))
         rows.forEach { (label, value) ->
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = HollowSpace.Xs), verticalAlignment = Alignment.Top) {
                 Text(
-                    text = label,
-                    fontFamily = HollowSansFamily,
+                    text = label.uppercase(),
+                    fontFamily = HollowMonoFamily,
                     fontSize = HollowType.Caption,
                     lineHeight = HollowLineHeight.Caption,
-                    letterSpacing = HollowTracking.Caption,
+                    letterSpacing = HollowTracking.Micro,
                     color = mutedColor,
-                    modifier = Modifier.width(92.dp)
+                    modifier = Modifier.width(96.dp)
                 )
                 Text(
                     text = value,
-                    fontFamily = HollowSansFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontFamily = HollowMonoFamily,
+                    fontWeight = FontWeight.Normal,
                     fontSize = HollowType.Caption,
                     lineHeight = HollowLineHeight.Caption,
                     letterSpacing = HollowTracking.Caption,
@@ -876,19 +842,19 @@ private fun ServerDetailsPanel(
         if (loading) {
             Spacer(modifier = Modifier.height(HollowSpace.Xs))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(modifier = Modifier.size(HollowSizes.IconSm), strokeWidth = 1.5.dp, color = accentColor)
+                CircularProgressIndicator(modifier = Modifier.size(HollowSizes.IconSm), strokeWidth = 2.dp, color = HollowDisplayInk)
                 Spacer(modifier = Modifier.width(HollowSpace.Sm))
-                Text("Loading server info…", fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = mutedColor)
+                Text("[LOADING…]", fontFamily = HollowMonoFamily, fontSize = HollowType.Caption, letterSpacing = HollowTracking.Micro, color = mutedColor)
             }
         } else if (details == null) {
             Spacer(modifier = Modifier.height(HollowSpace.Xs))
-            Text("Extra network info unavailable right now.", fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = mutedColor)
+            Text("Extra network info unavailable right now.", fontFamily = HollowMonoFamily, fontSize = HollowType.Caption, color = mutedColor)
         }
         Spacer(modifier = Modifier.height(HollowSpace.Xs))
-        TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
-            Text("Manage servers", style = HollowText.SmallMedium, color = accentColor)
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = accentColor, modifier = Modifier.size(HollowSizes.IconSm))
+        TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = HollowSpace.Xs)) {
+            Text("MANAGE SERVERS", style = HollowText.ButtonSmall, color = HollowInk)
+            Spacer(modifier = Modifier.width(HollowSpace.Xs))
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
         }
     }
 }
@@ -953,7 +919,7 @@ fun ServerItemRowContent(
     val pingColor = when {
         server.pingMs in 1..150 -> NothingMatrixGreen
         server.pingMs in 151..450 -> HollowInk
-        else -> HollowOrange
+        else -> HollowError
     }
 
     Row(
@@ -967,9 +933,9 @@ fun ServerItemRowContent(
                 checked = isCheckedForBatch,
                 onCheckedChange = { onToggleBatchCheck() },
                 colors = CheckboxDefaults.colors(
-                    checkedColor = HollowOrange,
-                    uncheckedColor = HollowInkSecondary,
-                    checkmarkColor = Color.White
+                    checkedColor = NothingInvertedSurface,
+                    uncheckedColor = HollowLine2,
+                    checkmarkColor = NothingOnInvertedSurface
                 )
             )
             Spacer(modifier = Modifier.width(HollowSpace.Xs))
@@ -994,7 +960,7 @@ fun ServerItemRowContent(
                 if (server.isSelected) {
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(HollowSizes.Dot)
                             .clip(CircleShape)
                             .background(NothingMatrixGreen)
                             .semantics { contentDescription = "Active server" }
@@ -1002,13 +968,13 @@ fun ServerItemRowContent(
                 } else if (showLightningBadge) {
                     Surface(
                         shape = RoundedCornerShape(HollowRadius.Xs),
-                        color = NothingCanvas,
-                        border = BorderStroke(HollowStroke.Hairline, HollowOrange)
+                        color = Color.Transparent,
+                        border = BorderStroke(HollowStroke.Hairline, HollowLine2)
                     ) {
                         Text(
                             text = "FAST",
                             style = HollowText.Label,
-                            color = HollowOrange,
+                            color = HollowInk,
                             modifier = Modifier.padding(horizontal = HollowSpace.Xs, vertical = HollowSpace.Xxs)
                         )
                     }
@@ -1034,8 +1000,8 @@ fun ServerItemRowContent(
 
         Spacer(modifier = Modifier.width(HollowSpace.Sm))
         Text(
-            text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
-            style = HollowText.SmallMedium.copy(fontFeatureSettings = "tnum"),
+            text = if (server.pingMs > 0) "${server.pingMs} ms" else "TIMEOUT",
+            style = HollowText.Data.copy(fontFeatureSettings = "tnum"),
             color = pingColor,
             maxLines = 1
         )
@@ -1048,7 +1014,7 @@ fun ServerItemRowContent(
                 Icon(
                     imageVector = if (isFavorite) Icons.Rounded.Star else Icons.Outlined.StarBorder,
                     contentDescription = if (isFavorite) "Remove ${server.countryName} from favorites" else "Add ${server.countryName} to favorites",
-                    tint = if (isFavorite) HollowOrange else HollowInkSecondary,
+                    tint = if (isFavorite) HollowDisplayInk else HollowInkSecondary,
                     modifier = Modifier.size(HollowSizes.Icon)
                 )
             }
@@ -1071,10 +1037,10 @@ fun ServerItemRowContent(
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
-                    containerColor = NothingSurfaceElevated
+                    containerColor = NothingSurface
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Copy", color = HollowInk) },
+                        text = { Text("COPY", style = HollowText.ButtonSmall, color = HollowInk) },
                         onClick = {
                             menuExpanded = false
                             val payload = server.shareUri.ifBlank { server.rawConfigJson }
@@ -1086,14 +1052,14 @@ fun ServerItemRowContent(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Edit", color = HollowInk) },
+                        text = { Text("EDIT", style = HollowText.ButtonSmall, color = HollowInk) },
                         onClick = {
                             menuExpanded = false
                             onEdit()
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Delete", color = HollowOrange) },
+                        text = { Text("DELETE", style = HollowText.ButtonSmall, color = HollowError) },
                         onClick = {
                             menuExpanded = false
                             onDelete()

@@ -1,5 +1,13 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.theme.NothingInvertedSurface
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.theme.NothingSurface
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.theme.HollowDisplayInk
+import com.hollow.vpn.ui.components.HollowPrimaryButton
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -119,7 +127,7 @@ internal fun SettingsFullPage(
             }
             Spacer(modifier = Modifier.width(HollowSpace.Lg))
             Text(
-                text = title.uppercase(),
+                text = title,
                 style = HollowText.Subheadline,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -135,7 +143,7 @@ internal fun SettingsFullPage(
 @Composable
 private fun HeaderTextAction(label: String, onClick: () -> Unit) {
     TextButton(onClick = onClick, modifier = Modifier.testTag("btn_save_page")) {
-        Text(label, style = HollowText.ButtonSmall, color = HollowOrange)
+        Text(label.uppercase(), style = HollowText.ButtonSmall, color = HollowDisplayInk)
     }
 }
 
@@ -147,10 +155,10 @@ private fun DiscardDialog(onDiscard: () -> Unit, onKeep: () -> Unit) {
         shape = HollowDialog.Shape,
         title = { Text("Discard unsaved changes?", style = HollowText.Heading, color = HollowInk) },
         confirmButton = {
-            TextButton(onClick = onDiscard) { Text("Discard", style = HollowText.ButtonSmall, color = HollowOrange) }
+            HollowPrimaryButton(onClick = onDiscard) { Text("DISCARD", style = HollowText.ButtonSmall) }
         },
         dismissButton = {
-            TextButton(onClick = onKeep) { Text("Keep editing", style = HollowText.ButtonSmall, color = HollowInk) }
+            TextButton(onClick = onKeep) { Text("KEEP EDITING", style = HollowText.ButtonSmall, color = HollowInk) }
         }
     )
 }
@@ -159,12 +167,12 @@ private fun DiscardDialog(onDiscard: () -> Unit, onKeep: () -> Unit) {
 private fun ListHeader(title: String, note: String? = null) {
     Column(Modifier.fillMaxWidth()) {
         Text(
-            title,
-            style = HollowText.SmallMedium,
-            color = HollowOrange,
+            title.uppercase(),
+            style = HollowText.Section,
+            color = HollowInkSecondary,
             modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = if (note != null) HollowSpace.Xs else HollowSpace.Sm)
         )
-        if (note != null) Text(note, style = HollowText.SmallMedium, color = HollowInkSecondary)
+        if (note != null) Text(note, style = HollowText.Small, color = HollowInkSecondary)
     }
 }
 
@@ -237,8 +245,8 @@ internal fun DebugLogsPage(
                 items(shown.size) { i ->
                     Text(
                         text = shown[i],
-                        style = HollowText.Caption.copy(fontFamily = FontFamily.Monospace),
-                        color = if (shown[i].contains("ERROR:", ignoreCase = true)) HollowOrange else HollowInk
+                        style = HollowText.Caption.copy(fontFamily = HollowMonoFamily),
+                        color = if (shown[i].contains("ERROR:", ignoreCase = true)) HollowError else HollowInk
                     )
                 }
             }
@@ -322,7 +330,7 @@ internal fun SplitAppsPage(
         val regularList = regular
         if (regularList == null) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = HollowOrange)
+                CircularProgressIndicator(color = HollowDisplayInk)
             }
         } else {
             val loadedSystem = (systemApps as? SystemApps.Content)?.apps.orEmpty()
@@ -349,7 +357,7 @@ internal fun SplitAppsPage(
                     SystemApps.NotLoaded -> item(key = "system_apps_loading") { Spacer(Modifier.height(64.dp)) }
                     SystemApps.Loading -> item(key = "system_apps_loading") {
                         Box(Modifier.heightIn(min = 64.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = HollowOrange)
+                            CircularProgressIndicator(color = HollowDisplayInk)
                         }
                     }
                     is SystemApps.Content -> items(state.apps.filter { it.pkg !in sel }, key = { "y_" + it.pkg }) { a ->
@@ -374,15 +382,15 @@ private fun SystemAppsCheckboxRow(checked: Boolean, onToggle: () -> Unit) {
             "Show system apps",
             style = HollowText.Body,
             color = HollowInk,
-            modifier = Modifier.padding(vertical = 14.dp).weight(1f)
+            modifier = Modifier.padding(vertical = HollowSpace.Md).weight(1f)
         )
         Checkbox(
             checked = checked,
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
-                checkedColor = HollowOrange,
+                checkedColor = NothingInvertedSurface,
                 uncheckedColor = HollowInkSecondary,
-                checkmarkColor = androidx.compose.ui.graphics.Color.White
+                checkmarkColor = NothingOnInvertedSurface
             ),
             modifier = Modifier.padding(HollowSpace.Xs).clearAndSetSemantics {}
         )
@@ -407,7 +415,7 @@ private fun PickRow(app: AppInfo, add: Boolean, showIcon: Boolean = true, onActi
             color = HollowInk,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).padding(vertical = 14.dp)
+            modifier = Modifier.weight(1f).padding(vertical = HollowSpace.Md)
         )
         Spacer(Modifier.width(HollowSpace.Xs))
         Icon(
@@ -508,7 +516,7 @@ internal fun SplitIpsPage(
         Text(
             if (error) "Not a valid IPv4 or IPv6 address." else "Enter an IPv4 or IPv6 address, optionally with a prefix like 10.0.0.0/8.",
             style = HollowText.Caption,
-            color = if (error) HollowOrange else HollowInkSecondary
+            color = if (error) HollowError else HollowInkSecondary
         )
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),

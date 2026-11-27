@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 
 object HollowSpace {
-    val Xxs = 2.dp
+    val Xxs = 4.dp
     val Xs = 4.dp
     val Sm = 8.dp
     val Md = 12.dp
@@ -36,13 +36,13 @@ object HollowSizes {
     val Tile = 64.dp
     val FlagWidth = 30.dp
     val FlagHeight = 20.dp
-    val CardRowMin = 42.dp
+    val CardRowMin = 40.dp
     val SettingRowMin = 56.dp
     val Border = 1.dp
     val Spinner = 2.dp
-    val SwitchWidth = 52.dp
-    val SwitchHeight = 32.dp
-    val SwitchThumb = 24.dp
+    val SwitchWidth = 48.dp
+    val SwitchHeight = 28.dp
+    val SwitchThumb = 20.dp
     val MaxContent = 800.dp
     val FocusMaxWidth = 480.dp
 }

@@ -1,5 +1,12 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.theme.NothingInvertedSurface
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.theme.HollowDisplayInk
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.theme.HollowGlass
+import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.HollowText
 import android.content.Context
 import com.hollow.vpn.ui.theme.HollowSansFamily
@@ -138,10 +145,10 @@ internal fun FeatureHero(icon: ImageVector, modifier: Modifier = Modifier) {
                 .size(HollowSizes.Tile)
                 .clip(CircleShape)
                 .background(HollowCreamSurface)
-                .border(HollowStroke.Emphasis, HollowOrange, CircleShape),
+                .border(HollowStroke.Hairline, HollowLine2, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = HollowOrange, modifier = Modifier.size(HollowSizes.IconLg))
+            Icon(imageVector = icon, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconLg))
         }
     }
 }
@@ -154,8 +161,8 @@ private fun FeatureCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(HollowRadius.Md),
-        color = HollowCreamSurface,
+        shape = RoundedCornerShape(HollowRadius.Lg),
+        color = HollowGlass,
         border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         Column(modifier = Modifier.padding(contentPadding)) { content() }
@@ -175,8 +182,8 @@ private fun FeatureToggleCard(
         modifier = modifier
             .fillMaxWidth()
             .alpha(if (enabled) 1f else 0.5f),
-        shape = RoundedCornerShape(HollowRadius.Md),
-        color = HollowCreamSurface,
+        shape = RoundedCornerShape(HollowRadius.Lg),
+        color = HollowGlass,
         border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
     ) {
         Row(
@@ -213,8 +220,8 @@ internal fun FeatureButton(
     testTag: String = ""
 ) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    val container = if (primary) HollowOrange else Color.Transparent
-    val content = if (primary) Color.White else HollowOrange
+    val container = if (primary) NothingInvertedSurface else Color.Transparent
+    val content = if (primary) NothingOnInvertedSurface else HollowInk
     val shape = RoundedCornerShape(HollowRadius.Md)
     Box(
         modifier = modifier
@@ -222,7 +229,7 @@ internal fun FeatureButton(
             .nothingPressScale(interaction, pressedScale = HollowMotion.PressCard)
             .clip(shape)
             .background(container)
-            .border(HollowStroke.Hairline, HollowOrange, shape)
+            .border(HollowStroke.Hairline, if (primary) NothingInvertedSurface else HollowLine2, shape)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .padding(horizontal = HollowSpace.Lg)
             .then(if (testTag.isNotEmpty()) Modifier.testTag(testTag) else Modifier),
@@ -230,7 +237,7 @@ internal fun FeatureButton(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Text(
-                text = label,
+                text = label.uppercase(),
                 style = HollowText.Button,
                 color = content,
                 maxLines = 1
@@ -247,7 +254,7 @@ internal fun FeatureButton(
 internal fun FeatureCaption(text: String, modifier: Modifier = Modifier, color: Color = HollowInkSecondary) {
     Text(
         text = text,
-        fontFamily = HollowSansFamily,
+        fontFamily = HollowMonoFamily,
         fontSize = HollowType.Micro,
         letterSpacing = HollowTracking.Micro,
         lineHeight = HollowLineHeight.Micro,
@@ -320,7 +327,7 @@ internal fun NetShieldPage(
             Text(
                 text = "Your device is using a private DNS provider, which overrides the DNS this VPN sets. " +
                     "Turn Private DNS off, or set it to Automatic, to use NetShield.",
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 letterSpacing = HollowTracking.Micro,
                 lineHeight = HollowLineHeight.Micro,
@@ -511,7 +518,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "When kill switch is on, you won’t be able to connect to:",
-                    fontFamily = HollowSansFamily,
+                    fontFamily = HollowMonoFamily,
                     fontSize = HollowType.Micro,
                     letterSpacing = HollowTracking.Micro,
                     lineHeight = HollowLineHeight.Micro,
@@ -554,7 +561,7 @@ private fun KillSwitchBullet(text: String) {
     Row {
         Text(
             text = "•",
-            fontFamily = HollowSansFamily,
+            fontFamily = HollowMonoFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -563,7 +570,7 @@ private fun KillSwitchBullet(text: String) {
         )
         Text(
             text = text,
-            fontFamily = HollowSansFamily,
+            fontFamily = HollowMonoFamily,
             fontSize = HollowType.Micro,
             letterSpacing = HollowTracking.Micro,
             lineHeight = HollowLineHeight.Micro,
@@ -641,21 +648,20 @@ internal fun UsageHistoryPage() {
     SettingsSectionHeader("Last 14 days")
     FeatureCard {
         val peak = days.maxOf { it.second + it.third }
-        val barColor = HollowOrange
-        val barDim = HollowOrange.copy(alpha = 0.35f)
+        val barColor = HollowDisplayInk
+        val barDim = HollowDisplayInk.copy(alpha = 0.3f)
         Canvas(Modifier.fillMaxWidth().height(110.dp)) {
             val n = days.size
-            val gap = 6.dp.toPx()
+            val gap = 4.dp.toPx()
             val bw = (size.width - gap * (n - 1)) / n
             days.forEachIndexed { i, d ->
                 val total = d.second + d.third
                 val h = if (peak == 0L) 2.dp.toPx()
                 else (total.toFloat() / peak * size.height).coerceAtLeast(2.dp.toPx())
-                drawRoundRect(
+                drawRect(
                     color = if (i == n - 1) barColor else barDim,
                     topLeft = Offset(i * (bw + gap), size.height - h),
-                    size = Size(bw, h),
-                    cornerRadius = CornerRadius(3.dp.toPx())
+                    size = Size(bw, h)
                 )
             }
         }
@@ -663,7 +669,7 @@ internal fun UsageHistoryPage() {
         Row(Modifier.fillMaxWidth()) {
             Text(
                 text = days.first().first.substring(5),
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -672,7 +678,7 @@ internal fun UsageHistoryPage() {
             )
             Text(
                 text = if (peak > 0) "peak ${fmtSize(peak)}" else "no data yet",
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -687,7 +693,7 @@ internal fun UsageHistoryPage() {
             Text(
                 text = "Android only shares per-app data with apps that have Usage access. Turn it on for " +
                     "Hollow to see which apps used data while the VPN was connected.",
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 letterSpacing = HollowTracking.Micro,
                 lineHeight = HollowLineHeight.Micro,
@@ -696,9 +702,9 @@ internal fun UsageHistoryPage() {
             )
             UsageDivider()
             Text(
-                text = "Open Usage access settings",
+                text = "OPEN USAGE ACCESS SETTINGS",
                 style = HollowText.ButtonSmall,
-                color = HollowOrange,
+                color = HollowInk,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(role = Role.Button) {
@@ -714,7 +720,7 @@ internal fun UsageHistoryPage() {
         } else {
             val list = apps
             when {
-                list == null -> UsageNote("Loading…")
+                list == null -> UsageNote("[LOADING…]")
                 list.isEmpty() -> UsageNote("No app data for recent sessions.")
                 else -> list.take(15).forEachIndexed { i, a ->
                     Row(
@@ -732,7 +738,7 @@ internal fun UsageHistoryPage() {
                         )
                         Text(
                             text = fmtSize(a.bytes),
-                            fontFamily = HollowSansFamily,
+                            fontFamily = HollowMonoFamily,
                             fontSize = HollowType.Caption,
                             lineHeight = HollowLineHeight.Caption,
                             letterSpacing = HollowTracking.Caption,
@@ -744,7 +750,7 @@ internal fun UsageHistoryPage() {
             }
             Text(
                 text = "Approximate. Android groups app data in hourly blocks, and this includes apps skipped by the VPN.",
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 letterSpacing = HollowTracking.Micro,
                 lineHeight = HollowLineHeight.Micro,
@@ -765,9 +771,9 @@ internal fun UsageHistoryPage() {
 
     if (sessions.isNotEmpty() || today.first + today.second + week.first + week.second > 0) {
         Text(
-            text = "Clear history",
+            text = "CLEAR HISTORY",
             style = HollowText.ButtonSmall,
-            color = HollowOrange,
+            color = HollowError,
             modifier = Modifier
                 .padding(top = HollowSpace.Md)
                 .clip(RoundedCornerShape(HollowRadius.Sm))
@@ -792,7 +798,7 @@ private fun UsageDivider() {
 private fun UsageNote(text: String) {
     Text(
         text = text,
-        fontFamily = HollowSansFamily,
+        fontFamily = HollowMonoFamily,
         fontSize = HollowType.Micro,
         lineHeight = HollowLineHeight.Micro,
         letterSpacing = HollowTracking.Micro,
@@ -805,8 +811,8 @@ private fun UsageNote(text: String) {
 private fun UsageSummaryCard(label: String, value: Pair<Long, Long>, modifier: Modifier) {
     FeatureCard(modifier = modifier, contentPadding = HollowSpace.Md) {
         Text(
-            text = label,
-            fontFamily = HollowSansFamily,
+            text = label.uppercase(),
+            fontFamily = HollowMonoFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -854,7 +860,7 @@ private fun UsageSessionRow(s: UsageSession) {
         Row(Modifier.fillMaxWidth()) {
             Text(
                 text = "${fmt.format(Date(s.start))} · ${fmtDuration(s.end - s.start)}",
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -863,7 +869,7 @@ private fun UsageSessionRow(s: UsageSession) {
             )
             Text(
                 text = "↓ ${fmtSize(s.down)}  ↑ ${fmtSize(s.up)}",
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,

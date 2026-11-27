@@ -1,5 +1,9 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowWarning
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.components.hollowFieldColors
 import com.hollow.vpn.ui.theme.HollowText
 import androidx.compose.foundation.clickable
 import com.hollow.vpn.ui.theme.HollowSansFamily
@@ -224,11 +228,11 @@ private fun AdvancedValueItem(
         Row(modifier = Modifier.heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = value,
-                fontFamily = HollowSansFamily,
+                fontFamily = HollowMonoFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
-                color = HollowOrange
+                color = HollowInk
             )
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
@@ -253,7 +257,7 @@ private fun AdvancedTitle(text: String, enabled: Boolean) {
 private fun AdvancedDescription(text: String) {
     Text(
         text = text,
-        fontFamily = HollowSansFamily,
+        fontFamily = HollowMonoFamily,
         fontSize = HollowType.Micro,
         letterSpacing = HollowTracking.Micro,
         lineHeight = HollowLineHeight.Micro,
@@ -315,7 +319,7 @@ internal fun CustomDnsPage(
     if (settings.customDnsEnabled && settings.netShieldEnabled) {
         FeatureCaption(
             "NetShield is on and takes priority, so these servers are not used until you turn NetShield off.",
-            color = HollowOrange
+            color = HollowWarning
         )
     }
 
@@ -338,16 +342,7 @@ internal fun CustomDnsPage(
                     }
                 }
             },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = HollowCreamSurface,
-                unfocusedContainerColor = HollowCreamSurface,
-                focusedBorderColor = HollowInk,
-                unfocusedBorderColor = HollowCreamDivider,
-                focusedTextColor = HollowInk,
-                unfocusedTextColor = HollowInk,
-                errorBorderColor = HollowOrange,
-                errorContainerColor = HollowCreamSurface
-            ),
+            colors = hollowFieldColors(),
             shape = RoundedCornerShape(HollowRadius.Md),
             modifier = Modifier.weight(1f).testTag("field_custom_dns")
         )
@@ -361,7 +356,7 @@ internal fun CustomDnsPage(
     }
     FeatureCaption(
         text = if (error) "Not a valid IPv4 or IPv6 address." else "Enter the address of a DNS server, e.g. 1.1.1.1.",
-        color = if (error) HollowOrange else HollowInkSecondary
+        color = if (error) HollowError else HollowInkSecondary
     )
 
     Spacer(Modifier.height(HollowSpace.Md))
@@ -385,7 +380,7 @@ internal fun CustomDnsPage(
                 modifier = Modifier.weight(1f)
             )
             if (!settings.ipv6Enabled && ':' in ip) {
-                Text("IPv6 off", fontFamily = HollowSansFamily, fontSize = HollowType.Micro, color = HollowInkMuted)
+                Text("IPv6 off", fontFamily = HollowMonoFamily, fontSize = HollowType.Micro, color = HollowInkMuted)
             }
             IconButton(
                 onClick = { onUpdateSettings { it.copy(customDnsList = it.customDnsList - ip) } },

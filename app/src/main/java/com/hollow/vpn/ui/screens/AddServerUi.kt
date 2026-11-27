@@ -1,5 +1,12 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.theme.HollowDisplayInk
+import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.components.HollowPrimaryButton
+import com.hollow.vpn.ui.components.hollowFieldColors
 import com.hollow.vpn.ui.theme.HollowScreenPadding
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -192,9 +199,9 @@ fun AddServerButton(
             expanded = state.menuOpen,
             onDismissRequest = { state.menuOpen = false },
             offset = DpOffset(x = 0.dp, y = 8.dp),
-            containerColor = NothingSurfaceElevated,
+            containerColor = NothingSurface,
             shape = RoundedCornerShape(HollowRadius.Lg),
-            modifier = Modifier.width(244.dp)
+            modifier = Modifier.width(240.dp)
         ) {
             AddServerMenuItem(Icons.Outlined.QrCodeScanner, "Scan QR code", "menu_add_scan") {
                 state.menuOpen = false
@@ -242,7 +249,7 @@ private fun AddServerMenuItem(
                     tint = HollowInk,
                     modifier = Modifier.size(HollowSizes.IconSm)
                 )
-                Text(text = label, style = HollowText.Body, color = HollowInk)
+                Text(text = label.uppercase(), style = HollowText.Button, color = HollowInk)
             }
         },
         onClick = onClick,
@@ -325,27 +332,21 @@ private fun AddSubscriptionDialog(
                     textStyle = HollowText.Body,
                     placeholder = { Text("https://…", style = HollowText.Body, color = HollowInkMuted) },
                     shape = RoundedCornerShape(HollowRadius.Md),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = HollowInk,
-                        unfocusedBorderColor = HollowCreamDivider,
-                        cursorColor = HollowOrange,
-                        focusedContainerColor = HollowCream,
-                        unfocusedContainerColor = HollowCream
-                    ),
+                    colors = hollowFieldColors(),
                     modifier = Modifier.fillMaxWidth().testTag("subscription_url_input")
                 )
             }
         },
         confirmButton = {
-            TextButton(
+            HollowPrimaryButton(
                 onClick = { if (url.isNotBlank()) onAdd(url.trim()) },
                 modifier = Modifier.testTag("btn_add_and_fetch")
             ) {
-                Text("Add", style = HollowText.ButtonSmall, color = HollowOrange)
+                Text("ADD", style = HollowText.ButtonSmall)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk) }
+            TextButton(onClick = onDismiss) { Text("CANCEL", style = HollowText.ButtonSmall, color = HollowInk) }
         }
     )
 }
@@ -379,32 +380,26 @@ private fun AddManualServerDialog(
                     maxLines = 8,
                     textStyle = HollowText.Body,
                     shape = RoundedCornerShape(HollowRadius.Md),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = HollowInk,
-                        unfocusedBorderColor = HollowCreamDivider,
-                        cursorColor = HollowOrange,
-                        focusedContainerColor = HollowCream,
-                        unfocusedContainerColor = HollowCream
-                    ),
+                    colors = hollowFieldColors(),
                     modifier = Modifier.fillMaxWidth().testTag("manual_links_field")
                 )
                 if (bad) {
                     Text(
-                        "No valid link found",
+                        "[ERROR: NO VALID LINK FOUND]",
                         style = HollowText.Caption,
-                        color = HollowOrange,
+                        color = HollowError,
                         modifier = Modifier.padding(top = HollowSpace.Sm)
                     )
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { if (text.isBlank()) bad = true else onAdd(text) }) {
-                Text("Add", style = HollowText.ButtonSmall, color = HollowOrange)
+            HollowPrimaryButton(onClick = { if (text.isBlank()) bad = true else onAdd(text) }) {
+                Text("ADD", style = HollowText.ButtonSmall)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk) }
+            TextButton(onClick = onDismiss) { Text("CANCEL", style = HollowText.ButtonSmall, color = HollowInk) }
         }
     )
 }

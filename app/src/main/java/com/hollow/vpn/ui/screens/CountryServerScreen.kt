@@ -1,5 +1,16 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowInkMuted
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.theme.HollowAccentText
+import com.hollow.vpn.ui.theme.HollowWarning
+import com.hollow.vpn.ui.components.nothingDashedBorder
+import com.hollow.vpn.ui.components.NothingDotGlyph
+import com.hollow.vpn.ui.components.NothingSegmentedBar
+import com.hollow.vpn.ui.components.HollowPrimaryButton
+import com.hollow.vpn.ui.theme.NothingSurface
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.theme.HollowDisplayInk
 import com.hollow.vpn.ui.theme.HollowMotion
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.animation.fadeOut
@@ -224,13 +235,13 @@ fun CountryServerListScreen(
                         value = query,
                         onValueChange = { query = it },
                         singleLine = true,
-                        textStyle = HollowText.Body.copy(color = NothingOnCanvas),
-                        cursorBrush = SolidColor(HollowOrange),
+                        textStyle = HollowText.Data.copy(color = NothingOnCanvas),
+                        cursorBrush = SolidColor(HollowDisplayInk),
                         modifier = Modifier.weight(1f).focusRequester(searchFocus).testTag("server_search_field"),
                         decorationBox = { inner ->
                             Box {
                                 if (query.isEmpty()) {
-                                    Text("Search servers", style = HollowText.Body, color = NothingOnCanvas.copy(alpha = 0.5f))
+                                    Text("SEARCH SERVERS", style = HollowText.Label, color = HollowInkMuted)
                                 }
                                 inner()
                             }
@@ -299,7 +310,7 @@ fun CountryServerListScreen(
                             expanded = overflowMenuExpanded,
                             onDismissRequest = { overflowMenuExpanded = false },
                             offset = DpOffset(x = 0.dp, y = 8.dp),
-                            containerColor = NothingSurfaceElevated,
+                            containerColor = NothingSurface,
                             shape = RoundedCornerShape(HollowRadius.Lg),
                             modifier = Modifier.widthIn(min = 220.dp)
                         ) {
@@ -322,7 +333,7 @@ fun CountryServerListScreen(
                                     ServerOverflowMenuItem(
                                         icon = Icons.Outlined.DeleteOutline,
                                         label = "Invalid / unreachable",
-                                        color = HollowOrange,
+                                        color = HollowError,
                                         enabled = invalidCount > 0,
                                         trailing = { ServerMenuCount(invalidCount) },
                                         onClick = {
@@ -337,7 +348,7 @@ fun CountryServerListScreen(
                                     ServerOverflowMenuItem(
                                         icon = Icons.Outlined.DeleteOutline,
                                         label = "Duplicates",
-                                        color = HollowOrange,
+                                        color = HollowError,
                                         enabled = dupeCount > 0,
                                         trailing = { ServerMenuCount(dupeCount) },
                                         onClick = {
@@ -352,7 +363,7 @@ fun CountryServerListScreen(
                                     ServerOverflowMenuItem(
                                         icon = Icons.Outlined.DeleteOutline,
                                         label = "All servers",
-                                        color = HollowOrange,
+                                        color = HollowError,
                                         onClick = {
                                             overflowMenuExpanded = false
                                             confirmDel = ServerDelAction(
@@ -392,7 +403,7 @@ fun CountryServerListScreen(
                                     ServerOverflowMenuItem(
                                         icon = Icons.Outlined.DeleteOutline,
                                         label = "Delete",
-                                        color = HollowOrange,
+                                        color = HollowError,
                                         trailing = { ServerMenuChevron() },
                                         onClick = { menuPage = "delete" }
                                     )
@@ -439,7 +450,7 @@ fun CountryServerListScreen(
             ) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth().padding(top = HollowSpace.Sm).height(HollowSizes.Spinner),
-                    color = HollowOrange,
+                    color = HollowDisplayInk,
                     trackColor = NothingBorder
                 )
             }
@@ -460,8 +471,8 @@ fun CountryServerListScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${selectedIds.size} selected",
-                            style = MaterialTheme.typography.titleSmall,
+                            text = "${selectedIds.size} SELECTED",
+                            style = HollowText.Label,
                             color = HollowInk
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)) {
@@ -471,9 +482,9 @@ fun CountryServerListScreen(
                                     selectedIds = emptySet()
                                 }
                             ) {
-                                Text("Cancel", color = HollowInkSecondary)
+                                Text("CANCEL", style = HollowText.ButtonSmall, color = HollowInkSecondary)
                             }
-                            Button(
+                            HollowPrimaryButton(
                                 onClick = {
                                     if (selectedIds.isNotEmpty()) {
                                         onDeleteServersByIds(selectedIds)
@@ -481,13 +492,9 @@ fun CountryServerListScreen(
                                     isSelectionMode = false
                                     selectedIds = emptySet()
                                 },
-                                enabled = selectedIds.isNotEmpty(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = HollowOrange,
-                                    contentColor = Color.White
-                                )
+                                enabled = selectedIds.isNotEmpty()
                             ) {
-                                Text("Delete")
+                                Text("DELETE", style = HollowText.ButtonSmall)
                             }
                         }
                     }
@@ -507,69 +514,37 @@ fun CountryServerListScreen(
             ) {
                 if (displayedServers.isEmpty()) {
                     item(key = "empty_state") {
-                        Surface(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = HollowSpace.Md),
-                            shape = RoundedCornerShape(HollowRadius.Lg),
-                            color = HollowCreamSurface,
-                            border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
+                                .padding(top = HollowSpace.Md)
+                                .nothingDashedBorder(HollowLine2)
+                                .padding(HollowSpace.Xxl),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(HollowSpace.Lg)
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(HollowSpace.Xxl),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Md)
+                            NothingDotGlyph("signal", size = 48.dp, color = HollowInk)
+                            Text(
+                                text = if (isDefaultCategory) "No default servers" else "No matching servers",
+                                style = HollowText.Heading,
+                                color = HollowInk
+                            )
+                            HollowPrimaryButton(
+                                onClick = {
+                                    if (isDefaultCategory) addServerState.showManual = true
+                                    else addServerState.menuOpen = true
+                                },
+                                modifier = Modifier.testTag("empty_add_server_button")
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.PublicOff,
-                                    contentDescription = null,
-                                    tint = HollowInkSecondary,
-                                    modifier = Modifier.size(HollowSizes.IconLg)
-                                )
-                                Text(
-                                    text = if (isDefaultCategory) "No default servers" else "No matching servers",
-                                    style = HollowText.BodyMedium,
-                                    color = HollowInk
-                                )
-                                val emptyMsg = when {
-                                    query.isNotBlank() -> "No servers match."
-                                    isDefaultCategory ->
-                                        "Manually added servers, pasted config keys, and scanned QR nodes will show up here."
-                                    else ->
-                                        "Import a subscription link, server config, or QR code to populate servers."
-                                }
-                                Text(
-                                    text = emptyMsg,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = HollowInkSecondary,
-                                    textAlign = TextAlign.Center
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)) {
-                                    Button(
-                                        onClick = {
-                                            if (isDefaultCategory) addServerState.showManual = true
-                                            else addServerState.menuOpen = true
-                                        },
-                                        shape = RoundedCornerShape(HollowRadius.Md),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = HollowInk,
-                                            contentColor = HollowCream
-                                        ),
-                                        modifier = Modifier.testTag("empty_add_server_button")
-                                    ) {
-                                        Text(if (isDefaultCategory) "Add custom server" else "Add server")
-                                    }
-                                }
+                                Text(if (isDefaultCategory) "ADD CUSTOM SERVER" else "ADD SERVER", style = HollowText.ButtonSmall)
                             }
                         }
                     }
                 } else {
                     item(key = "list_header") {
                         Text(
-                            text = "All servers (${displayedServers.size})",
-                            style = HollowText.Small,
+                            text = "ALL SERVERS [${displayedServers.size}]",
+                            style = HollowText.Section,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
@@ -672,13 +647,13 @@ fun CountryServerListScreen(
                 )
             },
             confirmButton = {
-                TextButton(onClick = { onDeleteSubscription(sub.url.trim()); deletingSubscription = null }) {
-                    Text("Delete", style = HollowText.ButtonSmall, color = HollowOrange)
+                HollowPrimaryButton(onClick = { onDeleteSubscription(sub.url.trim()); deletingSubscription = null }) {
+                    Text("DELETE", style = HollowText.ButtonSmall)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deletingSubscription = null }) {
-                    Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk)
+                    Text("CANCEL", style = HollowText.ButtonSmall, color = HollowInk)
                 }
             }
         )
@@ -692,13 +667,12 @@ fun CountryServerListScreen(
             title = { Text(text = d.title, style = HollowText.Heading, color = HollowInk) },
             text = { Text(text = d.text, style = HollowText.Small, color = HollowInkSecondary) },
             confirmButton = {
-                Button(
-                    onClick = { confirmDel = null; d.onConfirm() },
-                    colors = ButtonDefaults.buttonColors(containerColor = HollowOrange, contentColor = Color.White)
-                ) { Text("Delete") }
+                HollowPrimaryButton(onClick = { confirmDel = null; d.onConfirm() }) {
+                    Text("DELETE", style = HollowText.ButtonSmall)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDel = null }) { Text("Cancel", color = HollowInk) }
+                TextButton(onClick = { confirmDel = null }) { Text("CANCEL", style = HollowText.ButtonSmall, color = HollowInk) }
             }
         )
     }
@@ -744,8 +718,8 @@ private fun ServerMenuChoice(label: String, selected: Boolean, onClick: () -> Un
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
-                Text(label, style = HollowText.Body, color = if (selected) HollowOrange else HollowInk, modifier = Modifier.weight(1f, fill = false))
-                if (selected) Icon(Icons.Rounded.Check, null, tint = HollowOrange, modifier = Modifier.size(HollowSizes.IconSm))
+                Text(label, style = HollowText.Body, color = HollowInk, modifier = Modifier.weight(1f, fill = false))
+                if (selected) Icon(Icons.Rounded.Check, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
             }
         },
         onClick = onClick
@@ -762,26 +736,21 @@ private fun FastestServerRow(
             .fillMaxWidth()
             .heightIn(min = HollowSizes.ServerRow)
             .clickable(enabled = !isTesting, onClick = onClick)
-            .padding(start = 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md)
+            .padding(vertical = HollowSpace.Md)
             .testTag("server_fastest_row"),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier.size(width = 38.dp, height = 26.dp),
+            modifier = Modifier.size(width = HollowSizes.FlagWidth, height = HollowSizes.FlagHeight),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(if (LocalHollowIsDark.current) R.drawable.flag_fastest_dark else R.drawable.flag_fastest),
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize()
-            )
+            NothingDotGlyph("bolt", size = HollowSizes.IconLg, color = HollowInk)
         }
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = "Fastest server", style = HollowText.Body, color = HollowInk, maxLines = 1)
             if (isTesting) {
-                Text(text = "Testing servers…", style = HollowText.Caption, color = HollowInkSecondary, maxLines = 1)
+                Text(text = "[TESTING SERVERS…]", style = HollowText.Caption, color = HollowInkSecondary, maxLines = 1)
             }
         }
     }
@@ -846,8 +815,8 @@ private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
         else -> "$days days left"
     }
     val expColor = when {
-        expired -> HollowOrange
-        days <= 7 -> HollowAmber
+        expired -> HollowError
+        days <= 7 -> HollowWarning
         else -> HollowInkSecondary
     }
 
@@ -887,24 +856,23 @@ private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
                             "${fmtBinarySize(sub.usedBytes)} used · Unlimited"
                         },
                         style = HollowText.Caption,
-                        color = if (exhausted) HollowOrange else HollowInkSecondary,
+                        color = if (exhausted) HollowError else HollowInkSecondary,
                         maxLines = 1
                     )
                     if (sub.totalBytes > 0L) {
                         val frac = (sub.usedBytes.toFloat() / sub.totalBytes).coerceIn(0f, 1f)
-                        Spacer(Modifier.height(HollowSpace.Xs))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(HollowSpace.Xs)
-                                .clip(CircleShape)
-                                .background(NothingBorder)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(frac)
-                                    .height(HollowSpace.Xs)
-                                    .background(if (exhausted) HollowOrange else if (frac > 0.9f) HollowAmber else HollowInk)
+                        Spacer(Modifier.height(HollowSpace.Sm))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            NothingSegmentedBar(
+                                fraction = frac,
+                                overLimit = exhausted,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(Modifier.width(HollowSpace.Md))
+                            Text(
+                                text = "${(frac * 100).toInt()}%",
+                                style = HollowText.NumeralSm,
+                                color = if (exhausted) HollowAccentText else HollowDisplayInk
                             )
                         }
                     }

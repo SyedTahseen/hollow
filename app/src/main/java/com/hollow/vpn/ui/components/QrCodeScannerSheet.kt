@@ -182,7 +182,7 @@ fun ServerQrShareDialog(
                 Column {
                     Text(
                         text = server.countryName,
-                        style = MaterialTheme.typography.titleLarge.copy(fontFamily = DotoDisplayFamily),
+                        style = com.hollow.vpn.ui.theme.HollowText.Heading,
                         color = HollowInk
                     )
                     Text(

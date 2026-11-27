@@ -287,14 +287,6 @@ fun WorldMap(
             if (space > 0f) {
                 for (s in stars) drawCircle(Color.White.copy(alpha = s[3] * space), s[2].dp.toPx(), Offset(s[0] * size.width, s[1] * size.height))
 
-                val outer = r * 1.2f
-                drawCircle(
-                    Brush.radialGradient(
-                        0f to Color.Transparent, (r / outer) to dot.copy(alpha = 0.32f * space), 1f to Color.Transparent,
-                        center = centre, radius = outer,
-                    ),
-                    outer, centre,
-                )
                 drawCircle(lerp(colors.background, colors.sphere, 0.9f).copy(alpha = space), r, centre)
             }
 
@@ -351,14 +343,7 @@ fun WorldMap(
             }
 
             if (space > 0f) {
-                drawCircle(
-                    Brush.radialGradient(
-                        0f to Color.Transparent, 0.65f to Color.Transparent, 1f to colors.background.copy(alpha = 0.55f * space),
-                        center = centre, radius = r,
-                    ),
-                    r, centre,
-                )
-                drawCircle(dot.copy(alpha = 0.45f * space), r, centre, style = Stroke(1.5.dp.toPx()))
+                drawCircle(dot.copy(alpha = 0.45f * space), r, centre, style = Stroke(1.dp.toPx()))
             }
         }
 

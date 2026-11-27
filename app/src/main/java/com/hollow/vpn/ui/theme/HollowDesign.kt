@@ -4,11 +4,11 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+
+
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
+
+
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,39 +25,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
+/** Radius: controls 6 · cards / dialogs 8 · pill. Segmented-bar cells are square (0). */
 object HollowRadius {
-    val Bar = 2.dp
-    val Xs = 8.dp
-    val Sm = 12.dp
-    val Md = 16.dp
-    val Lg = 20.dp
-    val Xl = 24.dp
+    val Bar = 0.dp
+    val Xs = 6.dp
+    val Sm = 6.dp
+    val Md = 6.dp
+    val Lg = 8.dp
+    val Xl = 8.dp
     val Pill = 999.dp
 }
 
 object HollowShapes {
     val Control: Shape = RoundedCornerShape(HollowRadius.Md)
+    val Card: Shape = RoundedCornerShape(HollowRadius.Lg)
     val Dialog: Shape = RoundedCornerShape(HollowRadius.Xl)
     val Sheet: Shape = RoundedCornerShape(topStart = HollowRadius.Xl, topEnd = HollowRadius.Xl)
     val Pill: Shape = RoundedCornerShape(HollowRadius.Pill)
 }
 
+/** Hairlines are always 1dp. */
 object HollowStroke {
     val Hairline = 1.dp
-    val Emphasis = 1.5.dp
+    val Emphasis = 1.dp
     val Heavy = 2.dp
 }
 
 object HollowType {
-    val Micro = 12.sp
-    val Caption = 12.sp
+    val Micro = 11.sp
+    val Caption = 11.sp
     val Small = 14.sp
     val Body = 16.sp
     val BodyStrong = 16.sp
     val Title = 20.sp
-    val Heading = 20.sp
-    val Headline = 28.sp
-    val Display = 28.sp
+    val Heading = 24.sp
+    val Headline = 32.sp
+    val Display = 40.sp
 }
 
 object HollowLineHeight {
@@ -67,64 +70,54 @@ object HollowLineHeight {
     val Body = 24.sp
     val BodyStrong = 24.sp
     val Title = 24.sp
-    val Heading = 24.sp
-    val Headline = 34.sp
-    val Display = 34.sp
+    val Heading = 28.sp
+    val Headline = 38.sp
+    val Display = 44.sp
 }
 
 object HollowTracking {
-    val Micro = 0.03.em
-    val Caption = 0.03.em
-    val Small = 0.02.em
-    val Body = 0.03.em
-    val BodyStrong = 0.03.em
-    val Title = 0.01.em
-    val Heading = 0.01.em
-    val Headline = 0.45.sp
-    val Display = 0.45.sp
+    val Micro = 0.02.em
+    val Caption = 0.02.em
+    val Small = 0.sp
+    val Body = 0.sp
+    val BodyStrong = 0.sp
+    val Title = 0.sp
+    val Heading = 0.sp
+    val Headline = 0.sp
+    val Display = 0.sp
 }
 
+/** ~200ms controls / ~400ms transitions, ease-in-out, no spring. */
 object HollowMotion {
-    const val Quick = 120
-    const val Fast = 180
-    const val Standard = 240
-    const val Emphasized = 320
+    const val Quick = 150
+    const val Fast = 200
+    const val Standard = 200
+    const val Emphasized = 400
 
-    const val PressControl = 0.94f
-    const val PressCard = 0.97f
+    const val PressControl = 1f
+    const val PressCard = 1f
 }
 
 object HollowTransitions {
     private val ease = NothingMotion.FluidEase
 
+    // Opacity-first; a small horizontal drift only where direction matters. No scale, no rebound.
     val Push: ContentTransform
-        get() = (slideInHorizontally(tween(HollowMotion.Emphasized, easing = ease)) { (it * 0.12f).toInt() } +
-            fadeIn(tween(HollowMotion.Standard, easing = ease)))
-            .togetherWith(
-                slideOutHorizontally(tween(HollowMotion.Standard, easing = ease)) { -(it * 0.08f).toInt() } +
-                    fadeOut(tween(HollowMotion.Fast, easing = ease))
-            )
+        get() = (slideInHorizontally(tween(HollowMotion.Emphasized, easing = ease)) { (it * 0.06f).toInt() } +
+            fadeIn(tween(HollowMotion.Emphasized, easing = ease)))
+            .togetherWith(fadeOut(tween(HollowMotion.Fast, easing = ease)))
 
     val Pop: ContentTransform
-        get() = (slideInHorizontally(tween(HollowMotion.Emphasized, easing = ease)) { -(it * 0.08f).toInt() } +
-            fadeIn(tween(HollowMotion.Standard, easing = ease)))
-            .togetherWith(
-                slideOutHorizontally(tween(HollowMotion.Standard, easing = ease)) { (it * 0.12f).toInt() } +
-                    fadeOut(tween(HollowMotion.Fast, easing = ease))
-            )
+        get() = (slideInHorizontally(tween(HollowMotion.Emphasized, easing = ease)) { -(it * 0.06f).toInt() } +
+            fadeIn(tween(HollowMotion.Emphasized, easing = ease)))
+            .togetherWith(fadeOut(tween(HollowMotion.Fast, easing = ease)))
 
     val Modal: ContentTransform
-        get() = (fadeIn(tween(HollowMotion.Standard, easing = ease)) +
-            slideInVertically(tween(HollowMotion.Emphasized, easing = ease)) { it / 16 } +
-            scaleIn(tween(HollowMotion.Emphasized, easing = ease), initialScale = 0.97f))
-            .togetherWith(
-                fadeOut(tween(HollowMotion.Fast, easing = ease)) +
-                    scaleOut(tween(HollowMotion.Fast, easing = ease), targetScale = 0.98f)
-            )
+        get() = fadeIn(tween(HollowMotion.Emphasized, easing = ease))
+            .togetherWith(fadeOut(tween(HollowMotion.Fast, easing = ease)))
 
     val Fade: ContentTransform
-        get() = (fadeIn(tween(HollowMotion.Standard, easing = ease)) +
-            scaleIn(tween(HollowMotion.Standard, easing = ease), initialScale = 0.98f))
+        get() = fadeIn(tween(HollowMotion.Standard, easing = ease))
             .togetherWith(fadeOut(tween(HollowMotion.Fast, easing = ease)))
 }
 
@@ -139,36 +132,41 @@ data class HollowPhaseColors(
     val onAccent: Color
 )
 
+/**
+ * Phase → unified state machine.
+ *  0 idle        grey dot, monochrome
+ *  1 connecting  warning value colour (data state)
+ *  2 connected   success value colour (data state)
+ * The signal-red accent is NOT a phase colour; it is reserved for needs-input / errors.
+ */
 @Composable
 @ReadOnlyComposable
-fun hollowPhaseColors(phase: Int): HollowPhaseColors = when (phase) {
-    2 -> HollowPhaseColors(
-        canvas = HollowForest, surface = HollowForestCard, border = HollowForestDivider,
-        ink = HollowDarkInk, muted = HollowForestMuted, accent = HollowLime, onAccent = NothingBlack
-    )
-    1 -> HollowPhaseColors(
-        canvas = HollowObsidian, surface = HollowObsidianSurface, border = HollowObsidianDivider,
-        ink = HollowDarkInk, muted = HollowObsidianMuted, accent = HollowAmber, onAccent = NothingBlack
-    )
-    else -> HollowPhaseColors(
-        canvas = HollowCream, surface = HollowCreamSurface, border = HollowCreamDivider,
-        ink = HollowInk, muted = HollowInkSecondary, accent = HollowOrange, onAccent = Color.White
+fun hollowPhaseColors(phase: Int): HollowPhaseColors {
+    val p = LocalHollowPalette.current
+    return HollowPhaseColors(
+        canvas = p.canvas, surface = p.surface, border = p.border, ink = p.ink, muted = p.inkSecondary,
+        accent = when (phase) { 2 -> p.matrixGreen; 1 -> p.warning; else -> p.inkSecondary },
+        onAccent = p.onInvertedSurface
     )
 }
 
 object HollowBar {
-    val Fill = androidx.compose.ui.graphics.Color(0xFF0C0B0E)
-    val Border = androidx.compose.ui.graphics.Color(0xFF1C1C20)
+    val Fill: Color
+        @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.pillNavFill
+    val Border: Color
+        @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.pillNavBorder
     val Height = 60.dp
-    val Shape = androidx.compose.foundation.shape.RoundedCornerShape(30.dp)
+    val Shape: Shape = RoundedCornerShape(HollowRadius.Pill)
 }
 
-val HollowUploadAccent = Color(0xFFF28B9B)
+/** Upload series colour on the usage chart — a grey step, never a hue. */
+val HollowUploadAccent: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.inkSecondary
 
 object HollowDialog {
     val Shape: Shape = HollowShapes.Dialog
     val containerColor: Color
-        @Composable @ReadOnlyComposable get() = NothingSurfaceElevated
+        @Composable @ReadOnlyComposable get() = NothingSurface
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -181,9 +179,9 @@ fun HollowModalSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = NothingSurfaceElevated,
+        containerColor = NothingSurface,
         shape = HollowShapes.Sheet,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = NothingDotInactive) },
+        dragHandle = { BottomSheetDefaults.DragHandle(color = HollowLine2) },
         content = content
     )
 }

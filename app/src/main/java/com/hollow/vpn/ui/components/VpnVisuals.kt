@@ -93,6 +93,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowCreamDivider
@@ -128,9 +129,9 @@ enum class HollowBottomTab {
 @Composable
 fun HollowBrandShieldLogo(
     size: Dp = 120.dp,
-    cornerRadius: Dp = 34.dp,
-    backgroundColor: Color = HollowOrange,
-    strokeColor: Color = Color.White,
+    cornerRadius: Dp = 8.dp,
+    backgroundColor: Color = com.hollow.vpn.ui.theme.NothingInvertedSurface,
+    strokeColor: Color = com.hollow.vpn.ui.theme.NothingOnInvertedSurface,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -184,17 +185,12 @@ fun HollowStatusBrandRow(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = androidx.compose.ui.text.buildAnnotatedString {
-            append("HOLLOW ")
-            pushStyle(androidx.compose.ui.text.SpanStyle(color = com.hollow.vpn.ui.theme.NothingRed))
-            append("VPN")
-            pop()
-        },
+        text = "HOLLOW VPN",
         fontFamily = DotoDisplayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = HollowType.Display,
-        lineHeight = HollowLineHeight.Display,
-        letterSpacing = HollowTracking.Display,
+        fontWeight = FontWeight.Medium,
+        fontSize = HollowType.Heading,
+        lineHeight = HollowLineHeight.Heading,
+        letterSpacing = HollowTracking.Heading,
         maxLines = 1,
         color = textColor,
         modifier = modifier
@@ -242,22 +238,15 @@ fun HollowTopSquareButton(
         contentAlignment = Alignment.Center
     ) {
         val isPressed by interactionSource.collectIsPressedAsState()
-        val btnScale by animateFloatAsState(
-            targetValue = if (isPressed) 0.90f else 1f,
-            animationSpec = if (isPressed) {
-                tween(HollowMotion.Quick, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)
-            } else {
-                com.hollow.vpn.ui.theme.NothingMotion.tactileSpring()
-            },
-            label = "top_btn_scale"
+        val btnAlpha by animateFloatAsState(
+            targetValue = if (isPressed) 0.6f else 1f,
+            animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+            label = "top_btn_alpha"
         )
         Surface(
             modifier = Modifier
                 .size(HollowSizes.Chip)
-                .graphicsLayer {
-                    scaleX = btnScale
-                    scaleY = btnScale
-                },
+                .graphicsLayer { alpha = btnAlpha },
             shape = CircleShape,
             color = animContainer,
             border = BorderStroke(HollowStroke.Hairline, animBorder)
@@ -272,11 +261,6 @@ fun HollowTopSquareButton(
     }
 }
 
-private val NavCapsuleFill = com.hollow.vpn.ui.theme.HollowBar.Fill
-private val NavCapsuleBorder = com.hollow.vpn.ui.theme.HollowBar.Border
-private val NavActiveAccent = NothingRed
-private val NavActiveContent = Color.White
-private val NavInactiveContent = Color(0xFF8E8E92)
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
@@ -312,15 +296,15 @@ fun HollowBottomNavigationBar(
                 .fillMaxWidth()
                 .height(com.hollow.vpn.ui.theme.HollowBar.Height),
             shape = com.hollow.vpn.ui.theme.HollowBar.Shape,
-            color = NavCapsuleFill,
-            border = BorderStroke(HollowStroke.Hairline, NavCapsuleBorder)
+            color = com.hollow.vpn.ui.theme.HollowBar.Fill,
+            border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowBar.Border)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(6.dp),
+                    .padding(HollowSpace.Xs),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
             ) {
                 HollowBottomNavItem(
                     label = "Home",
@@ -328,12 +312,7 @@ fun HollowBottomNavigationBar(
                     onClick = onSelectConnect,
                     modifier = Modifier.testTag("nav_tab_connect")
                 ) { tint ->
-                    Icon(
-                        imageVector = Icons.Outlined.Home,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(HollowSizes.Icon)
-                    )
+                    NothingDotGlyph("home", size = 28.dp, color = tint)
                 }
                 HollowBottomNavItem(
                     label = "Servers",
@@ -341,12 +320,7 @@ fun HollowBottomNavigationBar(
                     onClick = onSelectServers,
                     modifier = Modifier.testTag("nav_tab_servers")
                 ) { tint ->
-                    Icon(
-                        imageVector = Icons.Outlined.Dns,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(HollowSizes.Icon)
-                    )
+                    NothingDotGlyph("grid", size = 28.dp, color = tint)
                 }
                 HollowBottomNavItem(
                     label = "Settings",
@@ -354,12 +328,7 @@ fun HollowBottomNavigationBar(
                     onClick = onSelectSettings,
                     modifier = Modifier.testTag("nav_tab_settings")
                 ) { tint ->
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(HollowSizes.Icon)
-                    )
+                    NothingDotGlyph("gear", size = 28.dp, color = tint)
                 }
             }
         }
@@ -378,33 +347,34 @@ private fun RowScope.HollowBottomNavItem(
     val isPressed by interactionSource.collectIsPressedAsState()
     val weight by animateFloatAsState(
         targetValue = if (selected) 1.6f else 1f,
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = 420f),
+        animationSpec = tween(HollowMotion.Emphasized, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_item_weight"
     )
+    // Active = black/white inversion (display on bg), never the accent.
+    val navActiveBg = NothingPillActiveBg
+    val navActiveContent = NothingPillActiveIcon
+    val navInactiveContent = com.hollow.vpn.ui.theme.HollowInkSecondary
     val pillBg by animateColorAsState(
-        targetValue = if (selected) NavActiveAccent else Color.Transparent,
+        targetValue = if (selected) navActiveBg else Color.Transparent,
         animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_pill_bg"
     )
     val iconTint by animateColorAsState(
-        targetValue = if (selected) NavActiveContent else NavInactiveContent,
+        targetValue = if (selected) navActiveContent else navInactiveContent,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_pill_tint"
     )
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec = com.hollow.vpn.ui.theme.NothingMotion.tactileSpring(),
-        label = "nav_press_scale"
+    val pressAlpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.6f else 1f,
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        label = "nav_press_alpha"
     )
     Box(
         modifier = modifier
             .weight(weight)
             .fillMaxHeight()
             .minimumInteractiveComponentSize()
-            .graphicsLayer {
-                scaleX = pressScale
-                scaleY = pressScale
-            }
+            .graphicsLayer { alpha = pressAlpha }
             .clip(CircleShape)
             .background(pillBg)
             .clickable(
@@ -437,7 +407,7 @@ fun HollowSlideActionPill(
     val density = LocalDensity.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    val trackPadding = 6.dp
+    val trackPadding = HollowSpace.Xs
     val thumbHeight = com.hollow.vpn.ui.theme.HollowBar.Height - trackPadding * 2
     val thumbWidth = thumbHeight * 1.32f
     val dir = if (reverse) -1f else 1f
@@ -493,8 +463,8 @@ fun HollowSlideActionPill(
         Canvas(
             modifier = Modifier
                 .align(endAlign)
-                .padding(horizontal = 22.dp)
-                .size(width = 26.dp, height = 16.dp)
+                .padding(horizontal = HollowSpace.Xl)
+                .size(width = 24.dp, height = 16.dp)
                 .alpha((1f - progress * 2f).coerceIn(0f, 1f))
         ) {
             val chevW = size.width / 3.4f
@@ -526,31 +496,27 @@ fun HollowSlideActionPill(
         }
 
         Text(
-            text = label,
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 16.sp,
-            lineHeight = 20.sp,
+            text = label.uppercase(),
+            fontFamily = com.hollow.vpn.ui.theme.HollowMonoFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = HollowType.Small,
+            lineHeight = HollowLineHeight.Small,
+            letterSpacing = 0.05.em,
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(horizontal = 72.dp)
+                .padding(horizontal = 64.dp)
                 .alpha((1f - progress * 1.45f).coerceIn(0f, 1f))
         )
 
-        val thumbScale = 1f + progress * 0.04f
         Box(
             modifier = Modifier
                 .align(startAlign)
                 .padding(horizontal = trackPadding)
                 .offset { IntOffset((dir * (offsetX.value + nudgePx * nudgeFactor)).roundToInt(), 0) }
                 .size(width = thumbWidth, height = thumbHeight)
-                .graphicsLayer {
-                    scaleX = thumbScale
-                    scaleY = thumbScale
-                }
                 .clip(shape)
                 .background(thumbColor)
                 .pointerInput(maxOffsetPx, label, reverse) {
@@ -565,16 +531,13 @@ fun HollowSlideActionPill(
                                 } else {
                                     offsetX.animateTo(
                                         0f,
-                                        spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
+                                        tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)
                                     )
                                 }
                             }
                         },
                         onDragCancel = {
-                            scope.launch { offsetX.animateTo(0f, spring()) }
+                            scope.launch { offsetX.animateTo(0f, tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)) }
                         },
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
@@ -613,38 +576,37 @@ fun HollowSwitch(
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    // ON = white track + black knob (inversion). OFF = outlined track + grey knob. Never the accent.
     val trackColor by animateColorAsState(
-        targetValue = if (checked) HollowOrange else NothingSwitchOffTrack,
+        targetValue = if (checked) NothingPillActiveBg else NothingSwitchOffTrack,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_track"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (checked) HollowOrange else NothingSwitchOffBorder,
+        targetValue = if (checked) NothingPillActiveBg else NothingSwitchOffBorder,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_border"
     )
     val thumbColor by animateColorAsState(
-        targetValue = if (checked) Color.White else NothingSwitchOffThumb,
+        targetValue = if (checked) NothingPillActiveIcon else NothingSwitchOffThumb,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_thumb"
     )
     val thumbOffset by animateDpAsState(
         targetValue = if (checked) (HollowSizes.SwitchWidth - HollowSpace.Sm - HollowSizes.SwitchThumb) else 0.dp,
-        animationSpec = spring(
-            dampingRatio = 0.68f,
-            stiffness = 520f
-        ),
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_offset"
     )
-    val thumbScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.88f else 1f,
-        animationSpec = com.hollow.vpn.ui.theme.NothingMotion.tactileSpring(),
-        label = "hollow_switch_scale"
+    val pressAlpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.6f else 1f,
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        label = "hollow_switch_alpha"
     )
 
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
+            .graphicsLayer { alpha = pressAlpha }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -659,9 +621,9 @@ fun HollowSwitch(
             modifier = Modifier
                 .width(HollowSizes.SwitchWidth)
                 .height(HollowSizes.SwitchHeight)
-                .clip(RoundedCornerShape(HollowRadius.Md))
+                .clip(CircleShape)
                 .background(trackColor)
-                .border(HollowStroke.Emphasis, borderColor, RoundedCornerShape(HollowRadius.Md))
+                .border(HollowStroke.Hairline, borderColor, CircleShape)
                 .padding(horizontal = HollowSpace.Xs),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -669,10 +631,6 @@ fun HollowSwitch(
                 modifier = Modifier
                     .offset(x = thumbOffset)
                     .size(HollowSizes.SwitchThumb)
-                    .graphicsLayer {
-                        scaleX = thumbScale
-                        scaleY = thumbScale
-                    }
                     .clip(CircleShape)
                     .background(thumbColor)
             )
@@ -715,7 +673,7 @@ fun FetchingSpinnerRing(
                     val isLead = i == 0
                     val trailFade = ((dotCount - i).toFloat() / dotCount.toFloat()).coerceIn(0.22f, 1f)
                     drawCircle(
-                        color = if (isLead) HollowOrange else spinnerInkColor.copy(alpha = trailFade * 0.78f),
+                        color = if (isLead) com.hollow.vpn.ui.theme.HollowDisplayInk else spinnerInkColor.copy(alpha = trailFade * 0.78f),
                         radius = if (isLead) 3.4.dp.toPx() else 2.0.dp.toPx(),
                         center = Offset(dx, dy)
                     )
@@ -734,7 +692,7 @@ fun FetchingSpinnerRing(
                 modifier = Modifier
                     .size(HollowSizes.Dot)
                     .clip(CircleShape)
-                    .background(HollowOrange)
+                    .background(com.hollow.vpn.ui.theme.HollowDisplayInk)
             )
         }
     }

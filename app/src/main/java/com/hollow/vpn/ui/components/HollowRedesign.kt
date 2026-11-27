@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowSizes
+import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -71,12 +73,12 @@ import com.hollow.vpn.ui.theme.nothingPressScale
 fun NothingDotMatrixBackdrop(
     modifier: Modifier = Modifier,
     dotColor: Color = NothingBackdropDot,
-    spacing: Dp = 18.dp,
-    dotRadius: Dp = 1.dp
+    spacing: Dp = 64.dp,
+    dotRadius: Dp = 0.65.dp
 ) {
     Canvas(modifier = modifier.fillMaxSize()) {
         val stepPx = spacing.toPx().coerceAtLeast(8f)
-        val rPx = dotRadius.toPx().coerceAtLeast(1f)
+        val rPx = dotRadius.toPx().coerceAtLeast(0.65f)
         var y = stepPx * 0.5f
         while (y < size.height) {
             var x = stepPx * 0.5f
@@ -181,8 +183,8 @@ fun NothingPillTabRow(
                     border = BorderStroke(HollowStroke.Hairline, borderColor)
                 ) {
                     Text(
-                        text = title,
-                        style = HollowText.Small,
+                        text = title.uppercase(),
+                        style = HollowText.Label,
                         color = contentColor,
                         maxLines = 1,
                         modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm)
@@ -244,3 +246,130 @@ fun HollowIndeterminateBar(color: Color, track: Color, modifier: Modifier = Modi
         }
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared Nothing controls
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Primary button: display fill + bg text (black/white inversion, never red). 6dp radius, mono label. */
+@Composable
+fun HollowPrimaryButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
+) {
+    androidx.compose.material3.Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(HollowRadius.Md),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = com.hollow.vpn.ui.theme.NothingInvertedSurface,
+            contentColor = com.hollow.vpn.ui.theme.NothingOnInvertedSurface,
+            disabledContainerColor = com.hollow.vpn.ui.theme.NothingInvertedSurface.copy(alpha = 0.3f),
+            disabledContentColor = com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+        ),
+        elevation = androidx.compose.material3.ButtonDefaults.buttonElevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm),
+        content = content
+    )
+}
+
+/** Outline button: transparent, 1dp line-2 border, primary text. */
+@Composable
+fun HollowOutlineButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit
+) {
+    androidx.compose.material3.OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(HollowRadius.Md),
+        border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowLine2),
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+            contentColor = HollowInk,
+            disabledContentColor = HollowInk.copy(alpha = 0.3f)
+        ),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm),
+        content = content
+    )
+}
+
+/** Input: 6dp border, focus = primary border (no glow, no accent), error = error border. */
+@Composable
+fun hollowFieldColors() = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = HollowInk,
+    unfocusedBorderColor = com.hollow.vpn.ui.theme.HollowLine2,
+    errorBorderColor = com.hollow.vpn.ui.theme.HollowError,
+    cursorColor = com.hollow.vpn.ui.theme.HollowDisplayInk,
+    errorCursorColor = com.hollow.vpn.ui.theme.HollowError,
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    errorContainerColor = Color.Transparent,
+    focusedTextColor = HollowInk,
+    unfocusedTextColor = HollowInk,
+    errorTextColor = HollowInk,
+    focusedPlaceholderColor = com.hollow.vpn.ui.theme.HollowInkMuted,
+    unfocusedPlaceholderColor = com.hollow.vpn.ui.theme.HollowInkMuted,
+    focusedLabelColor = com.hollow.vpn.ui.theme.HollowInkSecondary,
+    unfocusedLabelColor = com.hollow.vpn.ui.theme.HollowInkSecondary,
+    errorLabelColor = com.hollow.vpn.ui.theme.HollowError,
+    errorSupportingTextColor = com.hollow.vpn.ui.theme.HollowError
+)
+
+/** Inline status line — `[SAVED]` / `[ERROR: …]` instead of toasts. Error uses the error token on the value only. */
+@Composable
+fun HollowInlineStatus(text: String, isError: Boolean = false, modifier: Modifier = Modifier) {
+    Text(
+        text = "[" + text.uppercase() + "]",
+        style = HollowText.Label,
+        color = if (isError) com.hollow.vpn.ui.theme.HollowError else com.hollow.vpn.ui.theme.HollowInkSecondary,
+        modifier = modifier
+    )
+}
+
+/**
+ * Segmented bar (signature): discrete square cells, 2dp gaps, no radius.
+ * Fill = display (black/white inversion). Over-limit cells only use the signal accent.
+ * Always pair it with a numeric readout.
+ */
+@Composable
+fun NothingSegmentedBar(
+    fraction: Float,
+    modifier: Modifier = Modifier,
+    segments: Int = 20,
+    overLimit: Boolean = false
+) {
+    val lit = if (overLimit) com.hollow.vpn.ui.theme.NothingRed else com.hollow.vpn.ui.theme.HollowDisplayInk
+    val empty = com.hollow.vpn.ui.theme.NothingBorder
+    val filled = (fraction.coerceIn(0f, 1f) * segments).let { kotlin.math.ceil(it.toDouble()).toInt() }
+    Canvas(modifier = modifier.fillMaxWidth().height(8.dp)) {
+        val gap = 2.dp.toPx()
+        val cellW = (size.width - gap * (segments - 1)) / segments
+        for (i in 0 until segments) {
+            drawRect(
+                color = if (i < filled) lit else empty,
+                topLeft = Offset(i * (cellW + gap), 0f),
+                size = androidx.compose.ui.geometry.Size(cellW, size.height)
+            )
+        }
+    }
+}
+
+/** Dashed 1dp outline (used by the empty state). */
+fun Modifier.nothingDashedBorder(color: Color, radius: Dp = HollowRadius.Lg): Modifier = this.then(
+    Modifier.drawBehind {
+        drawRoundRect(
+            color = color,
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius.toPx()),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 1.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()), 0f)
+            )
+        )
+    }
+)

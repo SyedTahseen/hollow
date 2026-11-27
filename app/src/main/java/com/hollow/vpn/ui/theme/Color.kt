@@ -8,39 +8,53 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Nothing design tokens (source of truth: vibe-nothing-ui-design / css/tokens.css)
+// Black / grey / white carry the UI. The accent (signal red) is for genuine
+// signals only. Active controls invert display <-> bg, they never colorize.
+// ─────────────────────────────────────────────────────────────────────────────
 val NothingBlack = Color(0xFF000000)
-val NothingRed = Color(0xFFE5252D)
+
+/** Signal red — FILL only (white `accent-ink` on top). Foreground uses [NothingAccentTextDark]/Light via palette. */
+val NothingRed = Color(0xFFD71921)
+val NothingAccentInk = Color(0xFFFFFFFF)
+/** Legacy alias kept so older call sites compile; prefer HollowAccentText / HollowInk. */
 val HollowOrange = NothingRed
-val HollowDarkInk = Color(0xFFF5F5F7)
+val HollowDarkInk = Color(0xFFEDEDED)
 
-private val DarkCanvas = Color(0xFF000000)
-private val DarkSurface = Color(0xFF121214)
-private val DarkSurfaceElevated = Color(0xFF1A1A1E)
-private val DarkBorder = Color(0xFF27272A)
-private val DarkInk = Color(0xFFF5F5F7)
-private val DarkInkSecondary = Color(0xFF98989F)
-private val DarkInkMuted = Color(0xFF636369)
-private val DarkMatrixGreen = Color(0xFF2EE59D)
-private val DarkOrangeContainer = Color(0xFF2D0B0D)
+// dark
+private val DarkBg = Color(0xFF000000)
+private val DarkSurface = Color(0xFF0C0C0C)
+private val DarkRaised = Color(0xFF171717)
+private val DarkLine = Color(0xFF262626)
+private val DarkLine2 = Color(0xFF3A3A3A)
+private val DarkMuted = Color(0xFF5A5A5A)
+private val DarkSecondary = Color(0xFF8C8C8C)
+private val DarkPrimary = Color(0xFFEDEDED)
+private val DarkDisplay = Color(0xFFFFFFFF)
+private val DarkAccentText = Color(0xFFFF4438)
+private val DarkSuccess = Color(0xFF7BE38A)
+private val DarkWarning = Color(0xFFF2C94C)
+private val DarkError = Color(0xFFFF5247)
+private val DarkGlass = Color(0xE6101010)
+private val DarkErrorContainer = Color(0xFF1A0A0A)
 
-private val CarbonCanvas = Color(0xFF121212)
-private val CarbonSurface = Color(0xFF1B1B1B)
-private val CarbonSurfaceElevated = Color(0xFF242424)
-private val CarbonBorder = Color(0xFF2E2E2E)
-private val CarbonInk = Color(0xFFF4F4F4)
-private val CarbonInkSecondary = Color(0xFF9E9E9E)
-private val CarbonInkMuted = Color(0xFF6E6E6E)
-private val CarbonOrangeContainer = Color(0xFF331416)
-
-private val LightCanvas = Color(0xFFF4F4F2)
+// light
+private val LightBg = Color(0xFFF2F2F2)
 private val LightSurface = Color(0xFFFFFFFF)
-private val LightSurfaceElevated = Color(0xFFEAEAE6)
-private val LightBorder = Color(0xFFD8D8D3)
-private val LightInk = Color(0xFF0E0E10)
-private val LightInkSecondary = Color(0xFF5D5D65)
-private val LightInkMuted = Color(0xFF8A8A92)
-private val LightMatrixGreen = Color(0xFF0F9D58)
-private val LightOrangeContainer = Color(0xFFFFE5E7)
+private val LightRaised = Color(0xFFEDEDED)
+private val LightLine = Color(0xFFE2E2E2)
+private val LightLine2 = Color(0xFFCFCFCF)
+private val LightMuted = Color(0xFF9A9A9A)
+private val LightSecondary = Color(0xFF585A5A)
+private val LightPrimary = Color(0xFF1C1C1C)
+private val LightDisplay = Color(0xFF000000)
+private val LightAccentText = Color(0xFFC2141C)
+private val LightSuccess = Color(0xFF3D8B4A)
+private val LightWarning = Color(0xFF9C6B00)
+private val LightError = Color(0xFFD23B30)
+private val LightGlass = Color(0xF5FFFFFF)
+private val LightErrorContainer = Color(0xFFFBEAE8)
 
 @Immutable
 data class HollowPalette(
@@ -49,10 +63,16 @@ data class HollowPalette(
     val surface: Color,
     val surfaceElevated: Color,
     val border: Color,
+    val border2: Color,
     val ink: Color,
     val inkSecondary: Color,
     val inkMuted: Color,
+    val display: Color,
+    val accentText: Color,
     val matrixGreen: Color,
+    val warning: Color,
+    val error: Color,
+    val glass: Color,
     val invertedSurface: Color,
     val onInvertedSurface: Color,
     val pillNavFill: Color,
@@ -70,81 +90,70 @@ data class HollowPalette(
 )
 
 val DarkHollowPalette = HollowPalette(
-    canvas = DarkCanvas,
-    onCanvas = Color.White,
+    canvas = DarkBg,
+    onCanvas = DarkDisplay,
     surface = DarkSurface,
-    surfaceElevated = DarkSurfaceElevated,
-    border = DarkBorder,
-    ink = DarkInk,
-    inkSecondary = DarkInkSecondary,
-    inkMuted = DarkInkMuted,
-    matrixGreen = DarkMatrixGreen,
-    invertedSurface = Color.White,
-    onInvertedSurface = NothingBlack,
-    pillNavFill = Color(0xFF141417),
-    pillNavBorder = Color(0xFF26262C),
-    pillActiveBg = Color.White,
-    pillActiveIcon = NothingBlack,
-    topBtnFill = Color(0xFF0A0A0C),
-    topBtnBorder = Color(0xFF2E2E34),
-    dottedLine = Color(0xFF2B2B31),
-    dotInactive = Color(0xFF2E2E34),
-    switchOffTrack = NothingBlack,
-    switchOffBorder = Color(0xFF424249),
-    switchOffThumb = Color(0xFF8A8A94),
-    backdropDot = Color.White.copy(alpha = 0.028f)
+    surfaceElevated = DarkRaised,
+    border = DarkLine,
+    border2 = DarkLine2,
+    ink = DarkPrimary,
+    inkSecondary = DarkSecondary,
+    inkMuted = DarkMuted,
+    display = DarkDisplay,
+    accentText = DarkAccentText,
+    matrixGreen = DarkSuccess,
+    warning = DarkWarning,
+    error = DarkError,
+    glass = DarkGlass,
+    invertedSurface = DarkDisplay,
+    onInvertedSurface = DarkBg,
+    pillNavFill = DarkSurface,
+    pillNavBorder = DarkLine2,
+    pillActiveBg = DarkDisplay,
+    pillActiveIcon = DarkBg,
+    topBtnFill = Color.Transparent,
+    topBtnBorder = DarkLine2,
+    dottedLine = DarkLine2,
+    dotInactive = DarkLine2,
+    switchOffTrack = Color.Transparent,
+    switchOffBorder = DarkLine2,
+    switchOffThumb = DarkSecondary,
+    backdropDot = Color.White.copy(alpha = 0.34f)
 )
 
-val CarbonDarkHollowPalette = HollowPalette(
-    canvas = CarbonCanvas,
-    onCanvas = CarbonInk,
-    surface = CarbonSurface,
-    surfaceElevated = CarbonSurfaceElevated,
-    border = CarbonBorder,
-    ink = CarbonInk,
-    inkSecondary = CarbonInkSecondary,
-    inkMuted = CarbonInkMuted,
-    matrixGreen = DarkMatrixGreen,
-    invertedSurface = Color(0xFFF4F4F4),
-    onInvertedSurface = CarbonCanvas,
-    pillNavFill = Color(0xFF1D1D1D),
-    pillNavBorder = Color(0xFF303030),
-    pillActiveBg = Color(0xFFF4F4F4),
-    pillActiveIcon = CarbonCanvas,
-    topBtnFill = Color(0xFF1A1A1A),
-    topBtnBorder = Color(0xFF303030),
-    dottedLine = Color(0xFF303030),
-    dotInactive = Color(0xFF383838),
-    switchOffTrack = CarbonSurface,
-    switchOffBorder = Color(0xFF474747),
-    switchOffThumb = CarbonInkSecondary,
-    backdropDot = Color.White.copy(alpha = 0.030f)
-)
+/** The spec forbids a third theme: "Carbon" is kept only as a setting value and resolves to the dark tokens. */
+val CarbonDarkHollowPalette = DarkHollowPalette
 
 val LightHollowPalette = HollowPalette(
-    canvas = LightCanvas,
-    onCanvas = LightInk,
+    canvas = LightBg,
+    onCanvas = LightDisplay,
     surface = LightSurface,
-    surfaceElevated = LightSurfaceElevated,
-    border = LightBorder,
-    ink = LightInk,
-    inkSecondary = LightInkSecondary,
-    inkMuted = LightInkMuted,
-    matrixGreen = LightMatrixGreen,
-    invertedSurface = LightInk,
-    onInvertedSurface = Color.White,
-    pillNavFill = Color.White,
-    pillNavBorder = LightBorder,
-    pillActiveBg = LightInk,
-    pillActiveIcon = Color.White,
-    topBtnFill = Color.White,
-    topBtnBorder = Color(0xFFD2D2CC),
-    dottedLine = Color(0xFFCBCBC5),
-    dotInactive = Color(0xFFD2D2CC),
-    switchOffTrack = Color(0xFFE6E6E2),
-    switchOffBorder = Color(0xFFB5B5AF),
-    switchOffThumb = Color(0xFF6B6B73),
-    backdropDot = Color.Black.copy(alpha = 0.045f)
+    surfaceElevated = LightRaised,
+    border = LightLine,
+    border2 = LightLine2,
+    ink = LightPrimary,
+    inkSecondary = LightSecondary,
+    inkMuted = LightMuted,
+    display = LightDisplay,
+    accentText = LightAccentText,
+    matrixGreen = LightSuccess,
+    warning = LightWarning,
+    error = LightError,
+    glass = LightGlass,
+    invertedSurface = LightDisplay,
+    onInvertedSurface = LightBg,
+    pillNavFill = LightSurface,
+    pillNavBorder = LightLine2,
+    pillActiveBg = LightDisplay,
+    pillActiveIcon = LightBg,
+    topBtnFill = Color.Transparent,
+    topBtnBorder = LightLine2,
+    dottedLine = LightLine2,
+    dotInactive = LightLine2,
+    switchOffTrack = Color.Transparent,
+    switchOffBorder = LightLine2,
+    switchOffThumb = LightSecondary,
+    backdropDot = Color.Black.copy(alpha = 0.30f)
 )
 
 val LocalHollowPalette = staticCompositionLocalOf { DarkHollowPalette }
@@ -166,8 +175,6 @@ val NothingSurfaceElevated: Color
 val NothingBorder: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.border
 
-val NothingMatrixGreen: Color
-    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.matrixGreen
 
 val NothingInvertedSurface: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.invertedSurface
@@ -229,116 +236,88 @@ val HollowInkSecondary: Color
 val HollowInkMuted: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.inkMuted
 
-val HollowObsidian = Color(0xFF000000)
-val HollowObsidianSurface = Color(0xFF141416)
-val HollowObsidianDivider = Color(0xFF29292E)
-val HollowObsidianMuted = Color(0xFF94949C)
-val HollowAmber = Color(0xFFFFB020)
 
-val HollowForest = Color(0xFF050506)
-val HollowForestCard = Color(0xFF0C0B0E)
-val HollowForestDivider = Color(0xFF1C1C20)
-val HollowForestMuted = Color(0xFF8E8E92)
-val HollowLime = DarkMatrixGreen
+val HollowDisplayInk: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.display
 
-val ExpressiveLightColorScheme = lightColorScheme(
-    primary = LightInk,
-    onPrimary = Color.White,
-    primaryContainer = LightSurface,
-    onPrimaryContainer = LightInk,
-    secondary = NothingRed,
-    onSecondary = Color.White,
-    secondaryContainer = LightSurfaceElevated,
-    onSecondaryContainer = LightInk,
-    tertiary = LightMatrixGreen,
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFDFF6E8),
-    onTertiaryContainer = Color(0xFF0A3D22),
-    error = NothingRed,
-    onError = Color.White,
-    errorContainer = LightOrangeContainer,
-    onErrorContainer = Color(0xFF7D0E14),
-    background = LightCanvas,
-    onBackground = LightInk,
-    surface = LightCanvas,
-    onSurface = LightInk,
-    surfaceVariant = LightSurface,
-    onSurfaceVariant = LightInkSecondary,
-    outline = Color(0xFFB5B5AF),
-    outlineVariant = LightBorder,
-    surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFFAF9F7),
-    surfaceContainer = LightSurface,
-    surfaceContainerHigh = LightSurfaceElevated,
-    surfaceContainerHighest = Color(0xFFDFDFDA),
-    inverseSurface = LightInk,
-    inverseOnSurface = Color.White
+val HollowLine2: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.border2
+
+val HollowAccentText: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.accentText
+
+val HollowSuccess: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.matrixGreen
+
+val HollowWarning: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.warning
+
+val HollowError: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.error
+
+val HollowGlass: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.glass
+
+val NothingMatrixGreen: Color
+    @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.matrixGreen
+
+// legacy phase constants (non-themed) — now mapped onto the same tokens
+val HollowObsidian = DarkBg
+val HollowObsidianSurface = DarkSurface
+val HollowObsidianDivider = DarkLine
+val HollowObsidianMuted = DarkSecondary
+val HollowAmber = DarkWarning
+
+val HollowForest = DarkBg
+val HollowForestCard = DarkSurface
+val HollowForestDivider = DarkLine
+val HollowForestMuted = DarkSecondary
+val HollowLime = DarkSuccess
+
+private fun nothingScheme(
+    dark: Boolean, bg: Color, surface: Color, raised: Color, line: Color, line2: Color,
+    secondary: Color, primary: Color, display: Color, error: Color, errorContainer: Color, success: Color
+) = if (dark) darkColorScheme(
+    primary = display, onPrimary = bg,
+    primaryContainer = surface, onPrimaryContainer = primary,
+    secondary = primary, onSecondary = bg,
+    secondaryContainer = raised, onSecondaryContainer = primary,
+    tertiary = success, onTertiary = bg,
+    tertiaryContainer = surface, onTertiaryContainer = primary,
+    error = error, onError = NothingAccentInk,
+    errorContainer = errorContainer, onErrorContainer = error,
+    background = bg, onBackground = primary,
+    surface = bg, onSurface = primary,
+    surfaceVariant = surface, onSurfaceVariant = secondary,
+    outline = line2, outlineVariant = line,
+    surfaceContainerLowest = bg, surfaceContainerLow = bg,
+    surfaceContainer = surface, surfaceContainerHigh = raised, surfaceContainerHighest = raised,
+    inverseSurface = display, inverseOnSurface = bg
+) else lightColorScheme(
+    primary = display, onPrimary = bg,
+    primaryContainer = surface, onPrimaryContainer = primary,
+    secondary = primary, onSecondary = bg,
+    secondaryContainer = raised, onSecondaryContainer = primary,
+    tertiary = success, onTertiary = Color.White,
+    tertiaryContainer = surface, onTertiaryContainer = primary,
+    error = error, onError = NothingAccentInk,
+    errorContainer = errorContainer, onErrorContainer = error,
+    background = bg, onBackground = primary,
+    surface = bg, onSurface = primary,
+    surfaceVariant = surface, onSurfaceVariant = secondary,
+    outline = line2, outlineVariant = line,
+    surfaceContainerLowest = surface, surfaceContainerLow = surface,
+    surfaceContainer = surface, surfaceContainerHigh = raised, surfaceContainerHighest = raised,
+    inverseSurface = display, inverseOnSurface = bg
 )
 
-val ExpressiveDarkColorScheme = darkColorScheme(
-    primary = DarkInk,
-    onPrimary = NothingBlack,
-    primaryContainer = DarkSurface,
-    onPrimaryContainer = DarkInk,
-    secondary = NothingRed,
-    onSecondary = Color.White,
-    secondaryContainer = DarkSurfaceElevated,
-    onSecondaryContainer = DarkInk,
-    tertiary = HollowLime,
-    onTertiary = NothingBlack,
-    tertiaryContainer = HollowForestCard,
-    onTertiaryContainer = DarkInk,
-    error = NothingRed,
-    onError = Color.White,
-    errorContainer = DarkOrangeContainer,
-    onErrorContainer = Color(0xFFFFD8CF),
-    background = DarkCanvas,
-    onBackground = DarkInk,
-    surface = DarkCanvas,
-    onSurface = DarkInk,
-    surfaceVariant = DarkSurface,
-    onSurfaceVariant = DarkInkSecondary,
-    outline = Color(0xFF3A3A40),
-    outlineVariant = DarkBorder,
-    surfaceContainerLowest = DarkCanvas,
-    surfaceContainerLow = Color(0xFF0A0A0B),
-    surfaceContainer = DarkSurface,
-    surfaceContainerHigh = DarkSurfaceElevated,
-    surfaceContainerHighest = Color(0xFF242428),
-    inverseSurface = DarkInk,
-    inverseOnSurface = NothingBlack
+val ExpressiveLightColorScheme = nothingScheme(
+    false, LightBg, LightSurface, LightRaised, LightLine, LightLine2,
+    LightSecondary, LightPrimary, LightDisplay, LightError, LightErrorContainer, LightSuccess
 )
-
-val ExpressiveCarbonDarkColorScheme = darkColorScheme(
-    primary = CarbonInk,
-    onPrimary = CarbonCanvas,
-    primaryContainer = CarbonSurface,
-    onPrimaryContainer = CarbonInk,
-    secondary = NothingRed,
-    onSecondary = Color.White,
-    secondaryContainer = CarbonSurfaceElevated,
-    onSecondaryContainer = CarbonInk,
-    tertiary = HollowLime,
-    onTertiary = CarbonCanvas,
-    tertiaryContainer = HollowForestCard,
-    onTertiaryContainer = CarbonInk,
-    error = NothingRed,
-    onError = Color.White,
-    errorContainer = CarbonOrangeContainer,
-    onErrorContainer = Color(0xFFFFD8CF),
-    background = CarbonCanvas,
-    onBackground = CarbonInk,
-    surface = CarbonCanvas,
-    onSurface = CarbonInk,
-    surfaceVariant = CarbonSurface,
-    onSurfaceVariant = CarbonInkSecondary,
-    outline = Color(0xFF424242),
-    outlineVariant = CarbonBorder,
-    surfaceContainerLowest = CarbonCanvas,
-    surfaceContainerLow = Color(0xFF171717),
-    surfaceContainer = CarbonSurface,
-    surfaceContainerHigh = CarbonSurfaceElevated,
-    surfaceContainerHighest = Color(0xFF2C2C2C),
-    inverseSurface = CarbonInk,
-    inverseOnSurface = CarbonCanvas
+val ExpressiveDarkColorScheme = nothingScheme(
+    true, DarkBg, DarkSurface, DarkRaised, DarkLine, DarkLine2,
+    DarkSecondary, DarkPrimary, DarkDisplay, DarkError, DarkErrorContainer, DarkSuccess
 )
+/** No third theme in the spec — Carbon resolves to the dark scheme. */
+val ExpressiveCarbonDarkColorScheme = ExpressiveDarkColorScheme

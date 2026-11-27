@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="hollow_widget_bg">#FF121214</color>
-    <color name="hollow_widget_card">#FF1A1A1E</color>
-    <color name="hollow_widget_text">#FFF5F5F7</color>
-    <color name="hollow_widget_muted">#FF98989F</color>
+    <!-- Nothing dark tokens: surface / raised / primary / secondary -->
+    <color name="hollow_widget_bg">#FF0C0C0C</color>
+    <color name="hollow_widget_card">#FF171717</color>
+    <color name="hollow_widget_text">#FFEDEDED</color>
+    <color name="hollow_widget_muted">#FF8C8C8C</color>
 </resources>

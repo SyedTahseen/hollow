@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.NothingInvertedSurface
 import com.hollow.vpn.ui.theme.HollowText
 import android.net.Uri
 import com.hollow.vpn.ui.theme.HollowSansFamily
@@ -347,11 +349,7 @@ private fun SettingsOverview(
     ) {
         Text(
             text = "SETTINGS",
-            fontFamily = DotoDisplayFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Display,
-            lineHeight = HollowLineHeight.Display,
-            letterSpacing = HollowTracking.Display,
+            style = HollowText.Headline,
             maxLines = 1,
             color = NothingOnCanvas,
             modifier = Modifier.testTag("settings_title")
@@ -488,7 +486,7 @@ private fun SettingsOverview(
     ) {
         Text(
             text = "App version: ${BuildConfig.VERSION_NAME}",
-            fontFamily = HollowSansFamily,
+            fontFamily = HollowMonoFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -500,12 +498,9 @@ private fun SettingsOverview(
                 .testTag("card_about_hollow")
         )
         Text(
-            text = "Third party licenses",
-            fontFamily = HollowSansFamily,
-            fontSize = HollowType.Micro,
-            lineHeight = HollowLineHeight.Micro,
-            letterSpacing = HollowTracking.Micro,
-            color = HollowOrange,
+            text = "THIRD PARTY LICENSES",
+            style = HollowText.Label,
+            color = HollowInk,
             modifier = Modifier
                 .clip(RoundedCornerShape(HollowRadius.Sm))
                 .clickable(role = Role.Button) { ctx.openUrl(AppLinks.LICENSE_URL, onShowMessage) }
@@ -520,11 +515,8 @@ private fun SettingsOverview(
 internal fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
-        fontFamily = HollowSansFamily,
-        fontSize = HollowType.Micro,
-        lineHeight = HollowLineHeight.Micro,
-        letterSpacing = HollowTracking.Micro,
-        color = HollowOrange,
+        style = HollowText.Section,
+        color = HollowInkSecondary,
         modifier = Modifier.padding(top = HollowSpace.Xxl, bottom = HollowSpace.Sm, start = HollowSpace.Xxs)
     )
 }
@@ -633,7 +625,7 @@ private fun SettingsDetail(
         }
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Text(
-            text = title.uppercase(),
+            text = title,
             style = HollowText.Subheadline,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -768,7 +760,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
 internal fun DetailDescription(text: String) {
     Text(
         text = text,
-        fontFamily = HollowSansFamily,
+        fontFamily = HollowMonoFamily,
         fontSize = HollowType.Micro,
         letterSpacing = HollowTracking.Micro,
         lineHeight = HollowLineHeight.Micro,
@@ -825,7 +817,7 @@ internal fun DetailRadioList(
                     selected = selected,
                     onClick = null,
                     colors = RadioButtonDefaults.colors(
-                        selectedColor = HollowOrange,
+                        selectedColor = NothingInvertedSurface,
                         unselectedColor = HollowInkSecondary
                     )
                 )
@@ -839,7 +831,7 @@ internal fun DetailRadioList(
                     Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = option.subtitle,
-                        fontFamily = HollowSansFamily,
+                        fontFamily = HollowMonoFamily,
                         fontSize = HollowType.Micro,
                         letterSpacing = HollowTracking.Micro,
                         lineHeight = HollowLineHeight.Micro,

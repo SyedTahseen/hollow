@@ -1,5 +1,11 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.NothingSurface
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.HollowError
+import com.hollow.vpn.ui.theme.HollowDisplayInk
+import com.hollow.vpn.ui.components.HollowPrimaryButton
+import com.hollow.vpn.ui.components.hollowFieldColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,7 +75,7 @@ fun EditServerDialog(
                 )
             },
             confirmButton = {
-                TextButton(onClick = onDismiss) { Text("Close", style = HollowText.ButtonSmall, color = HollowInk) }
+                TextButton(onClick = onDismiss) { Text("CLOSE", style = HollowText.ButtonSmall, color = HollowInk) }
             }
         )
         return
@@ -137,7 +143,7 @@ fun EditServerDialog(
                     }
                 }
                 TextButton(onClick = { params += ("" to "") }) {
-                    Text("Add parameter", style = HollowText.ButtonSmall, color = HollowOrange)
+                    Text("ADD PARAMETER", style = HollowText.ButtonSmall, color = HollowInk)
                 }
 
                 if (fromSubscription) {
@@ -150,9 +156,9 @@ fun EditServerDialog(
                 }
                 error?.let {
                     Text(
-                        it,
+                        "[ERROR: " + it.uppercase() + "]",
                         style = HollowText.Caption,
-                        color = HollowOrange,
+                        color = HollowError,
                         modifier = Modifier.padding(top = HollowSpace.Md)
                     )
                 }
@@ -160,7 +166,7 @@ fun EditServerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            HollowPrimaryButton(onClick = {
                 val (link, err) = LinkEditor.finish(
                     model.copy(
                         name = name, host = host, port = port, user = user, pass = pass,
@@ -168,10 +174,10 @@ fun EditServerDialog(
                     )
                 )
                 error = err ?: link?.let { onSave(it) }
-            }) { Text("Save", style = HollowText.ButtonSmall, color = HollowOrange) }
+            }) { Text("SAVE", style = HollowText.ButtonSmall) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk) }
+            TextButton(onClick = onDismiss) { Text("CANCEL", style = HollowText.ButtonSmall, color = HollowInk) }
         }
     )
 }
@@ -209,23 +215,14 @@ internal fun HollowField(
         onValueChange = onValueChange,
         modifier = modifier,
         placeholder = placeholder?.let { p ->
-            { Text(p, color = HollowInkMuted, fontFamily = HollowSansFamily) }
+            { Text(p, color = HollowInkMuted, fontFamily = HollowMonoFamily) }
         },
         isError = isError,
         singleLine = true,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         trailingIcon = trailingIcon,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = HollowCreamSurface,
-            unfocusedContainerColor = HollowCreamSurface,
-            focusedBorderColor = HollowInk,
-            unfocusedBorderColor = HollowCreamDivider,
-            focusedTextColor = HollowInk,
-            unfocusedTextColor = HollowInk,
-            errorBorderColor = HollowOrange,
-            errorContainerColor = HollowCreamSurface
-        ),
+        colors = hollowFieldColors(),
         shape = RoundedCornerShape(HollowRadius.Md)
     )
 }

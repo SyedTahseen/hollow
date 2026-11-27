@@ -171,11 +171,7 @@ fun QrScanScreen(
 
             Text(
                 text = "SCAN QR",
-                fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Display,
-                lineHeight = HollowLineHeight.Display,
-                letterSpacing = HollowTracking.Display,
+                style = com.hollow.vpn.ui.theme.HollowText.Headline,
                 maxLines = 1,
                 color = NothingOnCanvas,
                 modifier = Modifier.weight(1f)
@@ -184,9 +180,9 @@ fun QrScanScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
                 if (hasPermission && hasFlash) {
                     HollowTopSquareButton(
-                        containerColor = NothingTopBtnFill,
-                        contentColor = if (torchOn) NothingRed else NothingOnCanvas,
-                        borderColor = NothingTopBtnBorder,
+                        containerColor = if (torchOn) com.hollow.vpn.ui.theme.NothingInvertedSurface else NothingTopBtnFill,
+                        contentColor = if (torchOn) com.hollow.vpn.ui.theme.NothingOnInvertedSurface else NothingOnCanvas,
+                        borderColor = if (torchOn) com.hollow.vpn.ui.theme.NothingInvertedSurface else NothingTopBtnBorder,
                         contentDescription = "Flash",
                         onClick = { torchOn = !torchOn },
                         modifier = Modifier.testTag("btn_scan_flash")
@@ -242,16 +238,13 @@ fun QrScanScreen(
                     Icon(
                         imageVector = Icons.Outlined.QrCodeScanner,
                         contentDescription = null,
-                        tint = NothingRed,
+                        tint = com.hollow.vpn.ui.theme.HollowInk,
                         modifier = Modifier.size(HollowSizes.Field)
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Lg))
                     Text(
                         text = "Scan a QR code",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = HollowType.Headline,
-                        lineHeight = HollowLineHeight.Headline,
-                        letterSpacing = HollowTracking.Headline,
+                        style = com.hollow.vpn.ui.theme.HollowText.Heading,
                         color = HollowInk
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Sm))
@@ -298,7 +291,7 @@ fun QrScanScreen(
                     fontSize = HollowType.Small,
                     lineHeight = HollowLineHeight.Small,
                     letterSpacing = HollowTracking.Small,
-                    color = NothingRed,
+                    color = com.hollow.vpn.ui.theme.HollowError,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -389,7 +382,7 @@ private fun ScanCameraArea(
             val t = (size.height - sd) / 2f
             val r = l + sd
             val b = t + sd
-            val radius = 20.dp.toPx()
+            val radius = 8.dp.toPx()
             val len = 36.dp.toPx()
 
             val scrim = Path().apply {
@@ -399,6 +392,7 @@ private fun ScanCameraArea(
             }
             drawPath(scrim, scrimColor)
 
+            val cornerInk = androidx.compose.ui.graphics.Color.White
             val corners = Path().apply {
                 moveTo(l, t + len); lineTo(l, t + radius)
                 arcTo(Rect(l, t, l + 2 * radius, t + 2 * radius), 180f, 90f, false); lineTo(l + len, t)
@@ -411,8 +405,8 @@ private fun ScanCameraArea(
             }
             drawPath(
                 corners,
-                NothingRed,
-                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                cornerInk,
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Butt, join = StrokeJoin.Miter)
             )
         }
 

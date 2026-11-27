@@ -1,5 +1,9 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.theme.HollowMonoFamily
+import com.hollow.vpn.ui.theme.NothingInvertedSurface
+import com.hollow.vpn.ui.components.hollowFieldColors
 import com.hollow.vpn.ui.theme.HollowText
 import android.content.ClipData
 import com.hollow.vpn.ui.theme.HollowSansFamily
@@ -155,11 +159,7 @@ fun SettingOptionPickerDialog(
         ) {
             Text(
                 text = title,
-                fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Display,
-                lineHeight = HollowLineHeight.Display,
-                letterSpacing = HollowTracking.Display,
+                style = HollowText.Heading,
                 color = HollowInk
             )
 
@@ -193,7 +193,7 @@ fun SettingOptionPickerDialog(
                                 selected = isSelected,
                                 onClick = { onSelect(option.value) },
                                 colors = RadioButtonDefaults.colors(
-                                    selectedColor = HollowOrange,
+                                    selectedColor = NothingInvertedSurface,
                                     unselectedColor = HollowInkSecondary
                                 )
                             )
@@ -255,8 +255,7 @@ fun RawXrayJsonEditorDialog(
         title = {
             Text(
                 text = "${server.countryName} · Raw Config",
-                fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
+                style = HollowText.Heading,
                 color = HollowInk
             )
         },
@@ -271,14 +270,7 @@ fun RawXrayJsonEditorDialog(
                     letterSpacing = HollowTracking.Small,
                     color = HollowInk
                 ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = NothingCanvas,
-                    unfocusedContainerColor = NothingCanvas,
-                    focusedBorderColor = HollowInk,
-                    unfocusedBorderColor = NothingBorder,
-                    focusedTextColor = HollowInk,
-                    unfocusedTextColor = HollowInk
-                ),
+                colors = hollowFieldColors(),
                 shape = RoundedCornerShape(HollowRadius.Md),
                 minLines = 10,
                 maxLines = 15,
@@ -337,7 +329,7 @@ internal fun AboutHollowSheet(
                     Canvas(modifier = Modifier.matchParentSize()) {
                         val center = Offset(size.width * 0.88f, size.height * 0.25f)
                         drawCircle(
-                            color = NothingRed.copy(alpha = 0.25f),
+                            color = HollowInk.copy(alpha = 0.16f),
                             radius = 68.dp.toPx(),
                             center = center,
                             style = Stroke(width = 1.dp.toPx())
@@ -377,7 +369,7 @@ internal fun AboutHollowSheet(
                                 Text(
                                     text = "HOLLOW VPN",
                                     fontFamily = DotoDisplayFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.Medium,
                                     fontSize = HollowType.Headline,
                                     lineHeight = HollowLineHeight.Headline,
                                     letterSpacing = HollowTracking.Headline,
@@ -390,13 +382,13 @@ internal fun AboutHollowSheet(
                                 )
                             }
                             Surface(
-                                shape = RoundedCornerShape(50),
-                                color = HollowOrange
+                                shape = RoundedCornerShape(HollowRadius.Pill),
+                                color = NothingInvertedSurface
                             ) {
                                 Text(
                                     text = "v${BuildConfig.VERSION_NAME}",
                                     style = HollowText.Label,
-                                    color = Color.White,
+                                    color = NothingOnInvertedSurface,
                                     modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Xs)
                                 )
                             }
@@ -422,7 +414,7 @@ internal fun AboutHollowSheet(
             Text(
                 text = "ARCHITECTURE & PRIVACY",
                 style = HollowText.Section,
-                color = HollowOrange
+                color = HollowInkSecondary
             )
             Spacer(modifier = Modifier.height(HollowSpace.Md))
 
@@ -579,7 +571,7 @@ private fun AboutMetaRow(
     ) {
         Text(
             text = label,
-            fontFamily = HollowSansFamily,
+            fontFamily = HollowMonoFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
