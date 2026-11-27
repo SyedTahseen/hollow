@@ -410,7 +410,7 @@ private fun HomeContent(
                     .fillMaxWidth()
                     .minimumInteractiveComponentSize()
                     .nothingPressScale(serverCardInteraction, pressedScale = HollowMotion.PressCard)
-                    .clip(RoundedCornerShape(HollowRadius.Lg))
+                    .clip(ServerCardShape)
                     .clickable(
                         interactionSource = serverCardInteraction,
                         indication = androidx.compose.material3.ripple(),
@@ -419,7 +419,7 @@ private fun HomeContent(
                         if (selectedServer != null) detailsExpanded = !detailsExpanded else addServerState.menuOpen = true
                     }
                     .testTag("active_server_pill"),
-                shape = RoundedCornerShape(HollowRadius.Lg),
+                shape = ServerCardShape,
                 color = pc.surface,
                 border = BorderStroke(HollowStroke.Hairline, pc.border)
             ) {
@@ -428,7 +428,7 @@ private fun HomeContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = HollowSpace.Lg, vertical = if (isCompact) HollowSpace.Md else HollowSpace.Md),
+                        .padding(horizontal = HollowSpace.Xl, vertical = if (isCompact) HollowSpace.Md else HollowSpace.Md),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (selectedServer == null) {
@@ -607,6 +607,9 @@ private fun TrayHandle(color: Color, expanded: Boolean, modifier: Modifier = Mod
             .semantics { contentDescription = if (expanded) "Collapse server details" else "Expand server details" }
     )
 }
+
+/** Fully rounded when collapsed; stays a tidy rounded block (not a tall capsule) once the details panel expands. */
+private val ServerCardShape = RoundedCornerShape(36.dp)
 
 @Composable
 private fun ConnectionStatsCard(
