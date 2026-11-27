@@ -169,11 +169,16 @@ internal fun formatConsumerProtocol(raw: String, transport: String? = null): Str
         .ifBlank { "Auto" }
 
     val cleanTransport = transport?.trim().orEmpty()
-    return if (cleanTransport.isNotBlank() && !cleaned.contains(cleanTransport, ignoreCase = true)) {
-        "$cleaned · $cleanTransport"
+    val joined = if (cleanTransport.isNotBlank() && !cleaned.contains(cleanTransport, ignoreCase = true)) {
+        "$cleaned / $cleanTransport"
     } else {
         cleaned
     }
+    // Use "/" between parts (e.g. "Shadowsocks / TLS") instead of dots or bullets.
+    return joined
+        .replace(Regex("\\s*[·•∙*]\\s*"), " / ")
+        .replace(Regex("\\s*/\\s*(/\\s*)+"), " / ")
+        .trim()
 }
 
 @Composable
@@ -453,6 +458,7 @@ private fun HomeContent(
                 border = BorderStroke(HollowStroke.Hairline, pc.border)
             ) {
                 Column(modifier = Modifier.fillMaxWidth().animateContentSize(tween(HollowMotion.Standard))) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -519,14 +525,6 @@ private fun HomeContent(
                             color = pingColor,
                             maxLines = 1
                         )
-                        Spacer(modifier = Modifier.width(HollowSpace.Xs))
-                        val chevronRotation by animateFloatAsState(if (detailsExpanded) 180f else 0f, tween(HollowMotion.Standard), label = "server_card_chevron")
-                        Icon(
-                            imageVector = Icons.Rounded.KeyboardArrowDown,
-                            contentDescription = if (detailsExpanded) "Collapse server details" else "Expand server details",
-                            tint = pc.muted,
-                            modifier = Modifier.size(HollowSizes.Icon).rotate(chevronRotation)
-                        )
                     } else {
                         Icon(
                             imageVector = Icons.Rounded.Add,
@@ -535,6 +533,14 @@ private fun HomeContent(
                             modifier = Modifier.size(HollowSizes.Icon)
                         )
                     }
+                }
+                if (selectedServer != null) {
+                    TrayHandle(
+                        color = pc.muted,
+                        expanded = detailsExpanded,
+                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 5.dp)
+                    )
+                }
                 }
                 if (selectedServer != null) {
                     AnimatedVisibility(visible = detailsExpanded, enter = fadeIn(tween(HollowMotion.Fast)) + expandVertically(tween(HollowMotion.Standard)), exit = fadeOut(tween(HollowMotion.Quick)) + shrinkVertically(tween(HollowMotion.Fast))) {
@@ -629,6 +635,19 @@ private fun formatSpeed2(bytesPerSec: Long): String {
     }
 }
 
+/** Small grabber bar at the top of the server / stats tray; the whole tray is tappable to expand it. */
+@Composable
+private fun TrayHandle(color: Color, expanded: Boolean, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .width(36.dp)
+            .height(4.dp)
+            .clip(CircleShape)
+            .background(color.copy(alpha = 0.55f))
+            .semantics { contentDescription = if (expanded) "Collapse server details" else "Expand server details" }
+    )
+}
+
 /** Footer card while protected: connection time plus live download / upload speed. Tap anywhere on it to expand server details. */
 @Composable
 private fun ConnectionStatsCard(
@@ -651,6 +670,7 @@ private fun ConnectionStatsCard(
         border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowBar.Border)
     ) {
         Column(modifier = Modifier.fillMaxWidth().animateContentSize(tween(HollowMotion.Standard))) {
+        Box(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -699,6 +719,12 @@ private fun ConnectionStatsCard(
                     }
                 }
             }
+        }
+        TrayHandle(
+            color = Color(0xFF8E8E92),
+            expanded = expanded,
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 5.dp)
+        )
         }
         AnimatedVisibility(visible = expanded, enter = fadeIn(tween(HollowMotion.Fast)) + expandVertically(tween(HollowMotion.Standard)), exit = fadeOut(tween(HollowMotion.Quick)) + shrinkVertically(tween(HollowMotion.Fast))) {
             expandedContent()
@@ -1019,26 +1045,23 @@ fun ServerItemRowContent(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-            ) {
-                Text(
-                    text = cleanProtocol,
-                    style = HollowText.Caption,
-                    color = HollowInkSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                Text(
-                    text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
-                    style = HollowText.SmallMedium.copy(fontFeatureSettings = "tnum"),
-                    color = pingColor,
-                    maxLines = 1
-                )
-            }
+            Text(
+                text = cleanProtocol,
+                style = HollowText.Caption,
+                color = HollowInkSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
+
+        // Ping: vertically centered on the right, next to the favorite star.
+        Spacer(modifier = Modifier.width(HollowSpace.Sm))
+        Text(
+            text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
+            style = HollowText.SmallMedium.copy(fontFeatureSettings = "tnum"),
+            color = pingColor,
+            maxLines = 1
+        )
 
         if (!isSelectionMode) {
             IconButton(
