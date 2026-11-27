@@ -209,7 +209,6 @@ fun CountryServerListScreen(
             .fillMaxSize()
             .background(NothingCanvas)
             .statusBarsPadding()
-            .padding(bottom = bottomContentPadding)
     ) {
         Column(
             modifier = Modifier
@@ -531,7 +530,7 @@ fun CountryServerListScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .testTag("server_lazy_column"),
-                contentPadding = PaddingValues(bottom = HollowSpace.Xxl)
+                contentPadding = PaddingValues(bottom = HollowSpace.Xxl + bottomContentPadding)
             ) {
                 if (displayedServers.isEmpty()) {
                     item(key = "empty_state") {
@@ -597,7 +596,7 @@ fun CountryServerListScreen(
                     item(key = "list_header") {
                         // Same as Outrun: always "All servers (N)" with the total number of servers.
                         Text(
-                            text = "All servers ($totalServerCount)",
+                            text = "All servers (${displayedServers.size})",
                             style = HollowText.Small,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
@@ -669,6 +668,7 @@ fun CountryServerListScreen(
             val lastSub = remember { mutableStateOf<SubscriptionEntity?>(null) }
             SideEffect { if (activeSub != null) lastSub.value = activeSub }
             AnimatedVisibility(
+                modifier = Modifier.padding(bottom = bottomContentPadding),
                 visible = activeSub != null,
                 enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
                 exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
