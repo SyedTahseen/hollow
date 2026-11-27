@@ -380,27 +380,12 @@ fun HollowVpnApp(
                     }
                 },
                 bottomBar = {
-                    val isBusy = fetchingProgress.isActive || isRepingAll || isTestingFastest
-                    // Thin loading bar (same idea as Outrun's latency test). The server list draws its own under the header.
-                    val showLoadingBar = isBusy && currentScreen != VpnScreen.SERVER_LIST
                     val renderNavBar = showBottomNav && !useNavigationRail
-                    if (showLoadingBar || renderNavBar) {
+                    if (renderNavBar) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            AnimatedVisibility(
-                                visible = showLoadingBar,
-                                enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
-                                exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
-                            ) {
-                                LinearProgressIndicator(
-                                    modifier = Modifier.fillMaxWidth().height(HollowSizes.Spinner),
-                                    color = HollowOrange,
-                                    trackColor = NothingBorder
-                                )
-                            }
-
                             AnimatedVisibility(
                                 visible = renderNavBar,
                                 enter = slideInVertically(
