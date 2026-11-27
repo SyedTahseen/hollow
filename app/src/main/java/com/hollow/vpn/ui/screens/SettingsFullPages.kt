@@ -334,7 +334,7 @@ internal fun SplitAppsPage(
         val regularList = regular
         if (regularList == null) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = HollowDisplayInk)
+                com.hollow.vpn.ui.components.HollowSegmentedSpinner()
             }
         } else {
             val loadedSystem = (systemApps as? SystemApps.Content)?.apps.orEmpty()
@@ -361,7 +361,7 @@ internal fun SplitAppsPage(
                     SystemApps.NotLoaded -> item(key = "system_apps_loading") { Spacer(Modifier.height(64.dp)) }
                     SystemApps.Loading -> item(key = "system_apps_loading") {
                         Box(Modifier.heightIn(min = 64.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = HollowDisplayInk)
+                            com.hollow.vpn.ui.components.HollowSegmentedSpinner()
                         }
                     }
                     is SystemApps.Content -> items(state.apps.filter { it.pkg !in sel }, key = { "y_" + it.pkg }) { a ->

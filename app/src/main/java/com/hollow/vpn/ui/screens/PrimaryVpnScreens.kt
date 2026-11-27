@@ -100,6 +100,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import com.hollow.vpn.vpn.ServerIpDetails
 import java.time.ZoneId
@@ -148,6 +149,7 @@ import com.hollow.vpn.ui.theme.HollowForestCard
 import com.hollow.vpn.ui.theme.HollowForestDivider
 import com.hollow.vpn.ui.theme.HollowForestMuted
 import com.hollow.vpn.ui.theme.HollowInk
+import com.hollow.vpn.ui.theme.HollowAccentText
 import com.hollow.vpn.ui.theme.HollowInkSecondary
 import com.hollow.vpn.ui.theme.HollowLime
 import com.hollow.vpn.ui.theme.HollowObsidian
@@ -240,7 +242,7 @@ fun ConnectedHomeScreen(
         landLine = displayInk.copy(alpha = 0.14f)
     )
     // Pin = state dot: success when protected, warning while connecting, display when idle.
-    val pinTone = when (homePhase) { 2 -> HollowSuccess; 1 -> HollowWarning; else -> displayInk }
+    val pinTone = when (homePhase) { 2 -> HollowSuccess; 1 -> HollowWarning; else -> NothingRed }
 
     Box(
         modifier = Modifier
@@ -332,7 +334,7 @@ private fun HomeContent(
     val protectedPhase = phase == 2
     val titleText = when (phase) { 2 -> "YOU ARE PROTECTED."; 1 -> "CONNECTING."; else -> "YOU ARE UNPROTECTED." }
     val pc = hollowPhaseColors(phase)
-    val titleColor = if (phase == 2) HollowSuccess else HollowDisplayInk
+    val titleColor = if (phase == 0) NothingRed else HollowDisplayInk
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     BoxWithConstraints(
@@ -347,7 +349,7 @@ private fun HomeContent(
 
         Column(modifier = Modifier.fillMaxSize()) {
             HomeTopBar(
-                dotState = when (phase) { 2 -> HollowStateDot.Done; 1 -> HollowStateDot.Running; else -> HollowStateDot.NeedsInput },
+                dotState = when (phase) { 2 -> HollowStateDot.Live; 1 -> HollowStateDot.Running; else -> HollowStateDot.NeedsInput },
                 textColor = HollowDisplayInk,
                 buttonContainer = NothingTopBtnFill, buttonContent = NothingOnCanvas, buttonBorder = NothingTopBtnBorder,
                 addServerState = addServerState, addServerActions = addServerActions, onOpenSettings = onOpenSettings
@@ -844,7 +846,7 @@ private fun ServerDetailsPanel(
         if (loading) {
             Spacer(modifier = Modifier.height(HollowSpace.Xs))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(modifier = Modifier.size(HollowSizes.IconSm), strokeWidth = 2.dp, color = HollowDisplayInk)
+                com.hollow.vpn.ui.components.HollowSegmentedSpinner(size = HollowSizes.IconSm)
                 Spacer(modifier = Modifier.width(HollowSpace.Sm))
                 Text("[LOADING…]", fontFamily = HollowMonoFamily, fontSize = HollowType.Caption, letterSpacing = HollowTracking.Micro, color = mutedColor)
             }
@@ -927,7 +929,13 @@ fun ServerItemRowContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md),
+            .then(
+                if (server.isSelected) Modifier
+                    .background(NothingSurfaceElevated)
+                    .drawBehind { drawRect(NothingRed, size = androidx.compose.ui.geometry.Size(2.dp.toPx(), size.height)) }
+                else Modifier
+            )
+            .padding(start = if (server.isSelected) HollowSpace.Md else 0.dp, end = 0.dp, top = HollowSpace.Md, bottom = HollowSpace.Md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isSelectionMode) {
@@ -960,12 +968,10 @@ fun ServerItemRowContent(
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 if (server.isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .size(HollowSizes.Dot)
-                            .clip(CircleShape)
-                            .background(NothingMatrixGreen)
-                            .semantics { contentDescription = "Active server" }
+                    com.hollow.vpn.ui.components.HollowStateDotView(
+                        com.hollow.vpn.ui.components.HollowStateDot.Live,
+                        size = HollowSizes.Dot,
+                        modifier = Modifier.semantics { contentDescription = "Active server" }
                     )
                 } else if (showLightningBadge) {
                     Surface(

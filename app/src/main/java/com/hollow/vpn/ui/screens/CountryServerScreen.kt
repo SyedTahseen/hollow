@@ -451,10 +451,10 @@ fun CountryServerListScreen(
                 enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
                 exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
             ) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().padding(top = HollowSpace.Sm).height(HollowSizes.Spinner),
+                com.hollow.vpn.ui.components.HollowIndeterminateBar(
                     color = HollowDisplayInk,
-                    trackColor = NothingBorder
+                    track = NothingBorder,
+                    modifier = Modifier.padding(top = HollowSpace.Sm)
                 )
             }
 

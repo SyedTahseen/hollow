@@ -62,7 +62,6 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -336,21 +335,21 @@ fun HollowVpnApp(
                         selected = selectedBottomTab == HollowBottomTab.CONNECT,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME) },
                         icon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = "Connect") },
-                        label = { Text("Connect") },
+                        label = { Text("CONNECT", style = com.hollow.vpn.ui.theme.HollowText.ButtonSmall) },
                         colors = railColors
                     )
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.SERVERS,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.SERVER_LIST) },
                         icon = { Icon(Icons.Outlined.Dns, contentDescription = "Servers") },
-                        label = { Text("Servers") },
+                        label = { Text("SERVERS", style = com.hollow.vpn.ui.theme.HollowText.ButtonSmall) },
                         colors = railColors
                     )
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.SETTINGS,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.SETTINGS) },
                         icon = { Icon(Icons.Outlined.Settings, contentDescription = "Settings") },
-                        label = { Text("Settings") },
+                        label = { Text("SETTINGS", style = com.hollow.vpn.ui.theme.HollowText.ButtonSmall) },
                         colors = railColors
                     )
                     Spacer(Modifier.weight(1f))
@@ -363,13 +362,7 @@ fun HollowVpnApp(
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = {
                     SnackbarHost(hostState = snackbarHostState) { data ->
-                        Snackbar(
-                            snackbarData = data,
-                            shape = RoundedCornerShape(HollowRadius.Md),
-                            containerColor = NothingSurface,
-                            contentColor = HollowInk,
-                            actionColor = HollowDisplayInk
-                        )
+                        com.hollow.vpn.ui.components.HollowStatusBanner(data.visuals.message)
                     }
                 },
                 bottomBar = {

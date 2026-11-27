@@ -91,6 +91,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -190,7 +191,10 @@ fun HollowStatusBrandRow(
     HollowStateDotView(dotState, size = HollowSizes.Dot)
     Spacer(Modifier.width(HollowSpace.Md))
     Text(
-        text = "HOLLOW VPN",
+        text = androidx.compose.ui.text.buildAnnotatedString {
+            append("HOLLOW ")
+            withStyle(androidx.compose.ui.text.SpanStyle(color = com.hollow.vpn.ui.theme.NothingRed)) { append("VPN") }
+        },
         fontFamily = DotoDisplayFamily,
         fontWeight = FontWeight.Medium,
         fontSize = HollowType.Heading,
@@ -418,15 +422,6 @@ fun HollowSlideActionPill(
     val dir = if (reverse) -1f else 1f
 
     val nudgeMotion = rememberInfiniteTransition(label = "slide_nudge")
-    val nudgeOffsetDp by nudgeMotion.animateFloat(
-        initialValue = 0f,
-        targetValue = 6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 850, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "slide_nudge_x"
-    )
     val wave by nudgeMotion.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -460,8 +455,6 @@ fun HollowSlideActionPill(
         }
         val offsetX = remember(label, reverse) { Animatable(0f) }
         val progress = (offsetX.value / maxOffsetPx).coerceIn(0f, 1f)
-        val nudgePx = with(density) { nudgeOffsetDp.dp.toPx() }
-        val nudgeFactor = (1f - progress * 10f).coerceIn(0f, 1f)
         val startAlign = if (reverse) Alignment.CenterEnd else Alignment.CenterStart
         val endAlign = if (reverse) Alignment.CenterStart else Alignment.CenterEnd
 
@@ -520,7 +513,7 @@ fun HollowSlideActionPill(
             modifier = Modifier
                 .align(startAlign)
                 .padding(horizontal = trackPadding)
-                .offset { IntOffset((dir * (offsetX.value + nudgePx * nudgeFactor)).roundToInt(), 0) }
+                .offset { IntOffset((dir * offsetX.value).roundToInt(), 0) }
                 .size(width = thumbWidth, height = thumbHeight)
                 .clip(shape)
                 .background(thumbColor)
@@ -581,19 +574,20 @@ fun HollowSwitch(
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    // ON = white track + black knob (inversion). OFF = outlined track + grey knob. Never the accent.
+    // ON = signal-red track + white knob (Nothing OS look, chosen for Hollow). OFF = line-2 track + muted knob.
+    // NOTE: nothing-ui.css `.switch.on` is white/black; swap the three NothingRed/AccentInk refs below to revert.
     val trackColor by animateColorAsState(
-        targetValue = if (checked) NothingPillActiveBg else NothingSwitchOffTrack,
+        targetValue = if (checked) com.hollow.vpn.ui.theme.NothingRed else NothingSwitchOffTrack,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_track"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (checked) NothingPillActiveBg else NothingSwitchOffBorder,
+        targetValue = if (checked) com.hollow.vpn.ui.theme.NothingRed else NothingSwitchOffBorder,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_border"
     )
     val thumbColor by animateColorAsState(
-        targetValue = if (checked) NothingPillActiveIcon else NothingSwitchOffThumb,
+        targetValue = if (checked) com.hollow.vpn.ui.theme.NothingAccentInk else NothingSwitchOffThumb,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_thumb"
     )

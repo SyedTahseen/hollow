@@ -964,16 +964,9 @@ private fun ThemeModeSegment(
                 .height(HollowSizes.Chip)
                 .padding(horizontal = HollowSpace.Sm)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = contentTint,
-                modifier = Modifier.size(HollowSizes.IconSm)
-            )
-            Spacer(modifier = Modifier.width(HollowSpace.Xs))
             Text(
-                text = label,
-                style = HollowText.Small,
+                text = label.uppercase(),
+                style = HollowText.ButtonSmall,
                 maxLines = 1,
                 color = contentTint
             )
@@ -1014,8 +1007,8 @@ private fun InlineModeSegment(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = label,
-                style = HollowText.Small,
+                text = label.uppercase(),
+                style = HollowText.ButtonSmall,
                 color = contentTint
             )
         }

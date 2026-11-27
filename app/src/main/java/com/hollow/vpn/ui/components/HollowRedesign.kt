@@ -371,7 +371,7 @@ fun Modifier.nothingDashedBorder(color: Color, radius: Dp = HollowRadius.Lg): Mo
 // Alerts, state dots, dot-matrix clock, pills  (mirrors .alert / .livedot / .clock / .pill)
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum class HollowAlertKind { Success, Warning, Error }
+enum class HollowAlertKind { Info, Success, Warning, Error }
 
 /** `.alert` — 3dp left border in the status colour + ~9% tint of the same colour. Title in display, text in secondary. */
 @Composable
@@ -382,6 +382,7 @@ fun HollowAlert(
     title: String? = null
 ) {
     val tone = when (kind) {
+        HollowAlertKind.Info -> com.hollow.vpn.ui.theme.HollowDisplayInk
         HollowAlertKind.Success -> com.hollow.vpn.ui.theme.HollowSuccess
         HollowAlertKind.Warning -> com.hollow.vpn.ui.theme.HollowWarning
         HollowAlertKind.Error -> com.hollow.vpn.ui.theme.HollowError
@@ -488,6 +489,64 @@ fun NothingClock(
         text.split(":").forEachIndexed { i, part ->
             if (i > 0) NothingDotColon(color = com.hollow.vpn.ui.theme.HollowInkSecondary)
             Text(part, style = style, color = color, maxLines = 1)
+        }
+    }
+}
+
+
+/**
+ * Inline status banner — replaces toasts/snackbars (spec: "No toasts — use inline status").
+ * Failure-sounding messages use the error tone; everything else is a neutral display-ink alert.
+ */
+@Composable
+fun HollowStatusBanner(message: String, modifier: Modifier = Modifier) {
+    val lower = message.lowercase()
+    val isError = listOf("fail", "denied", "error", "couldn", "invalid", "unable", "cannot", "can't").any { it in lower }
+    HollowAlert(
+        kind = if (isError) HollowAlertKind.Error else HollowAlertKind.Info,
+        text = message,
+        modifier = modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm)
+    )
+}
+
+/**
+ * Segmented spinner — 12 round dots on a ring, a lit tail steps around it (hard steps, no easing).
+ * Replaces Material's circular progress indicator (spec: `[LOADING…]` or a segmented spinner).
+ */
+@Composable
+fun HollowSegmentedSpinner(
+    modifier: Modifier = Modifier,
+    size: Dp = HollowSizes.IconLg,
+    color: Color = com.hollow.vpn.ui.theme.HollowDisplayInk,
+    track: Color = com.hollow.vpn.ui.theme.NothingBorder
+) {
+    val t = rememberInfiniteTransition(label = "spinner")
+    val phase by t.animateFloat(
+        initialValue = 0f,
+        targetValue = 12f,
+        animationSpec = infiniteRepeatable(
+            androidx.compose.animation.core.tween(1200, easing = LinearEasing), RepeatMode.Restart
+        ),
+        label = "spinner_phase"
+    )
+    Canvas(modifier = modifier.size(size)) {
+        val n = 12
+        val head = phase.toInt() % n
+        val ringR = this.size.minDimension / 2f
+        val dotR = ringR * 0.14f
+        val orbit = ringR - dotR
+        for (i in 0 until n) {
+            val behind = (head - i + n) % n
+            val lit = behind < 4
+            val ang = Math.toRadians(i * 360.0 / n - 90.0)
+            drawCircle(
+                color = if (lit) color.copy(alpha = 1f - behind * 0.22f) else track,
+                radius = dotR,
+                center = Offset(
+                    center.x + (orbit * kotlin.math.cos(ang)).toFloat(),
+                    center.y + (orbit * kotlin.math.sin(ang)).toFloat()
+                )
+            )
         }
     }
 }
