@@ -119,10 +119,6 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Hollow Editorial Redesign Primitives
-// ──────────────────────────────────────────────────────────────────────────────
-
 enum class HollowBottomTab {
     CONNECT,
     SERVERS,
@@ -282,12 +278,6 @@ private val NavActiveAccent = NothingRed
 private val NavActiveContent = Color.White
 private val NavInactiveContent = Color(0xFF8E8E92)
 
-/**
- * Bottom bar: a dark capsule of icon-only tabs; the selected tab gets a wider accent-red pill.
- *
- * The color parameters are kept for call-site compatibility; the look is fixed by the design.
- * [backgroundColor] is only used for the optional full-width backdrop.
- */
 @Suppress("UNUSED_PARAMETER")
 @Composable
 fun HollowBottomNavigationBar(
@@ -301,7 +291,6 @@ fun HollowBottomNavigationBar(
     onSelectServers: () -> Unit,
     onSelectSettings: () -> Unit,
     modifier: Modifier = Modifier,
-    /** false = no full-width backdrop behind the pill, so whatever is behind the bar (the map) shows through. */
     showBackdrop: Boolean = true
 ) {
     val animBg by animateColorAsState(
@@ -431,15 +420,6 @@ private fun RowScope.HollowBottomNavItem(
     }
 }
 
-/**
- * Slide-to-connect / slide-to-disconnect pill.
- *
- * Connect:    white thumb on the left, centered label, chevrons ">>>" on the right (drag right).
- * Disconnect: white thumb on the right, centered red label, chevrons "<<<" on the left (drag left).
- *
- * [arrowColor] tints the grip dots on the thumb, [labelColor] the label, and the chevrons
- * use [chevronColor]. [reverse] flips the layout and drag direction.
- */
 @Composable
 fun HollowSlideActionPill(
     label: String,
@@ -472,7 +452,6 @@ fun HollowSlideActionPill(
         ),
         label = "slide_nudge_x"
     )
-    // Chevron "wave": brightness sweeps in the direction of travel.
     val wave by nudgeMotion.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -511,7 +490,6 @@ fun HollowSlideActionPill(
         val startAlign = if (reverse) Alignment.CenterEnd else Alignment.CenterStart
         val endAlign = if (reverse) Alignment.CenterStart else Alignment.CenterEnd
 
-        // Chevrons sit at the far end of the track (the side the thumb travels toward).
         Canvas(
             modifier = Modifier
                 .align(endAlign)
@@ -523,7 +501,6 @@ fun HollowSlideActionPill(
             val gap = (size.width - chevW) / 2f
             val stroke = 2.dp.toPx()
             for (i in 0..2) {
-                // i = 0 is the chevron closest to the thumb → dimmest, i = 2 brightest.
                 val base = 0.25f + 0.375f * i
                 val phase = ((wave * 3f) - i).let { d -> 1f - kotlin.math.abs(d - 1f).coerceAtMost(1f) }
                 val a = (base + phase * 0.25f).coerceIn(0f, 1f)
@@ -534,7 +511,6 @@ fun HollowSlideActionPill(
                         lineTo(left + chevW, size.height / 2f)
                         lineTo(left, size.height)
                     } else {
-                        // mirrored: bright chevron is the one furthest from the thumb (leftmost)
                         val x = size.width - left
                         moveTo(x, 0f)
                         lineTo(x - chevW, size.height / 2f)
@@ -611,7 +587,6 @@ fun HollowSlideActionPill(
                 },
             contentAlignment = Alignment.Center
         ) {
-            // 2 × 3 grip dots
             Canvas(modifier = Modifier.size(width = 18.dp, height = 10.dp)) {
                 val r = 1.3.dp.toPx()
                 for (row in 0..1) for (col in 0..2) {
@@ -629,11 +604,6 @@ fun HollowSlideActionPill(
     }
 }
 
-/**
- * Nothing OS toggle switch:
- * ON: Signature Nothing Red track with crisp white circular dot thumb
- * OFF: Matte black track with thin graphite border and muted gray dot thumb
- */
 @Composable
 fun HollowSwitch(
     checked: Boolean,
@@ -709,10 +679,6 @@ fun HollowSwitch(
         }
     }
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Shared visuals: splash and server cards
-// ──────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun FetchingSpinnerRing(
@@ -799,10 +765,6 @@ private fun DrawScope.nordicCross(bg: Long, cross: Long, inner: Long? = null) {
     }
 }
 
-/**
- * Straight (rectangular, flat) country flag from bundled WebP images (res/drawable-nodpi/flag_xx.webp).
- * Falls back to a simple drawn flag / globe when no image exists for the code.
- */
 @Composable
 fun CountryFlag(
     countryCode: String?,
@@ -825,9 +787,6 @@ fun CountryFlag(
     }
 }
 
-/**
- * Fallback flag drawn with vector shapes (used only if no bundled image exists).
- */
 @Composable
 private fun CanvasCountryFlag(
     countryCode: String?,

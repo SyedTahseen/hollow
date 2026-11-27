@@ -40,13 +40,7 @@ val DotoDisplayFamily = FontFamily(
     )
 )
 
-/** Family used for body / UI text. Doto everywhere; set to FontFamily.SansSerif to get Outrun's system font back. */
 val HollowSansFamily: FontFamily = FontFamily.SansSerif
-
-/**
- * Doto is used for all text. Sizes, line heights and tracking follow Outrun's scale
- * (Headline 28 · Heading/Subheadline 20 · Body 16 · Small 14 · Caption/Label 12) so both apps read the same.
- */
 
 private fun outrun(size: Int, weight: FontWeight, line: Int, spacingEm: Float = 0f, family: FontFamily = HollowSansFamily) = TextStyle(
     fontFamily = family,
@@ -56,7 +50,6 @@ private fun outrun(size: Int, weight: FontWeight, line: Int, spacingEm: Float = 
     letterSpacing = spacingEm.em
 )
 
-/** Named styles mirroring Outrun's `Type` object. Use these (or the Material slots below) in screens. */
 object HollowText {
     val Headline = TextStyle(
         fontFamily = DotoDisplayFamily, fontSize = 28.sp, fontWeight = FontWeight.Bold,
@@ -78,7 +71,6 @@ object HollowText {
 
 val TabularMonoBody = HollowText.Caption.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum")
 
-/** Same slot mapping as Outrun's Theme.kt so Material components pick up identical text styles. */
 val Typography = Typography(
     displayLarge = HollowText.Heading, displayMedium = HollowText.Heading, displaySmall = HollowText.Heading,
     headlineLarge = HollowText.Subheadline, headlineMedium = HollowText.Subheadline, headlineSmall = HollowText.Subheadline,

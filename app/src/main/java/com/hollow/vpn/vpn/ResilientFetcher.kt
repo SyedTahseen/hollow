@@ -20,13 +20,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-/**
- * Censorship-resistant subscription fetcher & local atomic disk cache:
- * 1. Direct URL via single-roundtrip GET (no slow HEAD preflight) with live line-batch streaming
- *    for plaintext feeds and parallel byte-range sampling for >12 MB files.
- * 2. Optional staggered CDN mirrors (200ms Happy-Eyeballs race) when [mirrorsEnabled] is true.
- * 3. Atomic disk cache fallback (`filesDir/hollow_cache/`) if all network paths fail.
- */
 class ResilientFetcher(
     private val httpClient: OkHttpClient
 ) {
@@ -34,14 +27,9 @@ class ResilientFetcher(
         val body: String,
         val routeLabel: String,
         val fromCache: Boolean,
-        /** Response headers (lower-cased keys) of the route that won; empty for cache hits. */
         val headers: Map<String, String> = emptyMap()
     )
 
-    /**
-     * Streams plaintext URI subscription feeds in batches as they download so downstream
-     * parsing and TCP/Xray probing can start immediately without waiting for EOF.
-     */
     suspend fun fetchSubscriptionStreaming(
         url: String,
         context: Context?,
@@ -151,7 +139,6 @@ class ResilientFetcher(
                 val acceptsRanges = resp.header("Accept-Ranges")
                     ?.contains("bytes", ignoreCase = true) == true
 
-                // Only the route that claims the race publishes its headers (name, usage, expiry).
                 fun claimRoute(): Boolean {
                     val won = routeClaimed.compareAndSet(false, true)
                     if (won) {
@@ -212,7 +199,6 @@ class ResilientFetcher(
                 if (fullText.isBlank() || looksLikeHtmlBlockPage(fullText)) return null
 
                 if (isPlaintextStream == null) {
-                    // Small payload (< 256 chars)
                     if (!claimRoute()) return null
                     onRouteSelected(routeLabel)
                     onBatchText(fullText)
@@ -222,7 +208,6 @@ class ResilientFetcher(
                         batchLines.clear()
                     }
                 } else {
-                    // Base64 or JSON payload needs full body before decode
                     onBatchText(fullText)
                 }
 
@@ -235,10 +220,6 @@ class ResilientFetcher(
         }
     }
 
-    /**
-     * Reads 6 random 256 KB byte-range windows IN PARALLEL across huge >12 MB subscription files,
-     * emitting each window immediately into the downstream testing channel.
-     */
     private suspend fun sampleLargeSubscriptionByRangeParallel(
         url: String,
         totalBytes: Long,

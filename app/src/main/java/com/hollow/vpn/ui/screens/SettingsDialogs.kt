@@ -326,7 +326,6 @@ internal fun AboutHollowSheet(
                 .padding(horizontal = HollowScreenPadding)
                 .padding(bottom = HollowSpace.Xxl)
         ) {
-            // Nothing OS Glyph Showcase Card
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(HollowRadius.Xl),

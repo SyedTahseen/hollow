@@ -22,7 +22,6 @@ if (isReleaseOrBundleTask) {
   buildNumberFile.writeText(buildNumber.toString())
 }
 
-// CI only ships arm64, so it passes -PabiOnly=arm64-v8a to skip packaging/stripping the other ABIs.
 val shippedAbis: List<String> = providers.gradleProperty("abiOnly").orNull
   ?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
   ?: listOf("armeabi-v7a", "arm64-v8a")
@@ -36,10 +35,6 @@ android {
     applicationId = "com.hllow.vpn.snow"
     minSdk = 24
     targetSdk = 36
-    // Release artifacts are split like v2rayNG: 32-bit ARM, 64-bit ARM, and universal ARM.
-    // Debug builds keep all ABIs (including x86_64) and output standard app-debug.apk for preview.
-    // Release: ABI splits (see `splits` below) control the ABIs, so ndk abiFilters must NOT be set
-    // (AGP errors on the conflict). Debug/CI: ship only 64-bit ARM to keep the APK small.
     if (!isReleaseOrBundleTask) {
       ndk {
         abiFilters += listOf("arm64-v8a")
@@ -112,9 +107,7 @@ android {
   }
   packaging {
     jniLibs {
-      // Release never ships x86/x86_64 (and optionally other ABIs): don't merge/strip them at all.
       if (isReleaseOrBundleTask) excludes += skippedAbis.map { "**/$it/**" }
-      // Compress native libraries inside the APK (the Go core compresses very well) -> much smaller APK.
       useLegacyPackaging = true
     }
     resources {

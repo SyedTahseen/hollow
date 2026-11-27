@@ -121,10 +121,8 @@ typealias ManualServerSubmit = (
     grpcServiceName: String
 ) -> Unit
 
-/** Everything the server list needs to add servers. Built once in MainActivity. */
 class AddServerActions(
     val settings: AppSettingsState,
-    /** Pending request from another screen (home empty state, settings…). Consumed once handled. */
     val request: AddServerRequest?,
     val onConsumeRequest: () -> Unit,
     val onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
@@ -145,7 +143,6 @@ class AddServerState {
 @Composable
 fun rememberAddServerState(): AddServerState = remember { AddServerState() }
 
-/** A pasted/scanned/imported single-line http(s) URL is a subscription; everything else is raw server text. */
 private fun routeIncoming(raw: String, actions: AddServerActions) {
     val t = raw.trim()
     val singleUrl = t.isNotEmpty() && t.none { it.isWhitespace() } &&
@@ -153,10 +150,6 @@ private fun routeIncoming(raw: String, actions: AddServerActions) {
     if (singleUrl) actions.onAddSubscription(t) else actions.onImportText(raw)
 }
 
-/**
- * The "+" button in the server list header. Opens a dropdown with every way to add servers:
- * Scan QR code, Paste from clipboard, Import from file, Add manually, Add subscription link.
- */
 @Composable
 fun AddServerButton(
     state: AddServerState,
@@ -257,14 +250,12 @@ private fun AddServerMenuItem(
     )
 }
 
-/** Dialogs, the manual dialog and the full-screen scanner. Compose once next to [AddServerButton]. */
 @Composable
 fun AddServerOverlays(
     state: AddServerState,
     actions: AddServerActions,
     handleRequests: Boolean = true
 ) {
-    // Requests from other screens (home empty state, settings, failed fetch) open the right surface here.
     LaunchedEffect(actions.request, handleRequests) {
         if (!handleRequests) return@LaunchedEffect
         when (actions.request) {
@@ -307,10 +298,6 @@ fun AddServerOverlays(
     }
 }
 
-/**
- * "Add subscription link": same dialog as Outrun's. A title, one sentence, a URL field and
- * Cancel / Add. Auto-update and its interval live in Settings, not here.
- */
 @Composable
 private fun AddSubscriptionDialog(
     onAdd: (String) -> Unit,
@@ -363,10 +350,6 @@ private fun AddSubscriptionDialog(
     )
 }
 
-/**
- * "Add manually": paste one or more server links (or a JSON / WireGuard config), one per line.
- * Same dialog as Outrun's; the text goes through the normal import path.
- */
 @Composable
 private fun AddManualServerDialog(
     onAdd: (String) -> Unit,

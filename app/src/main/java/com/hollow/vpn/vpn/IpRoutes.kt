@@ -4,20 +4,12 @@ import java.math.BigInteger
 import java.net.Inet6Address
 import java.net.InetAddress
 
-/**
- * IP helpers for split tunneling.
- *
- * - [parse] validates what the user types (IPv4 / IPv6, optional /prefix) and normalises it.
- * - [routes] turns "everything except these ranges" into a list of routes, for Android versions
- *   that have no `VpnService.Builder.excludeRoute` (before Android 13).
- */
 object IpRoutes {
 
     private val ipv4 = Regex("^((25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1?\\d?\\d)$")
     private val literal = Regex("^[0-9a-fA-F:.]+$")
     private val loopback = listOf("127.0.0.0/8", "::1/128")
 
-    /** Returns a normalised address or CIDR ("1.2.3.4", "10.0.0.0/8"), or null when invalid. */
     fun parse(text: String): String? {
         val t = text.trim()
         if (t.isEmpty()) return null
@@ -66,17 +58,13 @@ object IpRoutes {
         return InetAddress.getByAddress(raw).hostAddress.orEmpty().substringBefore('%')
     }
 
-    /** Routes that cover the whole address space of one family except [exclusions]. */
     fun routes(v6: Boolean, exclusions: List<String>): List<Pair<String, Int>> {
         val plain = complement(v6, exclusions)
         val loop = loopback.mapNotNull { parseBlock(it) }.first { it.v6 == v6 }
-        // A route "hits" loopback if the two ranges overlap at all, not only if it starts inside it
-        // (e.g. 64.0.0.0/2 covers 127.0.0.0/8 without starting there).
         val hitsLoopback = plain.any { (addr, len) ->
             val a = parseBlock("$addr/$len") ?: return@any false
             a.start <= loop.end && a.end >= loop.start
         }
-        // Android rejects routes that cover loopback, so carve it out as well.
         return if (hitsLoopback) complement(v6, exclusions + loopback) else plain
     }
 

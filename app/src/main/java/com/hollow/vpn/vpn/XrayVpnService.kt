@@ -59,13 +59,6 @@ data class TunnelTrafficSnapshot(
     val elapsedSeconds: Long = 0L
 )
 
-/**
- * Android VPN service backed by Xray-core with:
- * - Single-threaded worker & generation guards
- * - Graceful stopLoop() teardown
- * - Live Xray outbound traffic & speed telemetry
- * - Android Always-On VPN snapshot recovery
- */
 class XrayVpnService : VpnService() {
 
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
@@ -94,7 +87,6 @@ class XrayVpnService : VpnService() {
     @Volatile
     private var networkMonitor: NetworkMonitor? = null
 
-    /** Root mode: the standalone Xray core running as root (null in normal VPN-service mode). */
     @Volatile private var rootCore: RootXrayCore? = null
 
     @Volatile
@@ -108,7 +100,6 @@ class XrayVpnService : VpnService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // Usage & history bookkeeping for the connection that is currently up.
     private val usageLock = Any()
     private var usageSessionStart = 0L
     private var usageSessionServer = ""
@@ -427,11 +418,6 @@ class XrayVpnService : VpnService() {
         }
     }
 
-    /**
-     * Root mode: no Android VPN service. A standalone Xray core runs as root with its own TUN device
-     * (see [RootXrayCore]); this service stays up as the foreground notification and the owner of the
-     * session. Per-app split tunneling is not available here; IP split rules still apply through Xray.
-     */
     private fun startRootTunnel(gen: Int, mtu: Int, snapshot: ActiveTunnelSnapshot) {
         teardownActiveResources()
         if (commandGeneration.get() != gen) return
@@ -511,7 +497,6 @@ class XrayVpnService : VpnService() {
         )
     }
 
-    /** On a network switch (Wi-Fi <-> mobile data) the core must be rebound to the new interface. */
     private fun startRootNetworkMonitor(
         gen: Int,
         core: RootXrayCore,
@@ -795,7 +780,6 @@ class XrayVpnService : VpnService() {
         usageLastFlush = now
     }
 
-    /** Saves the connection that just ended to Usage & history. Safe to call when nothing is open. */
     private fun finishUsageSession() {
         synchronized(usageLock) {
             if (usageSessionStart == 0L) return
@@ -811,7 +795,6 @@ class XrayVpnService : VpnService() {
         }
     }
 
-    /** DNS servers for the tunnel: NetShield (filtering resolver) wins over Custom DNS, which wins over the default. */
     private fun effectiveDnsServers(
         mode: String,
         netShield: Boolean,
@@ -823,12 +806,6 @@ class XrayVpnService : VpnService() {
         else -> listOf(selectedDns(mode))
     }
 
-    /**
-     * Routes for the tunnel. Normally everything goes through the VPN. With split tunneling on:
-     * - "VPN only" with IP addresses: only those ranges are routed into the VPN.
-     * - "Skip VPN" with IP addresses: everything is routed except those ranges (Android 13+ uses
-     *   excludeRoute; older versions get the equivalent list of routes computed here).
-     */
     private fun configureRoutes(
         builder: Builder,
         splitEnabled: Boolean,
@@ -871,7 +848,6 @@ class XrayVpnService : VpnService() {
         }
     }
 
-    /** Mirrors Android VpnService per-app routing without violating allowed/disallowed mutual exclusion. */
     private fun configurePerAppRouting(
         builder: Builder,
         enabled: Boolean,
@@ -1042,7 +1018,6 @@ class XrayVpnService : VpnService() {
     }
 
     companion object {
-        /** The explicit "connect to this server" intent, shared by the app and the boot receiver. */
         fun connectIntent(
             ctx: Context,
             server: ServerEntity,
@@ -1142,10 +1117,6 @@ class XrayVpnService : VpnService() {
             _logs.value = emptyList()
         }
 
-        /**
-         * Parses AndroidLibXrayLite's `QueryAllOutboundTrafficStats()` payload
-         * (`tag,direction,value;tag,direction,value;`) into `(uplinkBytes, downlinkBytes)`.
-         */
         internal fun parseOutboundTrafficStats(
             rawStats: String,
             includeDirect: Boolean = false

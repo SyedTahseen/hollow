@@ -118,22 +118,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/*
- * ─────────────────────────────────────────────────────────────────────────────
- *  Settings → "Features" pages ported from Outrun:
- *  NetShield · Split tunneling (apps + IP addresses) · Kill switch · Usage & history
- *
- *  Same page structure as Outrun (hero, description, toggle card, details), dressed in
- *  Hollow's flat hairline surfaces, Doto and Nothing-red accent.
- *  Every composable here renders inside SettingsScreen's scrolling column.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
 private const val KILL_SWITCH_HELP_URL = "https://developer.android.com/develop/connectivity/vpn"
 
-// ─────────────────────────────── Shared building blocks ───────────────────────────────
-
-/** Dot-matrix hero tile that stands in for Outrun's illustration at the top of each feature page. */
 @Composable
 internal fun FeatureHero(icon: ImageVector, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(HollowRadius.Lg)
@@ -176,7 +162,6 @@ private fun FeatureCard(
     }
 }
 
-/** Toggle inside a bordered card (Outrun's "FeatureToggle"). */
 @Composable
 private fun FeatureToggleCard(
     title: String,
@@ -212,7 +197,6 @@ private fun FeatureToggleCard(
             if (enabled) {
                 HollowSwitch(checked = checked, onCheckedChange = onCheckedChange)
             } else {
-                // Keep the switch visible but inert while the feature is unavailable.
                 HollowSwitch(checked = false, onCheckedChange = {}, modifier = Modifier.alpha(0.6f))
             }
         }
@@ -279,9 +263,6 @@ private fun formatItems(items: List<String>): String = when (items.size) {
     else -> "${items[0]}, ${items[1]} and ${items.size - 2} more"
 }
 
-// ─────────────────────────────── Private DNS detection ───────────────────────────────
-
-/** True when Android's own Private DNS is set to a hostname, which overrides the DNS a VPN sets. */
 private fun isStrictPrivateDns(lp: LinkProperties?): Boolean =
     Build.VERSION.SDK_INT >= 28 && lp != null && lp.isPrivateDnsActive && lp.privateDnsServerName != null
 
@@ -312,8 +293,6 @@ private fun rememberPrivateDnsActive(): Boolean {
     }
     return active
 }
-
-// ─────────────────────────────── NetShield ───────────────────────────────
 
 @Composable
 internal fun NetShieldPage(
@@ -388,8 +367,6 @@ internal fun NetShieldPage(
         )
     }
 }
-
-// ─────────────────────────────── Split tunneling ───────────────────────────────
 
 @Composable
 internal fun SplitTunnelingPage(
@@ -474,8 +451,6 @@ internal fun SplitTunnelingPage(
         )
     }
 }
-
-// ─────────────────────────────── Kill switch ───────────────────────────────
 
 @Composable
 internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
@@ -597,8 +572,6 @@ private fun KillSwitchBullet(text: String) {
     }
 }
 
-// ─────────────────────────────── Usage & history ───────────────────────────────
-
 internal fun fmtSize(bytes: Long): String {
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     var v = bytes.toDouble()
@@ -622,8 +595,8 @@ internal fun fmtDuration(ms: Long): String {
 @Composable
 internal fun UsageHistoryPage() {
     val ctx = LocalContext.current
-    var version by remember { mutableIntStateOf(0) }       // bumps on resume / clear / live refresh
-    var accessVersion by remember { mutableIntStateOf(0) } // bumps on resume / clear only (heavy per-app query)
+    var version by remember { mutableIntStateOf(0) }
+    var accessVersion by remember { mutableIntStateOf(0) }
 
     val activity = ctx as? ComponentActivity
     DisposableEffect(activity) {
@@ -633,7 +606,6 @@ internal fun UsageHistoryPage() {
         activity?.lifecycle?.addObserver(observer)
         onDispose { activity?.lifecycle?.removeObserver(observer) }
     }
-    // Live totals while a VPN session is running (the service saves them every few seconds).
     LaunchedEffect(Unit) {
         while (true) {
             delay(5_000)
@@ -901,5 +873,4 @@ private fun UsageSessionRow(s: UsageSession) {
     }
 }
 
-/** Icon used by the settings overview row for Usage & history. */
 internal val UsageHistoryIcon: ImageVector get() = Icons.Outlined.QueryStats

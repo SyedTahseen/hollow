@@ -11,11 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-/**
- * Settings > Connection > Advanced settings > "Auto-connect on boot".
- * Connects the selected server once the phone has started. Needs the VPN permission to have been
- * granted already (connect once from the app), otherwise Android would need a prompt we can't show.
- */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return

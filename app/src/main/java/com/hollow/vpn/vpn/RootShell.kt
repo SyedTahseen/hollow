@@ -9,7 +9,6 @@ class RootResult(val code: Int, val out: String) {
     val ok: Boolean get() = code == 0
 }
 
-/** One long-lived `su` shell, so root permission is asked once and commands run in order. */
 object RootShell {
     private const val MARK = "__HOLLOW_DONE__"
     private const val EOF = "\u0000EOF"

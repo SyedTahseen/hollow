@@ -51,7 +51,6 @@ enum class VpnScreen {
     SETTINGS
 }
 
-/** What the server list should open when another screen asks the user to add servers. */
 enum class AddServerRequest { MENU, SUBSCRIPTION, MANUAL }
 
 data class ConnectionTelemetryState(
@@ -85,7 +84,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private val _screenStack = MutableStateFlow(listOf(VpnScreen.CONNECTED_HOME))
     private val _currentScreen = MutableStateFlow(VpnScreen.CONNECTED_HOME)
     val currentScreen: StateFlow<VpnScreen> = _currentScreen.asStateFlow()
-
 
     private val _selectedCategory = MutableStateFlow(ServerCategory.ALL_KEY)
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
@@ -125,7 +123,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
-    /** Pills for the Servers screen: All, Default (manual), then one per subscription. */
     val serverCategories: StateFlow<List<ServerCategory>> = combine(allSubscriptions, allServers) { subs, servers ->
             val labels = subs.map { it.categoryLabel() }
             val seen = mutableMapOf<String, Int>()
@@ -134,7 +131,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 val n = (seen[base] ?: 0) + 1
                 seen[base] = n
                 val name = if (labels.count { it == base } > 1) "$base $n" else base
-                // Like Outrun: "Name (servers)"
                 val key = sub.url.trim()
                 val count = servers.count { !it.isCustom && it.subscriptionUrl.trim() == key }
                 ServerCategory(key = key, label = "$name ($count)")
@@ -159,8 +155,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         _settings,
         allSubscriptions
     ) { servers, category, settings, subs ->
-        // Stable order, like Outrun: the selected or favorited server never jumps to the top.
-        // The Servers screen applies the user's chosen sort on top of this.
         val sorted = servers.sortedBy { it.id }
         val knownSubscription = subs.any { it.url.trim() == category }
         when {
@@ -206,10 +200,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         prefsStore.saveFavoriteKeys(updated)
     }
 
-    /**
-     * Tests every given server, saves the fresh pings, and hands the fastest working one to
-     * [onFastest] so the UI can connect to it (the UI owns the VPN-permission flow).
-     */
     fun testAndPickFastest(candidates: List<ServerEntity>, onFastest: (ServerEntity) -> Unit) {
         if (fastestJob?.isActive == true) return
         if (candidates.isEmpty()) {
@@ -253,9 +243,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         HollowJobScheduler.schedulePeriodicMaintenance(getApplication(), _settings.value)
     }
 
-    /**
-     * Keeps UI connection state and Xray outbound traffic counters synchronized with XrayVpnService.
-     */
     private fun observeVpnServiceState() {
         var wasRunning = false
         viewModelScope.launch {
@@ -275,7 +262,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             downloadBytesPerSec = 0L
                         )
                     }
-                    // Verify live exit IP through the active tunnel once routes settle
                     ipRefreshJob?.cancel()
                     ipRefreshJob = viewModelScope.launch {
                         delay(1500L)
@@ -383,10 +369,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * On startup, loads saved servers or refreshes the user's configured subscription URL quietly
-     * in the background without blocking the user behind a splash fetching screen.
-     */
     private fun initializeLiveServersOnStartup() {
         viewModelScope.launch {
             val existing = dao.getAllServersOnce()
@@ -431,7 +413,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         context = getApplication(),
                         settings = current,
                         onSubscriptionStats = { staleSub, ok, count ->
-                            // Re-read so a name/usage update saved a moment ago isn't overwritten.
                             val sub = dao.getSubscriptionByUrl(staleSub.url) ?: staleSub
                             val updatedSub = if (ok) {
                                 sub.copy(
@@ -470,7 +451,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun navigateTo(screen: VpnScreen) {
-        // The full-screen fetching / proxy-testing page is gone: progress is shown as a thin loading bar instead.
         if (screen == VpnScreen.SPLASH_FETCHING) return
         if (_currentScreen.value == screen) return
         _screenStack.update { it + screen }
@@ -508,7 +488,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         _selectedCategory.value = key
     }
 
-    /** Opens the server list with the "+" menu (or its subscription / manual surface) ready. */
     fun requestAddServer(request: AddServerRequest = AddServerRequest.MENU) {
         _addServerRequest.value = request
         navigateTo(VpnScreen.SERVER_LIST)
@@ -518,7 +497,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         _addServerRequest.value = null
     }
 
-    /** Selects a server without starting the VPN. Used while Android shows its consent dialog. */
     fun selectServer(server: ServerEntity, openConnectedScreen: Boolean = true) {
         connectJob?.cancel()
         connectJob = null
@@ -584,7 +562,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun connectToServer(server: ServerEntity) {
-        // Never claim Connected if Android OS VPN consent hasn't been granted yet (when TUN Mode is on)
         if (_settings.value.tunMode && !_settings.value.rootMode && android.net.VpnService.prepare(getApplication()) != null) {
             _telemetry.update { it.copy(isConnecting = false, isConnected = false) }
             showMessage("Tap Connect and accept the Android VPN prompt to start the tunnel")
@@ -630,10 +607,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         startAndroidVpnService(updatedServer)
     }
 
-    /**
-     * Runs the real Fetcher Auto-Fetcher & Concurrent Xray Ping Ranker, saving the Top 15
-     * fastest verified servers to the Room database.
-     */
     fun runFetcherAutoFetchAndPingSweep(
         returnScreen: VpnScreen = VpnScreen.SERVER_LIST,
         autoConnectAfterFetch: Boolean = false,
@@ -681,7 +654,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     },
                     onProgress = { step -> _fetchingStatusMessage.value = step },
                     onSubscriptionStats = { staleSub, ok, count ->
-                        // Re-read so a name/usage update saved a moment ago isn't overwritten.
                         val sub = dao.getSubscriptionByUrl(staleSub.url) ?: staleSub
                         val updatedSub = if (ok) {
                             sub.copy(
@@ -757,13 +729,11 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Stores the name / usage / expiry a provider reported for [url] (shown in the pill and info bar). */
     private suspend fun saveSubscriptionMeta(url: String, meta: SubscriptionMeta) {
         val row = dao.getSubscriptionByUrl(url.trim()) ?: dao.getSubscriptionByUrl(url) ?: return
         dao.updateSubscription(row.withMeta(meta))
     }
 
-    /** Removes a subscription and every server that came from it. */
     fun deleteSubscription(url: String) {
         viewModelScope.launch {
             val key = url.trim()
@@ -777,10 +747,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * Adds a user-provided V2Ray Subscription URL (or inline URI/Base64 payload), streams nodes,
-     * and tests reachability + Xray handshakes concurrently in a producer-consumer pipeline.
-     */
     fun addAndFetchSubscriptionUrl(rawUrlOrLinks: String) {
         val input = rawUrlOrLinks.trim()
             .replaceFirst(Regex("^https?://(?=https?://)", RegexOption.IGNORE_CASE), "")
@@ -832,8 +798,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
 
                 fetchResult.fold(
                     onSuccess = { topNodes ->
-                        // Only this subscription's servers are replaced, so adding a second link
-                        // doesn't wipe the servers (and pill) of the first one.
                         if (_settings.value.subReplaceExisting) {
                             dao.deleteFetchedServersForSubscription(input)
                         }
@@ -863,9 +827,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * Imports V2Ray/Xray servers from clipboard text and runs real Xray outbound latency checks.
-     */
     fun importFromTextOrClipboard(rawText: String) {
         val trimmed = rawText.trim()
         if (trimmed.isBlank()) {
@@ -897,9 +858,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * Validates, verifies via Xray outbound probe, and saves a manual custom V2Ray/Xray server or Raw Xray JSON config.
-     */
     fun addManualCustomServer(
         countryName: String,
         host: String,
@@ -1181,10 +1139,6 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * Saves a server edited in the "Edit server" window. [newLink] is the rebuilt share link.
-     * Returns an error message to show in the window, or null when it was saved.
-     */
     fun editServerLink(server: ServerEntity, newLink: String): String? {
         val parsed = runCatching {
             fetcher.parseImportPayload(newLink, server.subscriptionUrl, server.isCustom).firstOrNull()

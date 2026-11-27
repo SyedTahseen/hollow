@@ -21,13 +21,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 
-/**
- * Background maintenance using Android JobScheduler:
- * 1. Lightweight health pulse (every 3h, runs even while VPN is up because Hollow excludes itself)
- *    to mark kept reserve servers alive/dead (`lastAliveAt`).
- * 2. Unmetered full refresh (every 6h + 3-min catch-up after tunnel stops) when <60% of the
- *    saved reserve answered within the last 12 hours.
- */
 class HollowBackgroundJobService : JobService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -104,7 +97,6 @@ class HollowBackgroundJobService : JobService() {
         }
 
         internal suspend fun runFullRefreshIfNeeded(context: Context) {
-            // Never saturate the radio with a full fetch + speed test while the tunnel is active.
             if (XrayVpnService.isServiceRunning.value) return
 
             val prefs = VpnPreferencesStore(context)

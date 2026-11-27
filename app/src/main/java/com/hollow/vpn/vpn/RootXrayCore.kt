@@ -7,18 +7,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-/**
- * Root mode: runs a standalone Xray executable as root, with its own TUN device, and routes every
- * app's traffic into it using policy routing. No Android VPN service is involved, so there is no
- * VPN permission prompt and no key icon.
- *
- * Needs the Xray-core executable for Android bundled as `libxray.so` in `app/src/main/jniLibs/<abi>/`
- * (a build with the TUN inbound, Xray-core 25.x or newer). See [isAvailable].
- *
- * How traffic is kept out of a loop: the Xray process marks every socket it opens with [MARK] and
- * binds it to the real network interface, and the one rule that sends traffic into the TUN skips
- * marked packets.
- */
 class RootXrayCore(private val context: Context) {
 
     companion object {
@@ -45,7 +33,6 @@ class RootXrayCore(private val context: Context) {
             return "alive" in r.out
         }
 
-        /** The interface of the real (non-VPN) default network, e.g. wlan0 or rmnet_data1. */
         fun activeInterface(context: Context): String? {
             val cm = context.getSystemService(ConnectivityManager::class.java) ?: return null
             val network = cm.activeNetwork ?: return null
@@ -54,10 +41,6 @@ class RootXrayCore(private val context: Context) {
             return cm.getLinkProperties(network)?.interfaceName
         }
 
-        /**
-         * Turns Hollow's normal runtime config into one for the standalone core: the TUN inbound is
-         * named [IFACE], and every outbound marks its sockets and binds them to [iface].
-         */
         fun buildConfig(runtimeJson: String, iface: String, mtu: Int): String {
             val root = JSONObject(runtimeJson)
             root.optJSONArray("inbounds")?.let { inbounds ->
@@ -113,7 +96,6 @@ class RootXrayCore(private val context: Context) {
         return r.out.lines().filter { it.isNotBlank() }.takeLast(4).joinToString(" | ").ifEmpty { "no output" }
     }
 
-    /** Starts (or restarts) the core and sets up routing. Throws with a readable message on failure. */
     fun start(configJson: String, iface: String, mtu: Int, ipv6: Boolean) {
         val bin = binary(context)
         if (!bin.exists()) error("Xray binary (libxray.so) is not bundled in this build")
@@ -169,7 +151,6 @@ class RootXrayCore(private val context: Context) {
         running = true
     }
 
-    /** Upload and download bytes so far, read from the TUN device's counters. */
     fun totals(): Pair<Long, Long> {
         val r = RootShell.run(
             "cat /sys/class/net/$IFACE/statistics/tx_bytes /sys/class/net/$IFACE/statistics/rx_bytes 2>/dev/null",

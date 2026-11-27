@@ -156,9 +156,6 @@ import com.hollow.vpn.ui.theme.nothingPressScale
 import java.util.Locale
 import kotlin.math.max
 
-/**
- * Formats internal protocol identifiers cleanly for consumer UI without technical clutter.
- */
 internal fun formatConsumerProtocol(raw: String, transport: String? = null): String {
     val cleaned = raw
         .replace("(V2Ray)", "", ignoreCase = true)
@@ -174,7 +171,6 @@ internal fun formatConsumerProtocol(raw: String, transport: String? = null): Str
     } else {
         cleaned
     }
-    // Use "/" between parts (e.g. "Shadowsocks / TLS") instead of dots or bullets.
     return joined
         .replace(Regex("\\s*[·•∙*]\\s*"), " / ")
         .replace(Regex("\\s*/\\s*(/\\s*)+"), " / ")
@@ -211,7 +207,6 @@ fun ConnectedHomeScreen(
         label = "home_bg_color"
     )
 
-    // ── World map layer (full-bleed, drawn behind the status bar; all content above is transparent) ──
     val appContext = LocalContext.current
     val geoReady by produceState(initialValue = WorldGeo.cached != null) {
         WorldGeo.load(appContext)
@@ -326,7 +321,6 @@ private fun HomeContent(
     onRefreshRealIp: () -> Unit,
     onLoadServerDetails: suspend (String) -> ServerIpDetails?
 ) {
-    // Tapping the server card expands it in place to show details about the proxy.
     var detailsExpanded by remember { mutableStateOf(false) }
     val lookupIp = remember(selectedServer?.id, selectedServer?.resolvedIp, selectedServer?.host) {
         selectedServer?.let { it.resolvedIp.ifBlank { it.host } }.orEmpty()
@@ -343,8 +337,6 @@ private fun HomeContent(
         telemetry.realPublicIpLabel.substringBefore(" · ").ifBlank { telemetry.realPublicIpLabel }
     }
     val serverIp = selectedServer?.resolvedIp?.ifBlank { selectedServer.host } ?: telemetry.serverIpLabel
-    // Same idea as Outrun: unprotected + connecting show YOUR city · IP (connecting scrambles it),
-    // protected shows the VPN's location · IP. The app only knows the server's country, so that is the VPN's "city".
     val chipPlace = if (phase == 2) selectedServer?.countryName ?: "VPN" else telemetry.realPublicCity
     val chipIp = if (phase == 2) serverIp else cleanIpDisplay
 
@@ -408,7 +400,6 @@ private fun HomeContent(
                 modifier = Modifier.testTag("row_real_ip")
             )
 
-            // Empty, transparent space: the world map behind the whole screen shows through here.
             Spacer(
                 modifier = Modifier
                     .weight(1f)
@@ -635,7 +626,6 @@ private fun formatSpeed2(bytesPerSec: Long): String {
     }
 }
 
-/** Small grabber bar at the top of the server / stats tray; the whole tray is tappable to expand it. */
 @Composable
 private fun TrayHandle(color: Color, expanded: Boolean, modifier: Modifier = Modifier) {
     Box(
@@ -648,7 +638,6 @@ private fun TrayHandle(color: Color, expanded: Boolean, modifier: Modifier = Mod
     )
 }
 
-/** Footer card while protected: connection time plus live download / upload speed. Tap anywhere on it to expand server details. */
 @Composable
 private fun ConnectionStatsCard(
     telemetry: ConnectionTelemetryState,
@@ -678,7 +667,6 @@ private fun ConnectionStatsCard(
                 .padding(horizontal = HollowSpace.Lg),
             verticalArrangement = Arrangement.Center
         ) {
-            // Connection time (left) and download / upload (right), same size + baseline. Tap the card to expand.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -733,10 +721,6 @@ private fun ConnectionStatsCard(
     }
 }
 
-/**
- * "City · IP" line (Outrun-style) with the place in the main text color and the IP muted, no pill behind it. While [scramble] is on (connecting) the characters are progressively masked with '*'.
- * A new label fades in (500 ms) like Outrun's status transition.
- */
 @Composable
 private fun HomeInfoChip(
     place: String,
@@ -787,7 +771,6 @@ private fun HomeInfoChip(
     }
 }
 
-/** Replaces the characters of [text] one by one (random order, 50 ms apart) with '*', keeping '.', ' ' and '-'. */
 @Composable
 private fun ScrambleText(
     text: String,
@@ -812,7 +795,6 @@ private fun ScrambleText(
         if (start >= 0) addStyle(androidx.compose.ui.text.SpanStyle(color = normal), start, start + highlight.length)
     }
     Box {
-        // Invisible full-length copy keeps the chip width stable while characters are masked.
         Text(text, style = style, color = Color.Transparent, maxLines = 1)
         Text(annotated, style = style, color = weak, maxLines = 1)
     }
@@ -829,7 +811,6 @@ private fun formatServerLocalTime(timezone: String): String? {
     }
 }
 
-/** Expanded details of the selected proxy: location, network (ISP / ASN), timezone, coordinates and connection info. */
 @Composable
 private fun ServerDetailsPanel(
     server: ServerEntity,
@@ -944,9 +925,6 @@ private fun HomeTopBar(
     }
 }
 
-/**
- * Editorial server node row used inside expanded country sections on Page 4.
- */
 @Composable
 fun ServerItemRowContent(
     server: ServerEntity,
@@ -1054,7 +1032,6 @@ fun ServerItemRowContent(
             )
         }
 
-        // Ping: vertically centered on the right, next to the favorite star.
         Spacer(modifier = Modifier.width(HollowSpace.Sm))
         Text(
             text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
@@ -1091,7 +1068,6 @@ fun ServerItemRowContent(
                     )
                 }
 
-                // Same three actions as Outrun: Copy, Edit, Delete.
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },

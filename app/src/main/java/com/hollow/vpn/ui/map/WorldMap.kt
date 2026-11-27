@@ -59,7 +59,6 @@ data class GeoPoint(val lon: Double, val lat: Double)
 
 enum class MapPin { Selected, Connecting, Connected }
 
-/** Colors for the map layers; the caller picks them to match the surface the map sits on. */
 data class MapColors(
     val background: Color = Color(0xFF121212),
     val sphere: Color = Color(0xFF1B1B1B),
@@ -343,7 +342,6 @@ fun WorldMap(
                     }
                 }
 
-                // Dotted (Nothing-style) borders: zero-length dashes with round caps render as dots.
                 val dotW = 1.4.dp.toPx()
                 val line = Stroke(
                     dotW, cap = StrokeCap.Round, join = StrokeJoin.Round,

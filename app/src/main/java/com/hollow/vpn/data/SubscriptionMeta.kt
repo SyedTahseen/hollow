@@ -3,17 +3,11 @@ package com.hollow.vpn.data
 import android.util.Base64
 import java.net.URLDecoder
 
-/**
- * What a subscription provider says about itself in the response headers (or `# key: value`
- * comment lines in the body): display name, traffic usage, expiry and refresh interval.
- * Same fields and parsing rules as Outrun's `SubInfo`.
- */
 data class SubscriptionMeta(
     val title: String = "",
     val upload: Long = 0L,
     val download: Long = 0L,
     val total: Long = 0L,
-    /** Unix seconds; 0 = no expiry reported. */
     val expire: Long = 0L,
     val intervalHours: Int = 0,
     val announce: String = ""
@@ -27,10 +21,6 @@ data class SubscriptionMeta(
         private val COMMENT_HEADER = Regex("^#\\s*([A-Za-z-]+)\\s*[:=]\\s*(.*)$")
         private val FILENAME = Regex("filename\\*?=(?:UTF-8'')?\"?([^\";]+)")
 
-        /**
-         * [headers] must have lower-cased keys. Header values win over `# key: value`
-         * lines found in [body].
-         */
         fun parse(headers: Map<String, String>, body: String): SubscriptionMeta {
             val h = HashMap(headers)
             body.lineSequence().take(40).forEach { line ->

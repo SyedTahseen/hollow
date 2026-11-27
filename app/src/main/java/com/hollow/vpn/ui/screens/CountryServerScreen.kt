@@ -182,7 +182,6 @@ fun CountryServerListScreen(
 
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
-    // "Favorites" pill: only offered once something is starred; shows starred servers from every category.
     var favoritesOnly by remember { mutableStateOf(false) }
     val hasFavorites = favoriteKeys.isNotEmpty()
     val favOnly = favoritesOnly && hasFavorites
@@ -190,7 +189,6 @@ fun CountryServerListScreen(
     val displayedServers = remember(servers, sortMode, favoriteKeys, favOnly, query) {
         val pool = (if (favOnly) servers.filter { it.favoriteKey() in favoriteKeys } else servers)
             .filter { query.isBlank() || it.countryName.contains(query, true) || it.host.contains(query, true) }
-        // Like Outrun: starring a server never moves it. Only the chosen sort decides the order.
         when (sortMode) {
             ServerSortMode.Default -> pool
             ServerSortMode.Name -> pool.sortedBy { it.countryName.lowercase() }
@@ -217,7 +215,6 @@ fun CountryServerListScreen(
                 .align(Alignment.TopCenter)
                 .padding(horizontal = HollowScreenPadding)
         ) {
-            // Header: title + Search, Add (+) and More (three dots), same actions and order as Outrun
             if (searching) {
                 Row(
                     modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
@@ -279,7 +276,6 @@ fun CountryServerListScreen(
                         Icon(Icons.Rounded.Search, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
                     }
 
-                    // "+" opens the add menu: Scan QR, Paste, Import file, Add manually, Add subscription
                     AddServerButton(state = addServerState, actions = addServerActions)
 
                     Box {
@@ -409,7 +405,6 @@ fun CountryServerListScreen(
 
             Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
-            // Category pills: All, Default (manually added), then one per subscription
             val favTabKey = "__favorites__"
             val tabEntries = remember(categories, hasFavorites) {
                 val base = categories.map { it.key to it.label }
@@ -424,7 +419,6 @@ fun CountryServerListScreen(
                     val key = tabEntries.getOrNull(idx)?.first
                     if (key == favTabKey) {
                         favoritesOnly = true
-                        // Starred servers can live in any category, so look across all of them.
                         if (selectedCategoryKey != ServerCategory.ALL_KEY) onSelectCategory(ServerCategory.ALL_KEY)
                     } else if (key != null) {
                         favoritesOnly = false
@@ -433,12 +427,10 @@ fun CountryServerListScreen(
                 },
                 tabTestTags = tabEntries.map { if (it.first == favTabKey) "server_category_favorites" else "server_category_${it.first.hashCode()}" },
                 onLongPressTab = { idx ->
-                    // Long-press a subscription pill to delete it (same as Outrun).
                     val key = tabEntries.getOrNull(idx)?.first
                     deletingSubscription = subscriptions.firstOrNull { it.url.trim() == key }
                 }
             )
-
 
             AnimatedVisibility(
                 visible = isLoading,
@@ -575,7 +567,6 @@ fun CountryServerListScreen(
                     }
                 } else {
                     item(key = "list_header") {
-                        // Same as Outrun: always "All servers (N)" with the total number of servers.
                         Text(
                             text = "All servers (${displayedServers.size})",
                             style = HollowText.Small,
@@ -583,7 +574,6 @@ fun CountryServerListScreen(
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
                     }
-                    // Like Outrun, the "Fastest server" row only shows on the unfiltered "All" list.
                     if (query.isBlank() && !favOnly && selectedCategoryKey == ServerCategory.ALL_KEY) {
                         item(key = "fastest_server") {
                             FastestServerRow(
@@ -644,7 +634,6 @@ fun CountryServerListScreen(
                 }
             }
 
-            // Subscription info (name, expiry, usage, copy link) for the selected subscription pill.
             val activeSub = if (favOnly) null else subscriptions.firstOrNull { it.url.trim() == selectedCategoryKey }
             val lastSub = remember { mutableStateOf<SubscriptionEntity?>(null) }
             SideEffect { if (activeSub != null) lastSub.value = activeSub }
@@ -763,7 +752,6 @@ private fun ServerMenuChoice(label: String, selected: Boolean, onClick: () -> Un
     )
 }
 
-/** "Fastest server" entry: tests every listed server, then connects to the quickest one. */
 @Composable
 private fun FastestServerRow(
     isTesting: Boolean,
@@ -778,8 +766,6 @@ private fun FastestServerRow(
             .testTag("server_fastest_row"),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Outrun's "fastest" flag: the bolt badge (teal on light, mint on dark), same size as a country flag
-        // so it lines up with the rows below.
         Box(
             modifier = Modifier.size(width = 38.dp, height = 26.dp),
             contentAlignment = Alignment.Center
@@ -837,8 +823,6 @@ private fun ServerOverflowMenuItem(
     )
 }
 
-
-/** 1024-based size text, as shown for subscription traffic (same as Outrun's `fmtSize(binary = true)`). */
 private fun fmtBinarySize(bytes: Long): String {
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     var v = bytes.toDouble()
@@ -847,10 +831,6 @@ private fun fmtBinarySize(bytes: Long): String {
     return if (i == 0) "$bytes B" else String.format(Locale.US, if (v >= 100) "%.0f %s" else "%.1f %s", v, units[i])
 }
 
-/**
- * What the provider reports about the selected subscription: its name, time left, traffic used
- * and a button to copy the link. Shown under the list while a subscription pill is selected.
- */
 @Composable
 private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
     val now = System.currentTimeMillis()

@@ -65,11 +65,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/*
- * Settings > Connection pages ported from Outrun: Latency test, Advanced settings (LAN connections,
- * Custom DNS, IPv6, Block QUIC, MTU, Auto-connect on boot). Built from Hollow's own building blocks.
- */
-
 internal val LatencyTestIcon = Icons.Outlined.Speed
 internal val AdvancedSettingsIcon = Icons.Outlined.Tune
 
@@ -78,8 +73,6 @@ private const val ROUTING_GLOBAL = "Global"
 
 internal fun lanConnectionsOn(settings: AppSettingsState) =
     settings.routingMode.contains(ROUTING_BYPASS_LAN, ignoreCase = true)
-
-// ─────────────────────────────── Latency test ───────────────────────────────
 
 @Composable
 internal fun LatencyTestPage(
@@ -98,8 +91,6 @@ internal fun LatencyTestPage(
     ) { id -> onUpdateSettings { it.copy(testUrlChoice = id) } }
     FeatureCaption("Used for the next test. Servers keep the latency they already have until they are tested again.")
 }
-
-// ─────────────────────────────── Advanced settings ───────────────────────────────
 
 @Composable
 internal fun AdvancedSettingsPage(
@@ -249,7 +240,6 @@ private fun AdvancedValueItem(
     }
 }
 
-
 @Composable
 private fun AdvancedTitle(text: String, enabled: Boolean) {
     Text(
@@ -272,8 +262,6 @@ private fun AdvancedDescription(text: String) {
     )
 }
 
-// ─────────────────────────────── MTU ───────────────────────────────
-
 @Composable
 internal fun MtuPage(
     settings: AppSettingsState,
@@ -294,8 +282,6 @@ internal fun MtuPage(
         onChosen()
     }
 }
-
-// ─────────────────────────────── Custom DNS ───────────────────────────────
 
 @Composable
 internal fun CustomDnsPage(

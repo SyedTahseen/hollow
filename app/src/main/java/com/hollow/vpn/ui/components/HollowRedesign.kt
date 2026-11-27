@@ -67,9 +67,6 @@ import com.hollow.vpn.ui.theme.NothingPillActiveIcon
 import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.nothingPressScale
 
-/**
- * Subtle Nothing OS OLED dot-matrix background texture.
- */
 @Composable
 fun NothingDotMatrixBackdrop(
     modifier: Modifier = Modifier,
@@ -96,9 +93,6 @@ fun NothingDotMatrixBackdrop(
     }
 }
 
-/**
- * Authentic Nothing OS dotted hairline divider (`· · · · · · · · ·`).
- */
 @Composable
 fun NothingDottedDivider(
     modifier: Modifier = Modifier,
@@ -126,11 +120,6 @@ fun NothingDottedDivider(
     }
 }
 
-/**
- * Pill filter/tab row (solid active pill + hairline pills) with smooth color morphing and a
- * tactile press-scale. Pill text uses Outrun's `Small` style: regular weight, same whether the
- * pill is selected or not. [onLongPressTab] lets a pill offer a secondary action (delete subscription).
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NothingPillTabRow(
@@ -204,7 +193,6 @@ fun NothingPillTabRow(
     }
 }
 
-/** Small Glyph status dot that pulses crisply. */
 @Composable
 fun HollowBlinkingDot(color: Color, modifier: Modifier = Modifier) {
     val t = rememberInfiniteTransition(label = "blink")
@@ -223,7 +211,6 @@ fun HollowBlinkingDot(color: Color, modifier: Modifier = Modifier) {
     )
 }
 
-/** Nothing OS segmented dot-matrix progress wave bar. */
 @Composable
 fun HollowIndeterminateBar(color: Color, track: Color, modifier: Modifier = Modifier) {
     val t = rememberInfiniteTransition(label = "bar_fill")

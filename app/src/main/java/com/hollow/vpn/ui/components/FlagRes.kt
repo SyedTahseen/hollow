@@ -2,7 +2,6 @@ package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.R
 
-/** ISO-3166 alpha-2 -> bundled flat 3:2 flag image (res/drawable-nodpi/flag_xx.webp). */
 internal val FLAG_RES: Map<String, Int> = mapOf(
     "AD" to R.drawable.flag_ad,
     "AE" to R.drawable.flag_ae,

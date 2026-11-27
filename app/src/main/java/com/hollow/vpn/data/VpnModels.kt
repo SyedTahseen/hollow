@@ -21,9 +21,9 @@ data class ServerEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val countryName: String,
     val countryCode: String,
-    val protocolDisplay: String, // e.g., "V2Ray · Reality · 185.216.34.12"
-    val protocolCore: String, // e.g., "VLESS (V2Ray)", "VMess (V2Ray)", "Trojan (V2Ray)"
-    val transport: String, // "Reality", "VLESS", "Trojan", "gRPC", "WebSocket", "TCP"
+    val protocolDisplay: String,
+    val protocolCore: String,
+    val transport: String,
     val host: String,
     val resolvedIp: String = "",
     val port: Int,
@@ -58,18 +58,15 @@ data class SubscriptionEntity(
     val isEnabled: Boolean = true,
     val successPulls: Int = 0,
     val failedPulls: Int = 0,
-    /** Name the provider reports (`profile-title`); empty until the first successful fetch. */
     @ColumnInfo(defaultValue = "''") val title: String = "",
     @ColumnInfo(defaultValue = "0") val uploadBytes: Long = 0L,
     @ColumnInfo(defaultValue = "0") val downloadBytes: Long = 0L,
     @ColumnInfo(defaultValue = "0") val totalBytes: Long = 0L,
-    /** Unix seconds, 0 = none reported. */
     @ColumnInfo(defaultValue = "0") val expireAt: Long = 0L
 ) {
     val usedBytes: Long get() = uploadBytes + downloadBytes
 }
 
-/** Copies the provider-reported info onto this subscription. Empty fields keep what we already had. */
 fun SubscriptionEntity.withMeta(meta: SubscriptionMeta): SubscriptionEntity = copy(
     title = meta.title.ifBlank { title },
     uploadBytes = meta.upload,
@@ -78,7 +75,6 @@ fun SubscriptionEntity.withMeta(meta: SubscriptionMeta): SubscriptionEntity = co
     expireAt = meta.expire
 )
 
-/** A pill on the Servers screen: "All", "Default" (manually added), or one per subscription. */
 data class ServerCategory(val key: String, val label: String) {
     companion object {
         const val ALL_KEY = "all"
@@ -86,7 +82,6 @@ data class ServerCategory(val key: String, val label: String) {
     }
 }
 
-/** Human readable pill label for a subscription (its name, or a name derived from its URL). */
 fun SubscriptionEntity.categoryLabel(): String {
     title.trim().takeIf { it.isNotBlank() }?.let { return it }
     val trimmedName = name.trim()
@@ -140,38 +135,24 @@ data class AppSettingsState(
     val activeSubscriptionUrl: String = DEFAULT_SUBSCRIPTION_URL,
     val perAppProxyEnabled: Boolean = false,
     val bypassSelectedApps: Boolean = false,
-    /** Split tunneling, "Exclude" mode: these apps connect directly. */
     val splitExcludeApps: Set<String> = emptySet(),
-    /** Split tunneling, "Include" mode: only these apps use the VPN. */
     val splitIncludeApps: Set<String> = emptySet(),
     val mirrorsEnabled: Boolean = false,
     val domesticCountryCode: String = "IR",
     val themeMode: String = "Dark",
-    /** App-wide display size in percent (80..130), same as Outrun's "Display size". */
     val displayScalePercent: Int = 100,
-    /** NetShield: filter ads, trackers and malware by sending DNS lookups to a filtering resolver. */
     val netShieldEnabled: Boolean = false,
-    /** NetShield extra: also block adult content (AdGuard "family" resolver). */
     val blockAdultContent: Boolean = false,
-    /** Split tunneling, "Skip VPN" mode: these IPs / CIDRs connect directly. */
     val splitExcludeIps: List<String> = emptyList(),
-    /** Split tunneling, "VPN only" mode: only these IPs / CIDRs go through the VPN. */
     val splitIncludeIps: List<String> = emptyList(),
-    /** Latency test: id of the address every server is tested against (see [TEST_URLS]). */
     val testUrlChoice: String = DEFAULT_TEST_URL_ID,
-    /** Advanced: drop QUIC (UDP 443) so apps fall back to TCP, which suits most proxy protocols. */
     val blockQuic: Boolean = true,
-    /** Advanced: largest packet the tunnel sends (see [MTU_CHOICES]). */
     val mtu: Int = DEFAULT_MTU,
-    /** Advanced: use [customDnsList] instead of the default DNS. */
     val customDnsEnabled: Boolean = false,
     val customDnsList: List<String> = emptyList(),
-    /** Advanced: connect the selected server when the phone starts. */
     val autoConnectBoot: Boolean = false,
-    /** Advanced: send all traffic through the VPN using root instead of Android's VPN service. */
     val rootMode: Boolean = false
 ) {
-    /** Apps for the active split-tunneling mode (what the VPN service receives). */
     val activeSplitApps: Set<String>
         get() = if (bypassSelectedApps) splitExcludeApps else splitIncludeApps
 
@@ -179,7 +160,6 @@ data class AppSettingsState(
         const val DEFAULT_TEST_URL_ID = "google"
         const val DEFAULT_MTU = 1500
 
-        /** Addresses used to time a server. Each one answers a tiny request through the proxy. */
         val TEST_URLS = listOf(
             TestUrlOption("google", "Google", "https://www.gstatic.com/generate_204"),
             TestUrlOption("cloudflare", "Cloudflare", "https://cp.cloudflare.com/generate_204"),
@@ -197,12 +177,10 @@ data class AppSettingsState(
         fun testUrlOption(id: String): TestUrlOption =
             TEST_URLS.firstOrNull { it.id == id } ?: TEST_URLS.first()
 
-        /** Custom DNS servers that are usable right now (IPv6 resolvers are dropped while IPv6 is off). */
         fun activeCustomDns(settings: AppSettingsState): List<String> =
             if (!settings.customDnsEnabled) emptyList()
             else settings.customDnsList.filter { settings.ipv6Enabled || ':' !in it }
 
-        /** AdGuard DNS: default (ads, trackers, malware) and family (adds adult content). */
         val NETSHIELD_DNS = listOf("94.140.14.14", "94.140.15.15")
         val NETSHIELD_DNS_FAMILY = listOf("94.140.14.15", "94.140.15.16")
 
@@ -244,12 +222,10 @@ class VpnPreferencesStore(context: Context) {
         val cleanSubUrl = if (rawSubUrl == AppSettingsState.LEGACY_DEFAULT_SUBSCRIPTION_URL) "" else rawSubUrl
         return AppSettingsState(
             updateIntervalLabel = prefs.getString("update_interval", "1 hour") ?: "1 hour",
-            // "Direct Only" was a diagnostic mode that has been removed; fall back to Global.
             routingMode = (prefs.getString("routing_mode", "Global") ?: "Global")
                 .takeUnless { it.contains("Direct", ignoreCase = true) } ?: "Global",
             tunMode = prefs.getBoolean("tun_mode", true),
             ipv6Enabled = prefs.getBoolean("ipv6_enabled", false),
-            // Merged from the old duplicate "auto_configure" toggle: off if either was off.
             subAutoUpdate = prefs.getBoolean("sub_auto_update", true) && prefs.getBoolean("auto_configure", true),
             subReplaceExisting = prefs.getBoolean("sub_replace_existing", true),
             activeSubscriptionUrl = cleanSubUrl,
@@ -283,7 +259,6 @@ class VpnPreferencesStore(context: Context) {
         prefs.edit()
             .remove("auto_configure")
             .remove("sub_update_interval")
-            // Settings that no longer exist.
             .remove("protocol_pref")
             .remove("dns_mode")
             .remove("start_on_open_v2")
@@ -412,7 +387,6 @@ class VpnPreferencesStore(context: Context) {
             .apply()
     }
 
-    /** Favorite servers are keyed by "host:port" so they survive re-fetches and DB resets. */
     fun loadFavoriteKeys(): Set<String> =
         prefs.getStringSet("favorite_server_keys", emptySet())?.toSet() ?: emptySet()
 
@@ -421,7 +395,6 @@ class VpnPreferencesStore(context: Context) {
     }
 }
 
-/** Stable identity used for the favorites star. */
 fun ServerEntity.favoriteKey(): String = "${host.lowercase()}:$port"
 
 @Dao
@@ -490,7 +463,6 @@ abstract class VpnDatabase : RoomDatabase() {
     abstract fun vpnDao(): VpnDao
 
     companion object {
-        /** Adds the provider-reported name / usage / expiry columns without touching saved servers. */
         private val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE vpn_subscriptions ADD COLUMN title TEXT NOT NULL DEFAULT ''")

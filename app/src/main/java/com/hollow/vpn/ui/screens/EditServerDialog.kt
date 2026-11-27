@@ -47,11 +47,6 @@ import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowText
 
-/**
- * "Edit server" window. Same fields as Outrun: name, server, port, the credential field(s) for the
- * protocol, and an editable list of link parameters. [onSave] receives the rebuilt share link and
- * returns an error message to show in the window, or null once it has been saved.
- */
 @Composable
 fun EditServerDialog(
     server: ServerEntity,
@@ -198,7 +193,6 @@ private fun LabeledField(
     Spacer(Modifier.height(HollowSpace.Md))
 }
 
-/** Single-line text input in Hollow's card style. Shared by the edit window and the IP address page. */
 @Composable
 internal fun HollowField(
     value: String,

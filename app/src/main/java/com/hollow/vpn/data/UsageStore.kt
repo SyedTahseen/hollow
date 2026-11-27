@@ -14,15 +14,10 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-/** One finished VPN connection. */
 data class UsageSession(val start: Long, val end: Long, val server: String, val up: Long, val down: Long)
 
 data class AppUsage(val label: String, val bytes: Long)
 
-/**
- * On-device data-use and connection history: daily totals (90 days), the last 100 sessions, and
- * per-app usage while connected (needs Android's Usage access). Nothing leaves the device.
- */
 object UsageStore {
     private const val FILE = "hollow_usage"
     private const val MAX_SESSIONS = 100
@@ -53,7 +48,6 @@ object UsageStore {
         j.keys().asSequence().associateWith { k -> j.getJSONArray(k).let { it.optLong(0) to it.optLong(1) } }
     }.getOrDefault(emptyMap())
 
-    /** Oldest first: (day "yyyy-MM-dd", uploaded bytes, downloaded bytes). */
     fun lastDays(ctx: Context, n: Int): List<Triple<String, Long, Long>> {
         val d = days(ctx)
         val cal = Calendar.getInstance()
@@ -68,7 +62,6 @@ object UsageStore {
         return out
     }
 
-    /** (uploaded, downloaded) over the last [n] days including today. */
     fun total(ctx: Context, n: Int): Pair<Long, Long> =
         lastDays(ctx, n).let { l -> l.sumOf { it.second } to l.sumOf { it.third } }
 
@@ -83,7 +76,6 @@ object UsageStore {
         p.edit().putString("sessions", keep.toString()).apply()
     }
 
-    /** Newest first. */
     @Synchronized
     fun sessions(ctx: Context): List<UsageSession> = runCatching {
         val arr = JSONArray(prefs(ctx).getString("sessions", "[]") ?: "[]")
@@ -109,7 +101,6 @@ object UsageStore {
         mode == AppOpsManager.MODE_ALLOWED
     }.getOrDefault(false)
 
-    /** Approximate per-app traffic during the given sessions (Android groups it in hourly blocks). */
     fun perApp(ctx: Context, sessions: List<UsageSession>, limit: Int = 30): List<AppUsage> {
         if (!hasUsageAccess(ctx) || sessions.isEmpty()) return emptyList()
         val nsm = ctx.getSystemService(Context.NETWORK_STATS_SERVICE) as? NetworkStatsManager ?: return emptyList()

@@ -13,11 +13,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * Watches the underlying physical network (Wi-Fi <-> Cellular, DHCP lease changes, roaming)
- * while the VPN tunnel is active and triggers a debounced handover callback so dead sockets
- * can be detected and recovered cleanly.
- */
 class NetworkMonitor(
     private val connectivity: ConnectivityManager,
     private val onHandover: (reason: String) -> Unit

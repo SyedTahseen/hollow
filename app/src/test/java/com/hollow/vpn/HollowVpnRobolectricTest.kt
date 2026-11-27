@@ -56,7 +56,6 @@ class HollowVpnRobolectricTest {
         assertEquals(true, loaded.bypassSelectedApps)
         assertTrue(loaded.splitExcludeApps.contains("com.android.chrome"))
         assertEquals(setOf("com.android.vending"), loaded.splitIncludeApps)
-        // Exclude and include apps are separate lists; the service gets the active one.
         assertEquals(loaded.splitExcludeApps, loaded.activeSplitApps)
         assertEquals(setOf("com.android.vending"), loaded.copy(bypassSelectedApps = false).activeSplitApps)
     }
@@ -264,9 +263,7 @@ class HollowVpnRobolectricTest {
 
         val store = VpnPreferencesStore(context)
         val loaded = store.loadSettings()
-        // Direct Only was a diagnostic mode: never carried forward, so it can't silently bypass the VPN.
         assertEquals("Global", loaded.routingMode)
-        // The Private DNS picker is gone; only the default (or Advanced > Custom DNS) applies.
         assertEquals("Auto (DoH)", loaded.dnsMode)
 
         store.saveSettings(loaded)

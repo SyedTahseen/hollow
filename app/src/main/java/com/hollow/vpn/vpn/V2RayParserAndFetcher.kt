@@ -57,7 +57,6 @@ data class PublicIpInfo(
     val longitude: Double? = null
 )
 
-/** Extra GeoIP / network details about a proxy server's IP, shown in the expandable home server card. */
 data class ServerIpDetails(
     val ip: String,
     val city: String = "",
@@ -73,12 +72,6 @@ data class ServerIpDetails(
     val isp: String = ""
 )
 
-/**
- * Production V2Ray / Xray multi-protocol parser and Fetcher Auto-Fetcher.
- * Uses ResilientFetcher (direct -> optional CDN mirrors -> disk cache), Beta source scoring,
- * TCP reachability filtering (drop-only, never ranked), DPI-resilient protocol tier ranking,
- * real Xray delay + serialized single-stream throughput probing, and HTTPS-only GeoIP enrichment.
- */
 class V2RayParserAndFetcher {
 
     private val httpClient = OkHttpClient.Builder()
@@ -171,13 +164,6 @@ class V2RayParserAndFetcher {
         }
     }
 
-    /**
-     * Concurrent Producer-Consumer Pipeline:
-     * - Producer(s) stream/download feeds in parallel and immediately push subnet-diverse nodes into [rawChannel].
-     * - 48 TCP pre-filter workers immediately test reachability and stream live survivors into [xrayChannel].
-     * - 24 Xray workers verify real proxy handshakes simultaneously while feeds are still downloading.
-     * - Speed testing (top 3) + GeoIP resolution (Semaphore 20 + in-memory cache) execute concurrently at the end.
-     */
     private suspend fun runStreamingFetchAndBenchmarkPipeline(
         urls: List<String>,
         subscriptions: List<SubscriptionEntity>,
@@ -296,7 +282,6 @@ class V2RayParserAndFetcher {
             }
             if (validNodes.isEmpty()) return 0
 
-
             val prioritized = ProtocolRanker.prioritizeCandidates(validNodes)
             var acceptedInBatch = 0
 
@@ -398,7 +383,6 @@ class V2RayParserAndFetcher {
             }
         }
 
-        // Consumer Pool 1: 48 parallel TCP pre-filter workers feed live survivors straight into xrayChannel
         val tcpWorkersJob = launch(Dispatchers.IO) {
             try {
                 val tcpWorkers = List(48) {
@@ -458,7 +442,6 @@ class V2RayParserAndFetcher {
             }
         }
 
-        // Consumer Pool 2: 24 parallel Xray handshake workers run simultaneously with download & TCP probing
         val now = System.currentTimeMillis()
         val xrayWorkersJob = launch(Dispatchers.IO) {
             val xrayWorkers = List(24) {
@@ -508,7 +491,6 @@ class V2RayParserAndFetcher {
                                 )
                                 workingServers.add(verifiedEntity)
 
-                                // Track fastest ping live
                                 while (true) {
                                     val curFast = fastestPing.get()
                                     if (curFast != 0 && curFast <= result.delayMs) break
@@ -605,10 +587,6 @@ class V2RayParserAndFetcher {
         Result.success(finalRanked)
     }
 
-    /**
-     * Filters malformed nodes, preserves distinct CDN endpoints sharing an Anycast IP:port
-     * (distinguished by core/credential/SNI), and samples across /16 prefixes & domains.
-     */
     internal fun selectDiverseCandidatePool(
         allParsed: List<ServerEntity>,
         maxCandidates: Int = 150
@@ -625,10 +603,8 @@ class V2RayParserAndFetcher {
         }
         if (uniqueByEndpoint.size <= maxCandidates) return uniqueByEndpoint
 
-        // Separate dedicated servers from Cloudflare Anycast CDN IP ranges
         val (cloudflareNodes, dedicatedNodes) = uniqueByEndpoint.partition { isCloudflareAnycastHost(it.host) }
 
-        // Group dedicated nodes by network prefix (first 2 octets or domain TLD) for maximum geographic spread
         val bySubnet = dedicatedNodes.groupBy { server ->
             val parts = server.host.split(".")
             if (parts.size == 4 && parts[0].toIntOrNull() != null) {
@@ -653,7 +629,6 @@ class V2RayParserAndFetcher {
             round++
         }
 
-        // Fill any remaining slots with Cloudflare nodes that have distinct SNI/credential combinations
         if (selected.size < maxCandidates && cloudflareNodes.isNotEmpty()) {
             val remaining = maxCandidates - selected.size
             selected.addAll(
@@ -680,19 +655,6 @@ class V2RayParserAndFetcher {
             (o1 == 198 && o2 == 41)
     }
 
-    /**
-     * Benchmarks candidate servers:
-     * 1. Measures user's line baseline (if needed) under TCP reachability probing.
-     * 2. Uses TCP ping strictly to DROP unreachable nodes (never to rank, avoiding CDN edge bias).
-     * 3. Orders survivors by DPI-resilient protocol tier (shuffled within tier).
-     * 4. Verifies live Xray outbound HTTP 204 delay (`Libv2ray.measureOutboundDelay`).
-     * 5. Runs serialized one-at-a-time throughput verification on top candidates so winners are truly fast.
-     * 6. Resolves real IPs + HTTPS-only GeoIP country flags, returning a country-diverse Top 15.
-     */
-    /**
-     * Benchmarks candidate servers using pipelined TCP -> Xray verification (no awaitAll barrier)
-     * followed by concurrent throughput + GeoIP enrichment.
-     */
     suspend fun benchmarkAndRankTop15(
         servers: List<ServerEntity>,
         context: Context? = null,
@@ -701,7 +663,6 @@ class V2RayParserAndFetcher {
         onProgress: (String) -> Unit = {}
     ): List<ServerEntity> = withContext(Dispatchers.IO) {
         if (servers.isEmpty()) return@withContext emptyList()
-
 
         val prioritizedInput = ProtocolRanker.prioritizeCandidates(
             servers.distinctBy {
@@ -950,10 +911,6 @@ class V2RayParserAndFetcher {
             }
     }
 
-    /**
-     * Fetches the user's real current public IP, Country, and ISP from live HTTPS-first GeoIP endpoints.
-     * When [socksProxyPort] is provided (Proxy Mode), probes exit IP directly through 127.0.0.1:[socksProxyPort].
-     */
     suspend fun fetchDevicePublicIpInfo(socksProxyPort: Int? = null): PublicIpInfo = withContext(Dispatchers.IO) {
         evictConnectionPools()
         val client = if (socksProxyPort != null) {
@@ -966,7 +923,6 @@ class V2RayParserAndFetcher {
             geoHttpClient
         }
 
-        // 1. Primary HTTPS endpoint: ipwho.is
         try {
             val req = Request.Builder()
                 .url("https://ipwho.is/")
@@ -1001,7 +957,6 @@ class V2RayParserAndFetcher {
         } catch (_: Exception) {
         }
 
-        // 2. Backup HTTPS endpoint: ipapi.co
         try {
             val req = Request.Builder()
                 .url("https://ipapi.co/json/")
@@ -1033,7 +988,6 @@ class V2RayParserAndFetcher {
         } catch (_: Exception) {
         }
 
-        // 3. Backup HTTPS endpoint: api.ip.sb
         try {
             val req = Request.Builder()
                 .url("https://api.ip.sb/geoip")
@@ -1068,9 +1022,6 @@ class V2RayParserAndFetcher {
         PublicIpInfo("Unavailable", "Unknown", "XX", "Unavailable")
     }
 
-    /**
-     * Enriches a single ServerEntity with its resolved IP and real GeoIP Country Name & Flag.
-     */
     suspend fun enrichServerWithIpAndCountry(
         server: ServerEntity,
         rank: Int = server.rankOrder
@@ -1096,10 +1047,6 @@ class V2RayParserAndFetcher {
         )
     }
 
-    /**
-     * Resolves country codes for a list of IPv4 addresses strictly over HTTPS (`ipwho.is` / `api.ip.sb`),
-     * avoiding cleartext HTTP GeoIP calls.
-     */
     private suspend fun fetchBatchGeoIpMap(ips: List<String>): Map<String, Pair<String, String>> = coroutineScope {
         val validIps = ips.filter { it.isNotBlank() && it.contains(".") }.distinct().take(120)
         if (validIps.isEmpty()) return@coroutineScope emptyMap()
@@ -1116,10 +1063,6 @@ class V2RayParserAndFetcher {
         }.awaitAll().filterNotNull().toMap()
     }
 
-    /**
-     * Full GeoIP + ASN details for a server IP (city, region, postal, timezone, coordinates, ASN, ISP).
-     * HTTPS only: ipwho.is first, ipapi.co as backup. Successful results are cached per IP.
-     */
     suspend fun fetchServerIpDetails(ip: String): ServerIpDetails? = withContext(Dispatchers.IO) {
         if (ip.isBlank() || ip.contains(":")) return@withContext null
         serverDetailsCache[ip]?.let { return@withContext it }
@@ -1427,7 +1370,6 @@ class V2RayParserAndFetcher {
             lower.startsWith("wireguard://") -> parseWireGuardUri(clean, subscriptionUrl, isCustom)
             lower.startsWith("socks://") || lower.startsWith("socks5://") ->
                 parseSocksUri(clean, subscriptionUrl, isCustom)
-            // TUIC outbounds are not supported by Xray-core / AndroidLibXrayLite.
             lower.startsWith("tuic://") -> null
             else -> null
         }
@@ -2060,7 +2002,6 @@ class V2RayParserAndFetcher {
         }
     }
 
-    /** Give each saved row an isolated outbound; Shadowsocks rejects multiple servers in one outbound. */
     private fun buildSingleServerConfig(root: JSONObject, sourceOutbound: JSONObject): JSONObject {
         val config = JSONObject()
         root.optJSONObject("log")?.let { config.put("log", JSONObject(it.toString())) }
@@ -2092,7 +2033,6 @@ class V2RayParserAndFetcher {
         return config
     }
 
-    /** The server's saved Xray config, or a freshly generated one when none is stored. */
     fun resolveConfigJson(server: ServerEntity): String =
         server.rawConfigJson.ifBlank { generateXrayJsonForServer(server) }
 
@@ -2386,11 +2326,6 @@ class V2RayParserAndFetcher {
         return root.toString(2)
     }
 
-    /**
-     * Applies user DNS, LAN routing (GeoIP/Geosite rules when `geoip.dat` & `geosite.dat` are
-     * installed, with automatic CIDR fallback), IPv6 strategy, TUN vs local proxy inbounds,
-     * ordered proxy/direct/block outbounds, QUIC UDP/443 block, IPv6 leak block, and Xray stats.
-     */
     fun applyRuntimeSettingsToXrayJson(
         baseJson: String,
         settings: AppSettingsState,
@@ -2399,7 +2334,6 @@ class V2RayParserAndFetcher {
         return try {
             val root = JSONObject(baseJson)
 
-            // 1. Inbounds: keep tun-in when TUN Mode is enabled; otherwise expose SOCKS5 + HTTP proxy
             val existingInbounds = root.optJSONArray("inbounds") ?: JSONArray()
             val updatedInbounds = JSONArray()
             var hasSocks = false
@@ -2456,7 +2390,6 @@ class V2RayParserAndFetcher {
             }
             root.put("inbounds", updatedInbounds)
 
-            // 2. Normalize outbounds: primary proxy outbound FIRST, followed by direct and block
             val existingOutbounds = root.optJSONArray("outbounds") ?: JSONArray()
             val proxyOutbounds = mutableListOf<JSONObject>()
             var directOutbound: JSONObject? = null
@@ -2494,15 +2427,12 @@ class V2RayParserAndFetcher {
             )
             root.put("outbounds", orderedOutbounds)
 
-            // 3. DNS configuration matching user's DNS setting & IPv6 preference
             val dnsServers = JSONArray()
             when {
                 settings.netShieldEnabled -> {
-                    // NetShield: filtering resolver (AdGuard) takes over from the default DNS.
                     AppSettingsState.netShieldDns(settings.blockAdultContent).forEach { dnsServers.put(it) }
                 }
                 AppSettingsState.activeCustomDns(settings).isNotEmpty() -> {
-                    // Advanced > Custom DNS replaces the default DNS.
                     AppSettingsState.activeCustomDns(settings).forEach { dnsServers.put(it) }
                 }
                 settings.dnsMode.contains("8.8.8.8") -> {
@@ -2528,7 +2458,6 @@ class V2RayParserAndFetcher {
                     .put("queryStrategy", if (settings.ipv6Enabled) "UseIP" else "UseIPv4")
             )
 
-            // 4. Routing rules (real GeoIP/Geosite when geoip.dat/geosite.dat exist, plus CIDR rules)
             val rules = JSONArray()
             if (settings.routingMode.contains("Bypass LAN", ignoreCase = true)) {
                 val bypassCidrs = JSONArray()
@@ -2582,7 +2511,6 @@ class V2RayParserAndFetcher {
                         .put("outboundTag", "block")
                 )
             }
-            // Block QUIC (UDP 443) so browsers cleanly fall back to TLS/TCP over the tunnel
             if (settings.blockQuic) {
                 rules.put(
                     JSONObject()
@@ -2592,7 +2520,6 @@ class V2RayParserAndFetcher {
                         .put("outboundTag", "block")
                 )
             }
-            // Explicit catch-all routing rule to the primary proxy outbound
             if (proxyOutbounds.isNotEmpty()) {
                 rules.put(
                     JSONObject()
@@ -2608,7 +2535,6 @@ class V2RayParserAndFetcher {
                     .put("rules", rules)
             )
 
-            // 5. Enable Xray internal outbound stats
             if (!root.has("stats")) {
                 root.put("stats", JSONObject())
             }
@@ -2670,10 +2596,6 @@ class V2RayParserAndFetcher {
         }
     }
 
-    /**
-     * Detects explicit country hints from flag emojis, city/country names, or domain TLDs.
-     * Returns null if no explicit country hint is present so GeoIP can resolve the exact country.
-     */
     private fun detectExplicitCountryCode(text: String): String? {
         val flagCode = extractFlagEmojiIsoCode(text)
         if (flagCode != null && flagCode !in listOf("EU", "UN", "XX")) {
@@ -2710,7 +2632,6 @@ class V2RayParserAndFetcher {
         if (explicit != null) {
             return countryNameFromIsoCode(explicit) to explicit
         }
-        // Mark as "XX" (pending GeoIP resolution after TCP ping test)
         return "Resolving…" to "XX"
     }
 

@@ -7,12 +7,10 @@ import android.os.Build
 import com.hollow.vpn.data.ActiveTunnelSnapshot
 import com.hollow.vpn.data.VpnPreferencesStore
 
-/** Connect / disconnect entry points shared by the Quick Settings tile and the home-screen widget. */
 internal object TunnelControl {
 
     fun isRunning(): Boolean = XrayVpnService.isServiceRunning.value
 
-    /** True when there is no saved server yet, or Android still needs to ask for VPN permission. */
     fun needsApp(context: Context, snapshot: ActiveTunnelSnapshot?): Boolean {
         val store = VpnPreferencesStore(context.applicationContext)
         val needsConsent = (snapshot?.tunMode ?: true) &&

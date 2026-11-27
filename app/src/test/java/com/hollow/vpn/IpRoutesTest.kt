@@ -31,7 +31,6 @@ class IpRoutesTest {
     fun routes_coverEverythingExceptTheExcludedRange() {
         val routes = IpRoutes.routes(v6 = false, exclusions = listOf("192.168.0.0/16"))
         assertFalse(routes.isEmpty())
-        // Nothing in the result may overlap the excluded /16.
         routes.forEach { (addr, len) ->
             val start = addr.split('.').fold(0L) { acc, p -> acc * 256 + p.toLong() }
             val size = 1L shl (32 - len)

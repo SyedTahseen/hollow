@@ -5,13 +5,8 @@ import org.json.JSONObject
 import java.net.URLDecoder
 import java.net.URLEncoder
 
-/**
- * Field-by-field editor for a server's share link (vless://, vmess://, trojan://, ss://, hysteria2://,
- * wireguard://, socks5://). Ported from Outrun so the "Edit server" window behaves the same.
- */
 data class EditModel(
     val protocol: String,
-    /** The scheme exactly as written in the link (hy2, socks5, ...), so a saved link keeps it. */
     val scheme: String,
     val name: String,
     val host: String,
@@ -19,7 +14,6 @@ data class EditModel(
     val user: String,
     val pass: String,
     val params: List<Pair<String, String>>,
-    /** VMess only: JSON values that were numbers (n) or booleans (b), so they are saved with the same type. */
     val kinds: Map<String, Char> = emptyMap()
 )
 
@@ -74,7 +68,6 @@ object LinkEditor {
         }
     }.getOrNull()
 
-    /** Builds the new link from the edited model. Returns (link, null) or (null, error message). */
     fun finish(m: EditModel): Pair<String?, String?> {
         if (m.host.isBlank()) return null to "Enter the server address"
         val portNumber = m.port.trim().takeWhile { it.isDigit() }.toIntOrNull()

@@ -18,9 +18,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-/**
- * Android Quick Settings tile for toggling Hollow VPN directly from the notification shade.
- */
 class HollowTileService : TileService() {
 
     private var scope: CoroutineScope? = null

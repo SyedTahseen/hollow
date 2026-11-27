@@ -118,12 +118,10 @@ import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
 import com.hollow.vpn.ui.theme.nothingPressScale
 
-/** Dialogs that still open on top of the settings list (about sheet). */
 private enum class ActiveSettingDialog {
     ABOUT
 }
 
-/** Every setting that has its own page where the value is changed. */
 private enum class SettingsPage {
     NET_SHIELD,
     SPLIT_TUNNELING,
@@ -140,7 +138,6 @@ private enum class SettingsPage {
     APPEARANCE
 }
 
-/** Environment block for "Report an issue" and for shared logs. */
 internal fun hollowDebugInfo(serverCount: Int): String =
     "App ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n" +
         "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
@@ -151,7 +148,6 @@ internal fun hollowDebugInfo(serverCount: Int): String =
 
 private fun onOff(value: Boolean) = if (value) "On" else "Off"
 
-/** One-line summary under "Advanced settings": what is switched away from the defaults. */
 private fun advancedSummary(settings: AppSettingsState): String {
     val parts = buildList {
         if (settings.customDnsEnabled && settings.customDnsList.isNotEmpty()) add("Custom DNS")
@@ -165,10 +161,6 @@ private fun advancedSummary(settings: AppSettingsState): String {
     return if (parts.isEmpty()) "DNS, IPv6, QUIC, MTU and more" else parts.joinToString(" · ")
 }
 
-/**
- * Settings: a clean sectioned list (icon, title, current value). Tapping a setting opens its own
- * page where the value is changed; actions (logs, support, about) run directly.
- */
 @Composable
 fun SettingsScreen(
     settings: AppSettingsState,
@@ -194,7 +186,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     var activeDialog by remember { mutableStateOf<ActiveSettingDialog?>(null) }
 
-    // Debug logs and the split tunneling apps / IP pages are full screen, like Outrun: no bottom bar.
     val fullScreen = page == SettingsPage.DEBUG_LOGS || page == SettingsPage.SPLIT_APPS || page == SettingsPage.SPLIT_IPS
     LaunchedEffect(fullScreen) { onFullScreenChange(fullScreen) }
     DisposableEffect(Unit) { onDispose { onFullScreenChange(false) } }
@@ -321,8 +312,6 @@ fun SettingsScreen(
     }
 }
 
-// ─────────────────────────────── Overview list ───────────────────────────────
-
 @Composable
 private fun SettingsOverview(
     settings: AppSettingsState,
@@ -352,7 +341,6 @@ private fun SettingsOverview(
         notifOn = NotificationManagerCompat.from(ctx).areNotificationsEnabled()
     }
 
-    // Same title style and 64dp header row as Home ("HOLLOW VPN") and Servers ("SERVERS").
     Box(
         modifier = Modifier.fillMaxWidth().heightIn(min = HollowSizes.TopBar),
         contentAlignment = Alignment.CenterStart
@@ -594,8 +582,6 @@ internal fun SettingsRow(
     }
 }
 
-// ─────────────────────────────── Detail pages ───────────────────────────────
-
 @Composable
 private fun SettingsDetail(
     page: SettingsPage,
@@ -666,7 +652,6 @@ private fun SettingsDetail(
             onOpenIps = onOpenSplitIps
         )
 
-        // Full-screen pages (apps, IP addresses, debug logs) are shown by SettingsScreen itself.
         SettingsPage.SPLIT_APPS, SettingsPage.SPLIT_IPS, SettingsPage.DEBUG_LOGS -> Unit
 
         SettingsPage.KILL_SWITCH -> KillSwitchPage(onOpenSystemVpnSettings)
@@ -865,8 +850,6 @@ internal fun DetailRadioList(
         }
     }
 }
-
-// ─────────────────────────────── Segmented selectors ───────────────────────────────
 
 @Composable
 private fun ThemeModeInlineSelector(

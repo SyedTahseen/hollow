@@ -292,8 +292,6 @@ fun HollowVpnApp(
         vpnViewModel.showMessage("Subscription link copied")
     }
 
-    // Floating Nothing OS capsule navigation dock shows on primary top-level tabs only 
-    // Settings pages that fill the whole screen (debug logs, split tunneling apps / IPs) hide the dock, like Outrun.
     var settingsFullScreen by remember { mutableStateOf(false) }
     val showBottomNav = currentScreen == VpnScreen.CONNECTED_HOME ||
         currentScreen == VpnScreen.SERVER_LIST ||

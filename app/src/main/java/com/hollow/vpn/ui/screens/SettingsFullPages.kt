@@ -85,12 +85,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
 
-/*
- * Full-screen settings pages, laid out like Outrun's: a header with a back button (and Save / share
- * actions), then a scrolling list. Used for Debug logs and for the split tunneling apps and IP pages.
- */
-
-/** Header + body of a full-screen settings page. The body fills the rest of the screen. */
 @Composable
 internal fun SettingsFullPage(
     title: String,
@@ -174,8 +168,6 @@ private fun ListHeader(title: String, note: String? = null) {
     }
 }
 
-// ─────────────────────────────── Debug logs ───────────────────────────────
-
 private suspend fun readSystemLog(): List<String> = withContext(Dispatchers.IO) {
     runCatching {
         val p = ProcessBuilder("logcat", "-d", "-t", "200", "-v", "time", "*:W").redirectErrorStream(true).start()
@@ -185,7 +177,6 @@ private suspend fun readSystemLog(): List<String> = withContext(Dispatchers.IO) 
     }.getOrElse { listOf("Couldn't read system log: ${it.message}") }
 }
 
-/** Full-screen log viewer (replaces the old pop-up): connection events, then Android warnings and errors. */
 @Composable
 internal fun DebugLogsPage(
     xrayLogs: List<String>,
@@ -263,8 +254,6 @@ private fun shareLogs(ctx: Context, info: String, lines: List<String>, onFail: (
         .onFailure { onFail("Couldn't share logs") }
 }
 
-// ─────────────────────────────── Split tunneling: apps ───────────────────────────────
-
 private class AppInfo(val label: String, val pkg: String)
 
 private sealed class SystemApps {
@@ -273,7 +262,6 @@ private sealed class SystemApps {
     class Content(val apps: List<AppInfo>) : SystemApps()
 }
 
-/** Packages that can use the network; [withLaunchIntent] true = regular apps, false = system apps. */
 private fun Context.installedInternetApps(withLaunchIntent: Boolean): List<String> {
     val pm = packageManager
     return pm.getInstalledApplications(0).map { it.packageName }.filter { pkg ->
@@ -289,10 +277,6 @@ private fun Context.appInfos(packages: Collection<String>): List<AppInfo> = pack
     AppInfo(label, pkg)
 }
 
-/**
- * Pick the apps for split tunneling. Same layout as Outrun: the chosen apps first, then every other
- * regular app, then a "Show system apps" checkbox that reveals the system apps. Nothing is saved until Save.
- */
 @Composable
 internal fun SplitAppsPage(
     including: Boolean,
@@ -456,9 +440,6 @@ private fun AppPickIcon(pkg: String) {
     if (i != null) Image(i, null, m) else Box(m)
 }
 
-// ─────────────────────────────── Split tunneling: IP addresses ───────────────────────────────
-
-/** Add / remove the IP addresses for split tunneling. Same layout as Outrun; changes are kept on Save. */
 @Composable
 internal fun SplitIpsPage(
     including: Boolean,

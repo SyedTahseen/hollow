@@ -20,11 +20,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.ln
 import kotlin.random.Random
 
-/**
- * Protocol & DPI-resilience ranker inspired by v2rayV's AutoModeRanker:
- * - TCP reachability drops dead hosts, NEVER ranks them (avoids Cloudflare CDN edge bias).
- * - Candidates are grouped by protocol tier and shuffled within each tier so every run explores.
- */
 object ProtocolRanker {
 
     fun protocolTier(server: ServerEntity): Int {
@@ -59,10 +54,6 @@ object ProtocolRanker {
     }
 }
 
-/**
- * Beta/Thompson-inspired ordering for multiple subscription sources so reliable feeds
- * are pulled first without ever starving newly added feeds.
- */
 object BetaSourceScorer {
 
     fun orderSources(
@@ -109,11 +100,6 @@ object BetaSourceScorer {
     }
 }
 
-/**
- * Single-stream throughput probe & baseline tracker.
- * Both the user's direct line baseline and each candidate server use the exact same probe
- * so `serverMbps / baselineMbps` is an apples-to-apples ratio.
- */
 object ThroughputProbe {
 
     private const val PROBE_URL = "https://speed.cloudflare.com/__down?bytes=1500000"
@@ -150,10 +136,6 @@ object ThroughputProbe {
         return measured
     }
 
-    /**
-     * Starts a throwaway Xray core bound to a random local SOCKS5 port and runs one
-     * single-stream download through it, then cleanly stops the core.
-     */
     fun measureServerThroughputMbps(
         context: Context,
         server: ServerEntity,
@@ -227,7 +209,6 @@ object ThroughputProbe {
             }
             val elapsedSec = ((System.nanoTime() - startNs) / 1_000_000_000.0).coerceAtLeast(0.05)
             if (totalBytes < 16 * 1024) return 0.0
-            // Return MB/s (megabytes per second)
             (totalBytes / 1_048_576.0) / elapsedSec
         } catch (_: Exception) {
             0.0

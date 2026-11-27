@@ -89,10 +89,6 @@ import com.hollow.vpn.ui.theme.NothingTopBtnFill
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Full-screen QR scanner. Header has back / flash / gallery, the camera fills the rest with a
- * dimmed scrim and corner brackets around the scan frame. Calls [onResult] once with the decoded text.
- */
 @Composable
 fun QrScanScreen(
     onResult: (String) -> Unit,
@@ -147,7 +143,6 @@ fun QrScanScreen(
             .fillMaxSize()
             .background(NothingCanvas)
     ) {
-        // Header: back + SCAN QR on the left, flash + gallery on the right
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -326,7 +321,6 @@ private fun ScanCameraArea(
     val lifecycleOwner = LocalLifecycleOwner.current
     val analyzerExecutor = remember { Executors.newSingleThreadExecutor() }
     val alreadyDecoded = remember { AtomicBoolean(false) }
-    // Theme colors are composable getters, so read them here rather than inside the draw lambda.
     val scrimColor = NothingCanvas.copy(alpha = 0.6f)
 
     DisposableEffect(Unit) {
@@ -436,7 +430,6 @@ private fun ScanCameraArea(
     }
 }
 
-/** Full-screen window hosting [QrScanScreen]. Use this wherever a QR scan is started from a dialog-less screen. */
 @Composable
 fun QrScanDialog(
     onQrDecoded: (String) -> Unit,

@@ -8,13 +8,11 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Static brand & phase constants (safe to use inside non-@Composable contexts)
 val NothingBlack = Color(0xFF000000)
 val NothingRed = Color(0xFFE5252D)
 val HollowOrange = NothingRed
 val HollowDarkInk = Color(0xFFF5F5F7)
 
-// Static palette base colors for Material 3 schemes
 private val DarkCanvas = Color(0xFF000000)
 private val DarkSurface = Color(0xFF121214)
 private val DarkSurfaceElevated = Color(0xFF1A1A1E)
@@ -25,7 +23,6 @@ private val DarkInkMuted = Color(0xFF636369)
 private val DarkMatrixGreen = Color(0xFF2EE59D)
 private val DarkOrangeContainer = Color(0xFF2D0B0D)
 
-// Nothing OS neutral achromatic matte dark palette for non-OLED (LCD/IPS) displays (zero blue tint)
 private val CarbonCanvas = Color(0xFF121212)
 private val CarbonSurface = Color(0xFF1B1B1B)
 private val CarbonSurfaceElevated = Color(0xFF242424)
@@ -154,7 +151,6 @@ val LocalHollowPalette = staticCompositionLocalOf { DarkHollowPalette }
 val LocalHollowIsDark = staticCompositionLocalOf { true }
 val LocalHollowIsOled = staticCompositionLocalOf { true }
 
-// Reactive Nothing OS semantic tokens (automatically adapt to Dark & Light Mode)
 val NothingCanvas: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.canvas
 
@@ -215,7 +211,6 @@ val NothingSwitchOffThumb: Color
 val NothingBackdropDot: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.backdropDot
 
-// Semantic accessors mapped dynamically to the active HollowPalette
 val HollowCream: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.canvas
 
@@ -234,15 +229,12 @@ val HollowInkSecondary: Color
 val HollowInkMuted: Color
     @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.inkMuted
 
-// Connecting Phase (.busy — Pure OLED Black + Glyph Amber)
 val HollowObsidian = Color(0xFF000000)
 val HollowObsidianSurface = Color(0xFF141416)
 val HollowObsidianDivider = Color(0xFF29292E)
 val HollowObsidianMuted = Color(0xFF94949C)
 val HollowAmber = Color(0xFFFFB020)
 
-// Connected Phase — neutral black surfaces + the same green as the connected map pin / "fastest" flag.
-// (Names kept for compatibility with existing call sites.)
 val HollowForest = Color(0xFF050506)
 val HollowForestCard = Color(0xFF0C0B0E)
 val HollowForestDivider = Color(0xFF1C1C20)

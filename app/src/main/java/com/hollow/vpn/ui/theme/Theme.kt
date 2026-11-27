@@ -7,10 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
-/**
- * Hardware-aware display detector: OLED/AMOLED panels on Android advertise HDR and/or
- * Wide Color Gamut (DCI-P3), whereas standard LCD/IPS screens typically report neither.
- */
 fun detectOledDisplay(context: Context): Boolean {
     return try {
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

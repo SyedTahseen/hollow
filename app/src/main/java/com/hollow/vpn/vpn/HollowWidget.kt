@@ -14,7 +14,6 @@ import com.hollow.vpn.MainActivity
 import com.hollow.vpn.R
 import com.hollow.vpn.data.VpnPreferencesStore
 
-/** Home-screen widget: shows connection state and toggles the VPN (ported from Outrun's widget). */
 class HollowWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -44,7 +43,6 @@ class HollowWidget : AppWidgetProvider() {
                 .getAppWidgetIds(ComponentName(app, HollowWidget::class.java)).size
         }.getOrDefault(0)
 
-        /** Asks the launcher to pin the widget. Returns false when pinning isn't supported. */
         fun requestPin(context: Context): Boolean {
             val manager = AppWidgetManager.getInstance(context)
             return manager.isRequestPinAppWidgetSupported && runCatching {

@@ -236,7 +236,6 @@ class V2RayParserTest {
         val hasQuicRule = (0 until rules.length()).any { rules.getJSONObject(it).optString("port") == "443" }
         assertFalse(hasQuicRule)
 
-        // IPv6 resolvers are dropped while IPv6 is off.
         val dns = runtime.getJSONObject("dns").getJSONArray("servers")
         assertEquals(1, dns.length())
         assertEquals("9.9.9.9", dns.getString(0))
