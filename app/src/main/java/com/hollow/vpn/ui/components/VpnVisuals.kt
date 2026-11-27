@@ -294,21 +294,20 @@ fun HollowBottomNavigationBar(
             .padding(horizontal = HollowSpace.Gutter, vertical = HollowSpace.Sm),
         contentAlignment = Alignment.Center
     ) {
-        // .navbar — 1px line-2 outline, pill radius, icons only, space-around.
+        // Floating pill: solid surface, 1dp outline, icon over bold label, filled pill behind the active tab.
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(com.hollow.vpn.ui.theme.HollowBar.Height),
+                .height(NavBarHeight),
             shape = com.hollow.vpn.ui.theme.HollowBar.Shape,
-            color = com.hollow.vpn.ui.theme.HollowBar.Fill,
+            color = com.hollow.vpn.ui.theme.NothingPillNavFill,
             border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowLine2)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = HollowSpace.Sm),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround
+                    .padding(NavBarInset),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 HollowBottomNavItem(
                     label = "Home",
@@ -333,7 +332,10 @@ fun HollowBottomNavigationBar(
     }
 }
 
-/** `.navbar .i` (muted) / `.navbar .i.on` (display / white). No fill behind the active tab — colour only. */
+private val NavBarHeight = 72.dp
+private val NavBarInset = 4.dp
+
+/** One tab: 24dp line icon above a bold label. The selected tab gets a lighter pill behind it. */
 @Composable
 private fun RowScope.HollowBottomNavItem(
     label: String,
@@ -344,22 +346,29 @@ private fun RowScope.HollowBottomNavItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val iconTint by animateColorAsState(
-        targetValue = if (selected) com.hollow.vpn.ui.theme.HollowDisplayInk else com.hollow.vpn.ui.theme.HollowInkMuted,
-        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+    val easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase
+    val tint by animateColorAsState(
+        targetValue = if (selected) com.hollow.vpn.ui.theme.HollowDisplayInk else com.hollow.vpn.ui.theme.HollowInk,
+        animationSpec = tween(HollowMotion.Fast, easing = easing),
         label = "nav_item_tint"
+    )
+    val pillBg by animateColorAsState(
+        targetValue = if (selected) com.hollow.vpn.ui.theme.LocalHollowPalette.current.surfaceElevated else Color.Transparent,
+        animationSpec = tween(HollowMotion.Fast, easing = easing),
+        label = "nav_item_pill"
     )
     val pressAlpha by animateFloatAsState(
         targetValue = if (isPressed) 0.6f else 1f,
-        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        animationSpec = tween(HollowMotion.Fast, easing = easing),
         label = "nav_press_alpha"
     )
     Box(
         modifier = modifier
             .weight(1f)
             .fillMaxHeight()
-            .minimumInteractiveComponentSize()
             .graphicsLayer { alpha = pressAlpha }
+            .clip(com.hollow.vpn.ui.theme.HollowBar.Shape)
+            .background(pillBg)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -369,7 +378,21 @@ private fun RowScope.HollowBottomNavItem(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
-        icon(iconTint)
+        androidx.compose.foundation.layout.Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            icon(tint)
+            Text(
+                text = label,
+                color = tint,
+                fontFamily = com.hollow.vpn.ui.theme.HollowSansFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                maxLines = 1
+            )
+        }
     }
 }
 
