@@ -283,8 +283,7 @@ private val NavActiveContent = Color.White
 private val NavInactiveContent = Color(0xFF8E8E92)
 
 /**
- * Bottom bar: a dark capsule where the selected tab expands into a accent-red pill showing icon + label,
- * and the other tabs collapse to muted icon-only buttons.
+ * Bottom bar: a dark capsule of icon-only tabs; the selected tab gets a wider accent-red pill.
  *
  * The color parameters are kept for call-site compatibility; the look is fixed by the design.
  * [backgroundColor] is only used for the optional full-width backdrop.
@@ -388,16 +387,10 @@ private fun RowScope.HollowBottomNavItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val spec = tween<Float>(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase)
     val weight by animateFloatAsState(
-        targetValue = if (selected) 2.2f else 1f,
+        targetValue = if (selected) 1.6f else 1f,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 420f),
         label = "nav_item_weight"
-    )
-    val labelAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = spec,
-        label = "nav_label_alpha"
     )
     val pillBg by animateColorAsState(
         targetValue = if (selected) NavActiveAccent else Color.Transparent,
@@ -434,27 +427,7 @@ private fun RowScope.HollowBottomNavItem(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            icon(iconTint)
-            if (selected || labelAlpha > 0.01f) {
-                Text(
-                    text = label,
-                    color = NavActiveContent,
-                    fontFamily = HollowSansFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    lineHeight = 20.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .alpha(labelAlpha)
-                )
-            }
-        }
+        icon(iconTint)
     }
 }
 

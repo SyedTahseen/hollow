@@ -398,8 +398,6 @@ private fun HomeContent(
                 place = chipPlace,
                 ip = chipIp,
                 scramble = phase == 1,
-                fill = pc.surface,
-                border = pc.border,
                 placeColor = pc.ink,
                 ipColor = pc.muted,
                 modifier = Modifier.testTag("row_real_ip")
@@ -631,7 +629,7 @@ private fun formatSpeed2(bytesPerSec: Long): String {
     }
 }
 
-/** Footer card while protected: "Connected for <time>" plus live download / upload speed, in the connected palette. */
+/** Footer card while protected: connection time plus live download / upload speed. Tap anywhere on it to expand server details. */
 @Composable
 private fun ConnectionStatsCard(
     telemetry: ConnectionTelemetryState,
@@ -660,31 +658,7 @@ private fun ConnectionStatsCard(
                 .padding(horizontal = HollowSpace.Lg),
             verticalArrangement = Arrangement.Center
         ) {
-            // Row 1: caption + expand chevron
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Connected for",
-                    fontFamily = HollowSansFamily,
-                    fontSize = HollowType.Micro,
-                    lineHeight = HollowLineHeight.Micro,
-                    letterSpacing = HollowTracking.Micro,
-                    color = Color(0xFF8E8E92),
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f)
-                )
-                val chevronRotation by animateFloatAsState(if (expanded) 180f else 0f, tween(HollowMotion.Standard), label = "stats_card_chevron")
-                Icon(
-                    imageVector = Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Collapse server details" else "Expand server details",
-                    tint = Color(0xFF8E8E92),
-                    modifier = Modifier.size(HollowSizes.Icon).rotate(chevronRotation)
-                )
-            }
-            Spacer(modifier = Modifier.height(HollowSpace.Xxs))
-            // Row 2: connection time (left) and download / upload (right), same size + baseline
+            // Connection time (left) and download / upload (right), same size + baseline. Tap the card to expand.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -734,8 +708,7 @@ private fun ConnectionStatsCard(
 }
 
 /**
- * "City · IP" chip (Outrun-style): a translucent bordered capsule with the place in the main text color and
- * the IP muted. While [scramble] is on (connecting) the characters are progressively masked with '*'.
+ * "City · IP" line (Outrun-style) with the place in the main text color and the IP muted, no pill behind it. While [scramble] is on (connecting) the characters are progressively masked with '*'.
  * A new label fades in (500 ms) like Outrun's status transition.
  */
 @Composable
@@ -743,13 +716,10 @@ private fun HomeInfoChip(
     place: String,
     ip: String,
     scramble: Boolean,
-    fill: Color,
-    border: Color,
     placeColor: Color,
     ipColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(HollowRadius.Md)
     val placeText = place.trim()
     val label = when {
         ip.isBlank() && placeText.isBlank() -> "Locating…"
@@ -765,14 +735,7 @@ private fun HomeInfoChip(
         enter = fadeIn(tween(500)),
         modifier = modifier
     ) {
-        Row(
-            modifier = Modifier
-                .clip(shape)
-                .background(fill.copy(alpha = 0.86f))
-                .border(HollowStroke.Hairline, border, shape)
-                .padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             val style = androidx.compose.ui.text.TextStyle(
                 fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Normal,
