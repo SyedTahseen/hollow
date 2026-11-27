@@ -59,7 +59,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Checkbox
@@ -861,7 +861,8 @@ fun ServerItemRowContent(
     onToggleBatchCheck: () -> Unit = {},
     showCountryBadge: Boolean = false,
     isFavorite: Boolean = false,
-    onToggleFavorite: () -> Unit = {}
+    onToggleFavorite: () -> Unit = {},
+    onEdit: () -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -985,49 +986,21 @@ fun ServerItemRowContent(
                     modifier = Modifier.minimumInteractiveComponentSize()
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.MoreVert,
+                        imageVector = Icons.Rounded.MoreHoriz,
                         contentDescription = "Server Options for ${server.countryName}",
                         tint = HollowInkSecondary,
                         modifier = Modifier.size(HollowSizes.Icon)
                     )
                 }
 
+                // Same three actions as Outrun: Copy, Edit, Delete.
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
                     containerColor = NothingSurfaceElevated
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Connect Now", color = HollowInk) },
-                        onClick = {
-                            menuExpanded = false
-                            onSelect()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            val pingSub = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout"
-                            Text("Ping Test ($pingSub)", color = HollowInk)
-                        },
-                        onClick = {
-                            menuExpanded = false
-                            onPing()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Inspect Raw Config", color = HollowInk) },
-                        onClick = {
-                            menuExpanded = false
-                            onInspectJson()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = if (server.shareUri.isNotBlank()) "Copy Share Link" else "Copy Raw Config",
-                                color = HollowInk
-                            )
-                        },
+                        text = { Text("Copy", color = HollowInk) },
                         onClick = {
                             menuExpanded = false
                             val payload = server.shareUri.ifBlank { server.rawConfigJson }
@@ -1039,14 +1012,14 @@ fun ServerItemRowContent(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Show QR Code", color = HollowInk) },
+                        text = { Text("Edit", color = HollowInk) },
                         onClick = {
                             menuExpanded = false
-                            onShareQr()
+                            onEdit()
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Delete Server", color = HollowOrange) },
+                        text = { Text("Delete", color = HollowOrange) },
                         onClick = {
                             menuExpanded = false
                             onDelete()

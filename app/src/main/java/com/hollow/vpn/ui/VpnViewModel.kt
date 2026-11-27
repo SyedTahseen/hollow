@@ -1218,6 +1218,41 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Saves a server edited in the "Edit server" window. [newLink] is the rebuilt share link.
+     * Returns an error message to show in the window, or null when it was saved.
+     */
+    fun editServerLink(server: ServerEntity, newLink: String): String? {
+        val parsed = runCatching {
+            fetcher.parseImportPayload(newLink, server.subscriptionUrl, server.isCustom).firstOrNull()
+        }.getOrNull() ?: return "These details don't make a valid server"
+        val sameEndpoint = parsed.host.equals(server.host, ignoreCase = true) && parsed.port == server.port
+        val updated = parsed.copy(
+            id = server.id,
+            isSelected = server.isSelected,
+            isCustom = server.isCustom,
+            subscriptionUrl = server.subscriptionUrl,
+            createdAt = server.createdAt,
+            rankOrder = server.rankOrder,
+            isRecommendedTop15 = server.isRecommendedTop15,
+            pingMs = if (sameEndpoint) server.pingMs else parsed.pingMs,
+            lastSpeedMbps = if (sameEndpoint) server.lastSpeedMbps else parsed.lastSpeedMbps,
+            lastAliveAt = if (sameEndpoint) server.lastAliveAt else parsed.lastAliveAt
+        )
+        val oldKey = server.favoriteKey()
+        val newKey = updated.favoriteKey()
+        if (oldKey != newKey && oldKey in _favoriteKeys.value) {
+            val moved = (_favoriteKeys.value - oldKey) + newKey
+            _favoriteKeys.value = moved
+            prefsStore.saveFavoriteKeys(moved)
+        }
+        viewModelScope.launch {
+            dao.updateServer(updated)
+            showMessage("Saved ${updated.countryName.ifBlank { updated.host }}")
+        }
+        return null
+    }
+
     private fun validateXrayConfigJson(rawJson: String): String? {
         return try {
             val root = JSONObject(rawJson.trim())

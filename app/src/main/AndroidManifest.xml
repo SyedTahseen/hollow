@@ -13,6 +13,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Lets split tunneling list every installed app, including system apps ("Show system apps"). -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
     <!-- Optional: lets Usage & history show which apps used data while connected (user grants it in Android). -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"

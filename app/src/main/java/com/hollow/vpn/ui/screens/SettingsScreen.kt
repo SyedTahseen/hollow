@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -117,9 +118,8 @@ import com.hollow.vpn.ui.theme.NothingTopBtnBorder
 import com.hollow.vpn.ui.theme.NothingTopBtnFill
 import com.hollow.vpn.ui.theme.nothingPressScale
 
-/** Dialogs that still open on top of the settings list (log viewer, about sheet). */
+/** Dialogs that still open on top of the settings list (about sheet). */
 private enum class ActiveSettingDialog {
-    XRAY_LOGS,
     ABOUT
 }
 
@@ -127,7 +127,9 @@ private enum class ActiveSettingDialog {
 private enum class SettingsPage {
     NET_SHIELD,
     SPLIT_TUNNELING,
+    SPLIT_APPS,
     SPLIT_IPS,
+    DEBUG_LOGS,
     USAGE_HISTORY,
     KILL_SWITCH,
     AUTO_UPDATE,
@@ -137,6 +139,15 @@ private enum class SettingsPage {
     MTU,
     APPEARANCE
 }
+
+/** Environment block for "Report an issue" and for shared logs. */
+internal fun hollowDebugInfo(serverCount: Int): String =
+    "App ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n" +
+        "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
+        "Device ${Build.MANUFACTURER} ${Build.MODEL}\n" +
+        "Status ${if (XrayVpnService.isServiceRunning.value) "Connected" else "Disconnected"}\n" +
+        "Servers $serverCount\n" +
+        "Last error ${XrayVpnService.lastError.value ?: "none"}"
 
 private fun onOff(value: Boolean) = if (value) "On" else "Off"
 
@@ -167,13 +178,14 @@ fun SettingsScreen(
     onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
     onClearXrayLogs: () -> Unit = {},
     onShowMessage: (String) -> Unit = {},
+    onFullScreenChange: (Boolean) -> Unit = {},
     onBack: () -> Unit
 ) {
     var page by remember { mutableStateOf<SettingsPage?>(null) }
     BackHandler {
         when (page) {
             null -> onBack()
-            SettingsPage.SPLIT_IPS -> page = SettingsPage.SPLIT_TUNNELING
+            SettingsPage.SPLIT_APPS, SettingsPage.SPLIT_IPS -> page = SettingsPage.SPLIT_TUNNELING
             SettingsPage.CUSTOM_DNS, SettingsPage.MTU -> page = SettingsPage.ADVANCED
             else -> page = null
         }
@@ -181,7 +193,11 @@ fun SettingsScreen(
 
     val context = LocalContext.current
     var activeDialog by remember { mutableStateOf<ActiveSettingDialog?>(null) }
-    var showPerAppPicker by remember { mutableStateOf(false) }
+
+    // Debug logs and the split tunneling apps / IP pages are full screen, like Outrun: no bottom bar.
+    val fullScreen = page == SettingsPage.DEBUG_LOGS || page == SettingsPage.SPLIT_APPS || page == SettingsPage.SPLIT_IPS
+    LaunchedEffect(fullScreen) { onFullScreenChange(fullScreen) }
+    DisposableEffect(Unit) { onDispose { onFullScreenChange(false) } }
 
     Box(
         modifier = Modifier
@@ -189,6 +205,55 @@ fun SettingsScreen(
             .background(HollowCream)
             .statusBarsPadding()
     ) {
+        val fullPage = page
+        if (fullPage == SettingsPage.DEBUG_LOGS || fullPage == SettingsPage.SPLIT_APPS || fullPage == SettingsPage.SPLIT_IPS) {
+            Box(
+                modifier = Modifier
+                    .widthIn(max = HollowSizes.MaxContent)
+                    .fillMaxSize()
+                    .align(Alignment.TopCenter)
+            ) {
+                when (fullPage) {
+                    SettingsPage.DEBUG_LOGS -> DebugLogsPage(
+                        xrayLogs = xrayLogs,
+                        debugInfo = { hollowDebugInfo(serverCount) },
+                        onClear = onClearXrayLogs,
+                        onShowMessage = onShowMessage,
+                        onBack = { page = null }
+                    )
+
+                    SettingsPage.SPLIT_APPS -> {
+                        val including = !settings.bypassSelectedApps
+                        SplitAppsPage(
+                            including = including,
+                            initial = settings.activeSplitApps,
+                            onSave = { packages ->
+                                onUpdateSettings {
+                                    if (including) it.copy(splitIncludeApps = packages)
+                                    else it.copy(splitExcludeApps = packages)
+                                }
+                            },
+                            onBack = { page = SettingsPage.SPLIT_TUNNELING }
+                        )
+                    }
+
+                    else -> {
+                        val including = !settings.bypassSelectedApps
+                        SplitIpsPage(
+                            including = including,
+                            initial = if (including) settings.splitIncludeIps else settings.splitExcludeIps,
+                            onSave = { list ->
+                                onUpdateSettings {
+                                    if (including) it.copy(splitIncludeIps = list)
+                                    else it.copy(splitExcludeIps = list)
+                                }
+                            },
+                            onBack = { page = SettingsPage.SPLIT_TUNNELING }
+                        )
+                    }
+                }
+            }
+        } else {
         Column(
             modifier = Modifier
                 .widthIn(max = HollowSizes.MaxContent)
@@ -204,7 +269,7 @@ fun SettingsScreen(
                     serverCount = serverCount,
                     xrayLogs = xrayLogs,
                     onOpenPage = { page = it },
-                    onOpenLogs = { activeDialog = ActiveSettingDialog.XRAY_LOGS },
+                    onOpenLogs = { page = SettingsPage.DEBUG_LOGS },
                     onOpenAbout = { activeDialog = ActiveSettingDialog.ABOUT },
                     onShowMessage = onShowMessage
                 )
@@ -215,7 +280,7 @@ fun SettingsScreen(
                     onUpdateSettings = onUpdateSettings,
                     onBack = {
                         page = when (current) {
-                            SettingsPage.SPLIT_IPS -> SettingsPage.SPLIT_TUNNELING
+                            SettingsPage.SPLIT_APPS, SettingsPage.SPLIT_IPS -> SettingsPage.SPLIT_TUNNELING
                             SettingsPage.CUSTOM_DNS, SettingsPage.MTU -> SettingsPage.ADVANCED
                             else -> null
                         }
@@ -223,7 +288,7 @@ fun SettingsScreen(
                     onOpenPage = { page = it },
                     onShowMessage = onShowMessage,
                     onOpenSplitIps = { page = SettingsPage.SPLIT_IPS },
-                    onOpenPerAppPicker = { showPerAppPicker = true },
+                    onOpenPerAppPicker = { page = SettingsPage.SPLIT_APPS },
                     onOpenSystemVpnSettings = {
                         try {
                             context.startActivity(
@@ -241,25 +306,10 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.navigationBarsPadding())
             }
         }
+        }
     }
 
     when (activeDialog) {
-        ActiveSettingDialog.XRAY_LOGS -> {
-            XrayDiagnosticLogsDialog(
-                logs = xrayLogs,
-                onCopyLogs = {
-                    val joined = xrayLogs.joinToString("\n")
-                    if (joined.isNotBlank()) {
-                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                        cm?.setPrimaryClip(ClipData.newPlainText("Hollow VPN Connection Logs", joined))
-                        onShowMessage("Copied ${xrayLogs.size} log line(s)")
-                    }
-                },
-                onClearLogs = onClearXrayLogs,
-                onDismiss = { activeDialog = null }
-            )
-        }
-
         ActiveSettingDialog.ABOUT -> {
             AboutHollowSheet(
                 onCopyBuildInfo = onShowMessage,
@@ -268,26 +318,6 @@ fun SettingsScreen(
         }
 
         null -> Unit
-    }
-
-    if (showPerAppPicker) {
-        val including = settings.perAppProxyEnabled && !settings.bypassSelectedApps
-        PerAppProxyPickerDialog(
-            selectedPackages = settings.activeSplitApps,
-            including = including,
-            onSave = { packages ->
-                onShowMessage(
-                    if (packages.isEmpty()) "No apps selected for split tunneling"
-                    else "Split tunneling saved for ${packages.size} app(s)"
-                )
-                onUpdateSettings {
-                    if (including) it.copy(splitIncludeApps = packages)
-                    else it.copy(splitExcludeApps = packages)
-                }
-                showPerAppPicker = false
-            },
-            onDismiss = { showPerAppPicker = false }
-        )
     }
 }
 
@@ -317,14 +347,7 @@ private fun SettingsOverview(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    val debugInfo = {
-        "App ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n" +
-            "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
-            "Device ${Build.MANUFACTURER} ${Build.MODEL}\n" +
-            "Status ${if (XrayVpnService.isServiceRunning.value) "Connected" else "Disconnected"}\n" +
-            "Servers $serverCount\n" +
-            "Last error ${XrayVpnService.lastError.value ?: "none"}"
-    }
+    val debugInfo = { hollowDebugInfo(serverCount) }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         notifOn = NotificationManagerCompat.from(ctx).areNotificationsEnabled()
     }
@@ -588,8 +611,11 @@ private fun SettingsDetail(
     val title = when (page) {
         SettingsPage.NET_SHIELD -> "NetShield"
         SettingsPage.SPLIT_TUNNELING -> "Split tunneling"
+        SettingsPage.SPLIT_APPS ->
+            if (settings.bypassSelectedApps) "Excluded apps" else "Included apps"
         SettingsPage.SPLIT_IPS ->
             if (settings.bypassSelectedApps) "Excluded IP addresses" else "Included IP addresses"
+        SettingsPage.DEBUG_LOGS -> "Log"
         SettingsPage.USAGE_HISTORY -> "Usage & history"
         SettingsPage.KILL_SWITCH -> "Kill switch"
         SettingsPage.AUTO_UPDATE -> "Auto-update subscriptions"
@@ -640,7 +666,8 @@ private fun SettingsDetail(
             onOpenIps = onOpenSplitIps
         )
 
-        SettingsPage.SPLIT_IPS -> SplitIpAddressesPage(settings, onUpdateSettings)
+        // Full-screen pages (apps, IP addresses, debug logs) are shown by SettingsScreen itself.
+        SettingsPage.SPLIT_APPS, SettingsPage.SPLIT_IPS, SettingsPage.DEBUG_LOGS -> Unit
 
         SettingsPage.KILL_SWITCH -> KillSwitchPage(onOpenSystemVpnSettings)
 

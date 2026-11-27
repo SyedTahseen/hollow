@@ -293,9 +293,11 @@ fun HollowVpnApp(
     }
 
     // Floating Nothing OS capsule navigation dock shows on primary top-level tabs only 
+    // Settings pages that fill the whole screen (debug logs, split tunneling apps / IPs) hide the dock, like Outrun.
+    var settingsFullScreen by remember { mutableStateOf(false) }
     val showBottomNav = currentScreen == VpnScreen.CONNECTED_HOME ||
         currentScreen == VpnScreen.SERVER_LIST ||
-        currentScreen == VpnScreen.SETTINGS
+        (currentScreen == VpnScreen.SETTINGS && !settingsFullScreen)
 
     val selectedBottomTab = when (currentScreen) {
         VpnScreen.CONNECTED_HOME -> HollowBottomTab.CONNECT
@@ -412,7 +414,7 @@ fun HollowVpnApp(
                                     onSelectConnect = { vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME) },
                                     onSelectServers = { vpnViewModel.navigateTo(VpnScreen.SERVER_LIST) },
                                     onSelectSettings = { vpnViewModel.navigateTo(VpnScreen.SETTINGS) },
-                                    showBackdrop = currentScreen != VpnScreen.CONNECTED_HOME
+                                    showBackdrop = false
                                 )
                             }
                         }
@@ -477,6 +479,8 @@ fun HollowVpnApp(
                                     onShareQr = vpnViewModel::openQrShare,
                                     onInspectJson = vpnViewModel::openJsonInspector,
                                     onDeleteServer = vpnViewModel::deleteServer,
+                                    onEditServer = vpnViewModel::editServerLink,
+                                    totalServerCount = allServers.size,
                                     onDeleteServersByIds = vpnViewModel::deleteServersByIds,
                                     onDeleteDuplicates = vpnViewModel::deleteDuplicateServers,
                                     onDeleteInvalid = vpnViewModel::deleteInvalidServers,
@@ -518,6 +522,7 @@ fun HollowVpnApp(
                                     onUpdateSettings = vpnViewModel::updateSettings,
                                     onClearXrayLogs = vpnViewModel::clearXrayLogs,
                                     onShowMessage = vpnViewModel::showMessage,
+                                    onFullScreenChange = { settingsFullScreen = it },
                                     onBack = {
                                         if (!vpnViewModel.navigateBack()) {
                                             vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME)

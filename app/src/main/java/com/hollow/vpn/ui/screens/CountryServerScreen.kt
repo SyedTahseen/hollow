@@ -20,6 +20,11 @@ import com.hollow.vpn.ui.theme.HollowSpace
 import com.hollow.vpn.ui.theme.HollowSizes
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.hollow.vpn.R
+import com.hollow.vpn.ui.theme.LocalHollowIsDark
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +63,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -150,6 +155,8 @@ fun CountryServerListScreen(
     onShareQr: (ServerEntity) -> Unit = {},
     onInspectJson: (ServerEntity) -> Unit,
     onDeleteServer: (ServerEntity) -> Unit,
+    onEditServer: (ServerEntity, String) -> String? = { _, _ -> null },
+    totalServerCount: Int = servers.size,
     onDeleteServersByIds: (Set<Long>) -> Unit = {},
     onDeleteDuplicates: () -> Unit = {},
     onDeleteInvalid: () -> Unit = {},
@@ -169,6 +176,7 @@ fun CountryServerListScreen(
     var menuPage by remember { mutableStateOf("main") }
     var confirmDel by remember { mutableStateOf<ServerDelAction?>(null) }
     var deletingSubscription by remember { mutableStateOf<SubscriptionEntity?>(null) }
+    var editingServer by remember { mutableStateOf<ServerEntity?>(null) }
     val searchFocus = remember { FocusRequester() }
     LaunchedEffect(searching) { if (searching) runCatching { searchFocus.requestFocus() } }
 
@@ -285,7 +293,7 @@ fun CountryServerListScreen(
                             modifier = Modifier.testTag("country_more_menu")
                         ) { tint ->
                             Icon(
-                                imageVector = Icons.Rounded.MoreVert,
+                                imageVector = Icons.Rounded.MoreHoriz,
                                 contentDescription = null,
                                 tint = tint,
                                 modifier = Modifier.size(HollowSizes.Icon)
@@ -517,12 +525,6 @@ fun CountryServerListScreen(
             Spacer(modifier = Modifier.height(HollowSpace.Lg))
 
             val isDefaultCategory = selectedCategoryKey == ServerCategory.DEFAULT_KEY
-            val listTitle = when {
-                favOnly -> "Favorite servers"
-                selectedCategoryKey == ServerCategory.ALL_KEY || activeCategory == null -> "All servers"
-                isDefaultCategory -> "Default servers"
-                else -> "${activeCategory.label} servers"
-            }
 
             LazyColumn(
                 modifier = Modifier
@@ -593,19 +595,23 @@ fun CountryServerListScreen(
                     }
                 } else {
                     item(key = "list_header") {
+                        // Same as Outrun: always "All servers (N)" with the total number of servers.
                         Text(
-                            text = "$listTitle (${displayedServers.size})",
+                            text = "All servers ($totalServerCount)",
                             style = HollowText.Small,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
                     }
-                    item(key = "fastest_server") {
-                        FastestServerRow(
-                            isTesting = isTestingFastest,
-                            onClick = { onConnectFastest(displayedServers) }
-                        )
-                        NothingDottedDivider()
+                    // Like Outrun, the "Fastest server" row only shows on the unfiltered "All" list.
+                    if (query.isBlank() && !favOnly && selectedCategoryKey == ServerCategory.ALL_KEY) {
+                        item(key = "fastest_server") {
+                            FastestServerRow(
+                                isTesting = isTestingFastest,
+                                onClick = { onConnectFastest(displayedServers) }
+                            )
+                            NothingDottedDivider()
+                        }
                     }
                     itemsIndexed(displayedServers, key = { _, server -> server.id }) { idx, server ->
                         val isChecked = server.id in selectedIds
@@ -635,6 +641,7 @@ fun CountryServerListScreen(
                                     onDelete = { onDeleteServer(server) },
                                     onCopyFeedback = onShowMessage,
                                     onShareQr = { onShareQr(server) },
+                                    onEdit = { editingServer = server },
                                     isSelectionMode = isSelectionMode,
                                     isCheckedForBatch = isChecked,
                                     onToggleBatchCheck = {
@@ -671,6 +678,14 @@ fun CountryServerListScreen(
                 }
             }
         }
+    }
+
+    editingServer?.let { srv ->
+        EditServerDialog(
+            server = srv,
+            onDismiss = { editingServer = null },
+            onSave = { newLink -> onEditServer(srv, newLink).also { err -> if (err == null) editingServer = null } }
+        )
     }
 
     deletingSubscription?.let { sub ->
@@ -782,27 +797,18 @@ private fun FastestServerRow(
             .testTag("server_fastest_row"),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Outrun's "fastest" flag: the bolt badge (teal on light, mint on dark), same size as a country flag
+        // so it lines up with the rows below.
         Box(
-            modifier = Modifier
-                .size(width = HollowSizes.FlagWidth, height = HollowSizes.FlagHeight)
-                .clip(RoundedCornerShape(HollowRadius.Xs))
-                .background(HollowOrange),
+            modifier = Modifier.size(width = 38.dp, height = 26.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (isTesting) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(HollowSizes.IconSm),
-                    strokeWidth = 2.dp,
-                    color = Color.White
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Rounded.Bolt,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(HollowSizes.IconSm)
-                )
-            }
+            Image(
+                painter = painterResource(if (LocalHollowIsDark.current) R.drawable.flag_fastest_dark else R.drawable.flag_fastest),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
         }
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
