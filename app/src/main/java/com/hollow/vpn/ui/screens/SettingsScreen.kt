@@ -530,7 +530,7 @@ internal fun SettingsRow(
             imageVector = icon,
             contentDescription = null,
             tint = HollowInk,
-            modifier = Modifier.size(HollowSizes.Icon)
+            modifier = Modifier.size(28.dp)
         )
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {

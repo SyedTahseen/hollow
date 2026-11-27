@@ -151,8 +151,10 @@ fun hollowPhaseColors(phase: Int): HollowPhaseColors {
 }
 
 object HollowBar {
+    /** Translucent so the bottom bar, connect slider and statistics bar let the screen show through. */
+    const val FillAlpha = 0.6f
     val Fill: Color
-        @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.pillNavFill
+        @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.pillNavFill.copy(alpha = FillAlpha)
     val Border: Color
         @Composable @ReadOnlyComposable get() = LocalHollowPalette.current.pillNavBorder
     val Height = 60.dp
