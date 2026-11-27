@@ -249,16 +249,7 @@ private fun AddServerMenuItem(
                     tint = HollowInk,
                     modifier = Modifier.size(HollowSizes.IconSm)
                 )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = HollowType.BodyStrong,
-                        lineHeight = HollowLineHeight.BodyStrong,
-                        letterSpacing = HollowTracking.BodyStrong,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    color = HollowInk
-                )
+                Text(text = label, style = HollowText.Body, color = HollowInk)
             }
         },
         onClick = onClick,
@@ -297,8 +288,6 @@ fun AddServerOverlays(
 
     if (state.showSubscription) {
         AddSubscriptionDialog(
-            settings = actions.settings,
-            onUpdateSettings = actions.onUpdateSettings,
             onAdd = { url ->
                 state.showSubscription = false
                 actions.onAddSubscription(url)
@@ -318,205 +307,60 @@ fun AddServerOverlays(
     }
 }
 
+/**
+ * "Add subscription link": same dialog as Outrun's. A title, one sentence, a URL field and
+ * Cancel / Add. Auto-update and its interval live in Settings, not here.
+ */
 @Composable
 private fun AddSubscriptionDialog(
-    settings: AppSettingsState,
-    onUpdateSettings: ((AppSettingsState) -> AppSettingsState) -> Unit,
     onAdd: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var url by remember { mutableStateOf(settings.activeSubscriptionUrl) }
-    var showIntervalPicker by remember { mutableStateOf(false) }
+    var url by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = HollowDialog.containerColor,
         shape = HollowDialog.Shape,
-        title = {
-            Text(
-                text = "Add subscription link",
-                fontFamily = DotoDisplayFamily,
-                fontWeight = FontWeight.Bold,
-                color = HollowInk
-            )
-        },
+        title = { Text("Add subscription link", style = HollowText.Heading, color = HollowInk) },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column {
                 Text(
-                    text = "Servers from this URL are added now and refreshed when you update subscriptions.",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Body),
-                    color = HollowInkSecondary
+                    "Servers from this URL are added now and when you update subscriptions.",
+                    style = HollowText.Small,
+                    color = HollowInk
                 )
-
-                Spacer(modifier = Modifier.height(HollowSpace.Lg))
-
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(HollowSizes.Field),
+                Spacer(Modifier.height(HollowSpace.Md))
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    singleLine = true,
+                    textStyle = HollowText.Body,
+                    placeholder = { Text("https://…", style = HollowText.Body, color = HollowInkMuted) },
                     shape = RoundedCornerShape(HollowRadius.Md),
-                    color = HollowCreamSurface,
-                    border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = HollowSpace.Lg),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (url.isEmpty()) {
-                            Text(
-                                text = "https://example.com/sub",
-                                fontFamily = HollowSansFamily,
-                                fontSize = HollowType.Body,
-                                lineHeight = HollowLineHeight.Body,
-                                letterSpacing = HollowTracking.Body,
-                                color = HollowInkMuted
-                            )
-                        }
-                        BasicTextField(
-                            value = url,
-                            onValueChange = { url = it },
-                            singleLine = true,
-                            textStyle = TextStyle(
-                                fontFamily = HollowSansFamily,
-                                fontSize = HollowType.Body,
-                                lineHeight = HollowLineHeight.Body,
-                                letterSpacing = HollowTracking.Body,
-                                color = HollowInk
-                            ),
-                            cursorBrush = SolidColor(HollowOrange),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("subscription_url_input")
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(HollowSpace.Md))
-
-                SubscriptionOptionRow(
-                    label = "Auto update",
-                    onClick = { onUpdateSettings { it.copy(subAutoUpdate = !settings.subAutoUpdate) } }
-                ) {
-                    HollowSwitch(
-                        checked = settings.subAutoUpdate,
-                        onCheckedChange = { enabled -> onUpdateSettings { it.copy(subAutoUpdate = enabled) } },
-                        modifier = Modifier.testTag("switch_sub_auto_update")
-                    )
-                }
-                NothingDottedDivider()
-                SubscriptionOptionRow(
-                    label = "Update interval",
-                    onClick = { showIntervalPicker = true },
-                    role = Role.Button,
-                    modifier = Modifier.testTag("row_sub_update_interval")
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-                    ) {
-                        Text(
-                            text = settings.updateIntervalLabel,
-                            fontFamily = HollowSansFamily,
-                            fontSize = HollowType.Small,
-                            lineHeight = HollowLineHeight.Small,
-                            letterSpacing = HollowTracking.Small,
-                            color = HollowInk
-                        )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = HollowInkSecondary,
-                            modifier = Modifier.size(HollowSizes.IconSm)
-                        )
-                    }
-                }
-                NothingDottedDivider()
-                SubscriptionOptionRow(
-                    label = "Replace existing",
-                    onClick = { onUpdateSettings { it.copy(subReplaceExisting = !settings.subReplaceExisting) } }
-                ) {
-                    HollowSwitch(
-                        checked = settings.subReplaceExisting,
-                        onCheckedChange = { enabled -> onUpdateSettings { it.copy(subReplaceExisting = enabled) } },
-                        modifier = Modifier.testTag("switch_sub_replace_existing")
-                    )
-                }
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = HollowInk,
+                        unfocusedBorderColor = HollowCreamDivider,
+                        cursorColor = HollowOrange,
+                        focusedContainerColor = HollowCream,
+                        unfocusedContainerColor = HollowCream
+                    ),
+                    modifier = Modifier.fillMaxWidth().testTag("subscription_url_input")
+                )
             }
         },
         confirmButton = {
-            Button(
+            TextButton(
                 onClick = { if (url.isNotBlank()) onAdd(url.trim()) },
-                enabled = url.isNotBlank(),
-                shape = RoundedCornerShape(HollowRadius.Md),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = HollowInk,
-                    contentColor = HollowCream
-                ),
                 modifier = Modifier.testTag("btn_add_and_fetch")
             ) {
-                Text(
-                    text = "Add & fetch",
-                    fontSize = HollowType.Body,
-                    lineHeight = HollowLineHeight.Body,
-                    letterSpacing = HollowTracking.Body,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
+                Text("Add", style = HollowText.ButtonSmall, color = HollowOrange)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = HollowInkSecondary)
-            }
+            TextButton(onClick = onDismiss) { Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk) }
         }
     )
-
-    if (showIntervalPicker) {
-        SettingOptionPickerDialog(
-            title = "Select Update Interval",
-            options = UPDATE_INTERVAL_OPTIONS,
-            selectedValue = settings.updateIntervalLabel,
-            onSelect = { chosen ->
-                onUpdateSettings { it.copy(updateIntervalLabel = chosen) }
-                showIntervalPicker = false
-            },
-            onDismiss = { showIntervalPicker = false }
-        )
-    }
-}
-
-@Composable
-private fun SubscriptionOptionRow(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    role: Role? = null,
-    trailing: @Composable () -> Unit
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .minimumInteractiveComponentSize()
-            .clickable(role = role, onClick = onClick)
-            .padding(vertical = HollowSpace.Sm),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = HollowType.BodyStrong,
-                lineHeight = HollowLineHeight.BodyStrong,
-                letterSpacing = HollowTracking.BodyStrong,
-            ),
-            color = HollowInk,
-            modifier = Modifier.weight(1f)
-        )
-        trailing()
-    }
 }
 
 /**

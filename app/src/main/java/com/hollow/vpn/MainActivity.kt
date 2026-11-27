@@ -142,6 +142,7 @@ fun HollowVpnApp(
     val isTestingFastest by vpnViewModel.isTestingFastest.collectAsStateWithLifecycle()
     val isRepingAll by vpnViewModel.isRepingAll.collectAsStateWithLifecycle()
     val serverCategories by vpnViewModel.serverCategories.collectAsStateWithLifecycle()
+    val subscriptions by vpnViewModel.allSubscriptions.collectAsStateWithLifecycle()
     val selectedCategory by vpnViewModel.selectedCategory.collectAsStateWithLifecycle()
     val selectedServer by vpnViewModel.selectedServer.collectAsStateWithLifecycle()
     val telemetry by vpnViewModel.telemetry.collectAsStateWithLifecycle()
@@ -283,6 +284,12 @@ fun HollowVpnApp(
             cm?.setPrimaryClip(android.content.ClipData.newPlainText("Hollow VPN Servers", payload))
             vpnViewModel.showMessage("Exported ${servers.size} server(s) to clipboard")
         }
+    }
+
+    val copySubscriptionLink: (String) -> Unit = { url ->
+        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+        cm?.setPrimaryClip(android.content.ClipData.newPlainText("Subscription link", url))
+        vpnViewModel.showMessage("Subscription link copied")
     }
 
     // Floating Nothing OS capsule navigation dock shows on primary top-level tabs only 
@@ -446,6 +453,9 @@ fun HollowVpnApp(
                                     isTestingFastest = isTestingFastest,
                                     isLoading = fetchingProgress.isActive || isRepingAll || isTestingFastest,
                                     onToggleFavorite = vpnViewModel::toggleFavorite,
+                                    subscriptions = subscriptions,
+                                    onDeleteSubscription = vpnViewModel::deleteSubscription,
+                                    onCopySubscription = copySubscriptionLink,
                                     onConnectFastest = { candidates ->
                                         vpnViewModel.testAndPickFastest(candidates) { server ->
                                             connectToServerWithPermission(server)

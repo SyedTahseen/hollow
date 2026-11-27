@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowText
 import android.net.Uri
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -545,21 +546,14 @@ internal fun SettingsRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Small,
-                lineHeight = HollowLineHeight.Small,
-                letterSpacing = HollowTracking.Small,
+                style = HollowText.Body,
                 color = HollowInk
             )
             if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Text(
                     text = subtitle,
-                    fontFamily = HollowSansFamily,
-                    fontSize = HollowType.Micro,
-                    letterSpacing = HollowTracking.Micro,
-                    lineHeight = HollowLineHeight.Micro,
+                    style = HollowText.Body,
                     color = HollowInkSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -628,11 +622,7 @@ private fun SettingsDetail(
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Text(
             text = title.uppercase(),
-            fontFamily = DotoDisplayFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Display,
-            lineHeight = HollowLineHeight.Display,
-            letterSpacing = HollowTracking.Display,
+            style = HollowText.Subheadline,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             color = NothingOnCanvas
@@ -713,11 +703,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
     ) {
         Text(
             text = "Display size",
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
+            style = HollowText.Body,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -797,11 +783,7 @@ internal fun DetailToggleRow(
     ) {
         Text(
             text = title,
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
+            style = HollowText.Body,
             color = HollowInk,
             modifier = Modifier.weight(1f)
         )
@@ -839,11 +821,7 @@ internal fun DetailRadioList(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = option.label,
-                        fontFamily = HollowSansFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = HollowType.Small,
-                        lineHeight = HollowLineHeight.Small,
-                        letterSpacing = HollowTracking.Small,
+                        style = HollowText.Body,
                         color = HollowInk
                     )
                     Spacer(modifier = Modifier.height(HollowSpace.Xs))
@@ -988,11 +966,7 @@ private fun ThemeModeSegment(
             Spacer(modifier = Modifier.width(HollowSpace.Xs))
             Text(
                 text = label,
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = HollowType.Caption,
-                lineHeight = HollowLineHeight.Caption,
-                letterSpacing = HollowTracking.Caption,
+                style = HollowText.Small,
                 maxLines = 1,
                 color = contentTint
             )
@@ -1034,11 +1008,7 @@ private fun InlineModeSegment(
         ) {
             Text(
                 text = label,
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = HollowType.Caption,
-                lineHeight = HollowLineHeight.Caption,
-                letterSpacing = HollowTracking.Caption,
+                style = HollowText.Small,
                 color = contentTint
             )
         }

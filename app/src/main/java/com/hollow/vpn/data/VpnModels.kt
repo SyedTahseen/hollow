@@ -1,6 +1,7 @@
 package com.hollow.vpn.data
 
 import android.content.Context
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -10,6 +11,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -54,7 +57,25 @@ data class SubscriptionEntity(
     val serverCount: Int = 0,
     val isEnabled: Boolean = true,
     val successPulls: Int = 0,
-    val failedPulls: Int = 0
+    val failedPulls: Int = 0,
+    /** Name the provider reports (`profile-title`); empty until the first successful fetch. */
+    @ColumnInfo(defaultValue = "''") val title: String = "",
+    @ColumnInfo(defaultValue = "0") val uploadBytes: Long = 0L,
+    @ColumnInfo(defaultValue = "0") val downloadBytes: Long = 0L,
+    @ColumnInfo(defaultValue = "0") val totalBytes: Long = 0L,
+    /** Unix seconds, 0 = none reported. */
+    @ColumnInfo(defaultValue = "0") val expireAt: Long = 0L
+) {
+    val usedBytes: Long get() = uploadBytes + downloadBytes
+}
+
+/** Copies the provider-reported info onto this subscription. Empty fields keep what we already had. */
+fun SubscriptionEntity.withMeta(meta: SubscriptionMeta): SubscriptionEntity = copy(
+    title = meta.title.ifBlank { title },
+    uploadBytes = meta.upload,
+    downloadBytes = meta.download,
+    totalBytes = meta.total,
+    expireAt = meta.expire
 )
 
 /** A pill on the Servers screen: "All", "Default" (manually added), or one per subscription. */
@@ -67,6 +88,7 @@ data class ServerCategory(val key: String, val label: String) {
 
 /** Human readable pill label for a subscription (its name, or a name derived from its URL). */
 fun SubscriptionEntity.categoryLabel(): String {
+    title.trim().takeIf { it.isNotBlank() }?.let { return it }
     val trimmedName = name.trim()
     if (trimmedName.isNotBlank() && !trimmedName.equals("Custom Subscription", ignoreCase = true)) return trimmedName
     return try {
@@ -431,6 +453,15 @@ interface VpnDao {
     @Query("DELETE FROM vpn_servers WHERE isCustom = 0")
     suspend fun deleteFetchedServers()
 
+    @Query("DELETE FROM vpn_servers WHERE isCustom = 0 AND subscriptionUrl = :url")
+    suspend fun deleteFetchedServersForSubscription(url: String)
+
+    @Query("DELETE FROM vpn_servers WHERE subscriptionUrl = :url")
+    suspend fun deleteServersBySubscription(url: String)
+
+    @Query("SELECT * FROM vpn_subscriptions WHERE url = :url LIMIT 1")
+    suspend fun getSubscriptionByUrl(url: String): SubscriptionEntity?
+
     @Query("DELETE FROM vpn_servers")
     suspend fun deleteAllServers()
 
@@ -452,13 +483,24 @@ interface VpnDao {
 
 @Database(
     entities = [ServerEntity::class, SubscriptionEntity::class],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class VpnDatabase : RoomDatabase() {
     abstract fun vpnDao(): VpnDao
 
     companion object {
+        /** Adds the provider-reported name / usage / expiry columns without touching saved servers. */
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE vpn_subscriptions ADD COLUMN title TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE vpn_subscriptions ADD COLUMN uploadBytes INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE vpn_subscriptions ADD COLUMN downloadBytes INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE vpn_subscriptions ADD COLUMN totalBytes INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE vpn_subscriptions ADD COLUMN expireAt INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var INSTANCE: VpnDatabase? = null
 
@@ -469,6 +511,7 @@ abstract class VpnDatabase : RoomDatabase() {
                     VpnDatabase::class.java,
                     "v2ray_xray_vpn.db"
                 )
+                    .addMigrations(MIGRATION_7_8)
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                 INSTANCE = instance

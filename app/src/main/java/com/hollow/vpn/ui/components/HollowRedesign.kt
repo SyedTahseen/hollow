@@ -19,7 +19,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import com.hollow.vpn.ui.theme.HollowText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -122,9 +127,11 @@ fun NothingDottedDivider(
 }
 
 /**
- * Nothing OS uppercase monospace pill filter/tab row (solid white active pill + hairline dark pills)
- * with smooth color morphing and tactile spring press-scale.
+ * Pill filter/tab row (solid active pill + hairline pills) with smooth color morphing and a
+ * tactile press-scale. Pill text uses Outrun's `Small` style: regular weight, same whether the
+ * pill is selected or not. [onLongPressTab] lets a pill offer a secondary action (delete subscription).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NothingPillTabRow(
     tabs: List<String>,
@@ -132,8 +139,9 @@ fun NothingPillTabRow(
     onSelectTab: (Int) -> Unit,
     modifier: Modifier = Modifier,
     tabTestTags: List<String> = emptyList(),
-    fontSize: androidx.compose.ui.unit.TextUnit = HollowType.Caption
+    onLongPressTab: (Int) -> Unit = {}
 ) {
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -166,11 +174,16 @@ fun NothingPillTabRow(
                     .then(if (tag != null) Modifier.testTag(tag) else Modifier)
                     .nothingPressScale(interactionSource, pressedScale = HollowMotion.PressControl)
                     .clip(CircleShape)
-                    .clickable(
+                    .combinedClickable(
                         interactionSource = interactionSource,
                         indication = androidx.compose.material3.ripple(),
-                        role = Role.Tab
-                    ) { onSelectTab(index) },
+                        role = Role.Tab,
+                        onLongClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onLongPressTab(index)
+                        },
+                        onClick = { onSelectTab(index) }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
@@ -179,12 +192,8 @@ fun NothingPillTabRow(
                     border = BorderStroke(HollowStroke.Hairline, borderColor)
                 ) {
                     Text(
-                        text = title.uppercase(),
-                        fontFamily = HollowSansFamily,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        fontSize = fontSize,
-                        lineHeight = HollowLineHeight.Caption,
-                        letterSpacing = HollowTracking.Caption,
+                        text = title,
+                        style = HollowText.Small,
                         color = contentColor,
                         maxLines = 1,
                         modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm)

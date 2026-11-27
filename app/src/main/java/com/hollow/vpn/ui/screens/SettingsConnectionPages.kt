@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowText
 import androidx.compose.foundation.clickable
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -253,11 +254,7 @@ private fun AdvancedValueItem(
 private fun AdvancedTitle(text: String, enabled: Boolean) {
     Text(
         text = text,
-        fontFamily = HollowSansFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = HollowType.Small,
-        lineHeight = HollowLineHeight.Small,
-        letterSpacing = HollowTracking.Small,
+        style = HollowText.Body,
         color = if (enabled) HollowInk else HollowInkMuted
     )
 }

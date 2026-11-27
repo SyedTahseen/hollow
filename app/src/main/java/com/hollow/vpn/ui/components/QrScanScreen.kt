@@ -290,7 +290,7 @@ fun QrScanScreen(
                             fontSize = HollowType.Body,
                             lineHeight = HollowLineHeight.Body,
                             letterSpacing = HollowTracking.Body,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }

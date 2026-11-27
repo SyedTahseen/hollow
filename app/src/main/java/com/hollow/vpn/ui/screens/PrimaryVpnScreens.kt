@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowText
 import com.hollow.vpn.ui.theme.HollowUploadAccent
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -497,11 +498,7 @@ private fun HomeContent(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = selectedServer?.countryName ?: "Add a server",
-                            fontFamily = HollowSansFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = HollowType.Title,
-                            lineHeight = HollowLineHeight.Title,
-                            letterSpacing = HollowTracking.Title,
+                            style = HollowText.BodyMedium,
                             color = pc.ink,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -532,11 +529,7 @@ private fun HomeContent(
                         Spacer(modifier = Modifier.width(HollowSpace.Sm))
                         Text(
                             text = if (selectedServer.pingMs > 0) "${selectedServer.pingMs} ms" else "—",
-                            fontFamily = HollowSansFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = HollowType.Caption,
-                            lineHeight = HollowLineHeight.Caption,
-                            letterSpacing = HollowTracking.Caption,
+                            style = HollowText.SmallMedium,
                             color = pingColor,
                             maxLines = 1
                         )
@@ -601,7 +594,7 @@ private fun HomeContent(
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = "Cancel",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = HollowType.BodyStrong),
+                            style = HollowText.BodyMedium,
                             color = pc.ink
                         )
                     }
@@ -811,7 +804,7 @@ private fun ServerDetailsPanel(
         }
         Spacer(modifier = Modifier.height(HollowSpace.Xs))
         TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
-            Text("Manage servers", fontFamily = HollowSansFamily, fontWeight = FontWeight.SemiBold, fontSize = HollowType.Small, color = accentColor)
+            Text("Manage servers", style = HollowText.SmallMedium, color = accentColor)
             Spacer(modifier = Modifier.width(4.dp))
             Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = accentColor, modifier = Modifier.size(HollowSizes.IconSm))
         }
@@ -912,12 +905,7 @@ fun ServerItemRowContent(
             ) {
                 Text(
                     text = server.countryName.ifBlank { cleanProtocol },
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = HollowType.Title,
-                        lineHeight = HollowLineHeight.Title,
-                        letterSpacing = HollowTracking.Title,
-                        fontWeight = FontWeight.Medium
-                    ),
+                    style = HollowText.Body,
                     color = HollowInk,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -939,11 +927,7 @@ fun ServerItemRowContent(
                     ) {
                         Text(
                             text = "FAST",
-                            fontFamily = HollowSansFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = HollowType.Micro,
-                            lineHeight = HollowLineHeight.Micro,
-                            letterSpacing = HollowTracking.Micro,
+                            style = HollowText.Label,
                             color = HollowOrange,
                             modifier = Modifier.padding(horizontal = HollowSpace.Xs, vertical = HollowSpace.Xxs)
                         )
@@ -954,7 +938,7 @@ fun ServerItemRowContent(
             val addrText = "${server.resolvedIp.ifBlank { server.host }}:${server.port}"
             Text(
                 text = addrText,
-                style = TabularMonoBody.copy(fontSize = HollowType.Body, fontWeight = FontWeight.Normal),
+                style = HollowText.Small,
                 color = HollowInkSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -965,7 +949,7 @@ fun ServerItemRowContent(
             ) {
                 Text(
                     text = cleanProtocol,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Small),
+                    style = HollowText.Caption,
                     color = HollowInkSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -973,7 +957,7 @@ fun ServerItemRowContent(
                 )
                 Text(
                     text = if (server.pingMs > 0) "${server.pingMs} ms" else "Timeout",
-                    style = TabularMonoBody.copy(fontSize = HollowType.Caption, fontWeight = FontWeight.SemiBold),
+                    style = HollowText.SmallMedium.copy(fontFeatureSettings = "tnum"),
                     color = pingColor,
                     maxLines = 1
                 )

@@ -9,6 +9,7 @@ import com.hollow.vpn.data.FetchingStage
 import com.hollow.vpn.data.ProbeUrls
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.SubscriptionEntity
+import com.hollow.vpn.data.SubscriptionMeta
 import go.Seq
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -112,7 +113,8 @@ class V2RayParserAndFetcher {
         context: Context? = null,
         settings: AppSettingsState = AppSettingsState(),
         onProgressState: (FetchingProgressState) -> Unit = {},
-        onProgress: (String) -> Unit = {}
+        onProgress: (String) -> Unit = {},
+        onSubscriptionMeta: suspend (String, SubscriptionMeta) -> Unit = { _, _ -> }
     ): Result<List<ServerEntity>> = withContext(Dispatchers.IO) {
         try {
             val cleanUrl = subscriptionUrl.trim()
@@ -127,7 +129,8 @@ class V2RayParserAndFetcher {
                 settings = settings,
                 maxCandidates = 340,
                 onProgressState = onProgressState,
-                onProgress = onProgress
+                onProgress = onProgress,
+                onSubscriptionMeta = onSubscriptionMeta
             )
         } catch (e: CancellationException) {
             throw e
@@ -143,7 +146,8 @@ class V2RayParserAndFetcher {
         settings: AppSettingsState = AppSettingsState(),
         onProgressState: (FetchingProgressState) -> Unit = {},
         onProgress: (String) -> Unit = {},
-        onSubscriptionStats: suspend (SubscriptionEntity, Boolean, Int) -> Unit = { _, _, _ -> }
+        onSubscriptionStats: suspend (SubscriptionEntity, Boolean, Int) -> Unit = { _, _, _ -> },
+        onSubscriptionMeta: suspend (String, SubscriptionMeta) -> Unit = { _, _ -> }
     ): Result<List<ServerEntity>> = withContext(Dispatchers.IO) {
         try {
             val orderedSubs = BetaSourceScorer.orderSources(subscriptions).take(8)
@@ -157,7 +161,8 @@ class V2RayParserAndFetcher {
                 maxCandidates = 380,
                 onProgressState = onProgressState,
                 onProgress = onProgress,
-                onSubscriptionStats = onSubscriptionStats
+                onSubscriptionStats = onSubscriptionStats,
+                onSubscriptionMeta = onSubscriptionMeta
             )
         } catch (e: CancellationException) {
             throw e
@@ -181,7 +186,8 @@ class V2RayParserAndFetcher {
         maxCandidates: Int,
         onProgressState: (FetchingProgressState) -> Unit,
         onProgress: (String) -> Unit,
-        onSubscriptionStats: suspend (SubscriptionEntity, Boolean, Int) -> Unit = { _, _, _ -> }
+        onSubscriptionStats: suspend (SubscriptionEntity, Boolean, Int) -> Unit = { _, _, _ -> },
+        onSubscriptionMeta: suspend (String, SubscriptionMeta) -> Unit = { _, _ -> }
     ): Result<List<ServerEntity>> = coroutineScope {
         val baselineJob = if (context != null) {
             async(Dispatchers.IO) { ThroughputProbe.measureOrLoadBaselineMbps(context) }
@@ -361,6 +367,10 @@ class V2RayParserAndFetcher {
                             )
                             outcome.fold(
                                 onSuccess = { fetched ->
+                                    if (!fetched.fromCache) {
+                                        val meta = SubscriptionMeta.parse(fetched.headers, fetched.body)
+                                        if (!meta.isEmpty) onSubscriptionMeta(feedUrl, meta)
+                                    }
                                     if (subEntity != null) {
                                         onSubscriptionStats(subEntity, true, parsedCount.get())
                                     }

@@ -11,6 +11,8 @@ import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.ServerCategory
 import com.hollow.vpn.data.categoryLabel
 import com.hollow.vpn.data.SubscriptionEntity
+import com.hollow.vpn.data.SubscriptionMeta
+import com.hollow.vpn.data.withMeta
 import com.hollow.vpn.data.VpnDatabase
 import com.hollow.vpn.data.VpnPreferencesStore
 import com.hollow.vpn.data.favoriteKey
@@ -124,16 +126,18 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         )
 
     /** Pills for the Servers screen: All, Default (manual), then one per subscription. */
-    val serverCategories: StateFlow<List<ServerCategory>> = allSubscriptions
-        .map { subs ->
+    val serverCategories: StateFlow<List<ServerCategory>> = combine(allSubscriptions, allServers) { subs, servers ->
             val labels = subs.map { it.categoryLabel() }
             val seen = mutableMapOf<String, Int>()
             val subCategories = subs.mapIndexed { i, sub ->
                 val base = labels[i]
                 val n = (seen[base] ?: 0) + 1
                 seen[base] = n
-                val label = if (labels.count { it == base } > 1) "$base $n" else base
-                ServerCategory(key = sub.url.trim(), label = label)
+                val name = if (labels.count { it == base } > 1) "$base $n" else base
+                // Like Outrun: "Name (servers)"
+                val key = sub.url.trim()
+                val count = servers.count { !it.isCustom && it.subscriptionUrl.trim() == key }
+                ServerCategory(key = key, label = "$name ($count)")
             }
             listOf(
                 ServerCategory(ServerCategory.ALL_KEY, "All"),
@@ -155,10 +159,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         _settings,
         allSubscriptions
     ) { servers, category, settings, subs ->
-        val sorted = servers.sortedWith(
-            compareByDescending<ServerEntity> { it.isSelected }
-                .thenBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
-        )
+        // Stable order, like Outrun: the selected or favorited server never jumps to the top.
+        // The Servers screen applies the user's chosen sort on top of this.
+        val sorted = servers.sortedBy { it.id }
         val knownSubscription = subs.any { it.url.trim() == category }
         when {
             category == ServerCategory.DEFAULT_KEY ->
@@ -429,7 +432,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         fallbackUrls = fallbackUrls,
                         context = getApplication(),
                         settings = current,
-                        onSubscriptionStats = { sub, ok, count ->
+                        onSubscriptionStats = { staleSub, ok, count ->
+                            // Re-read so a name/usage update saved a moment ago isn't overwritten.
+                            val sub = dao.getSubscriptionByUrl(staleSub.url) ?: staleSub
                             val updatedSub = if (ok) {
                                 sub.copy(
                                     successPulls = sub.successPulls + 1,
@@ -440,7 +445,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                                 sub.copy(failedPulls = sub.failedPulls + 1)
                             }
                             dao.updateSubscription(updatedSub)
-                        }
+                        },
+                        onSubscriptionMeta = ::saveSubscriptionMeta
                     )
                     result.onSuccess { ranked ->
                         if (current.subReplaceExisting) {
@@ -683,7 +689,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         _fetchingStatusMessage.value = progress.detail
                     },
                     onProgress = { step -> _fetchingStatusMessage.value = step },
-                    onSubscriptionStats = { sub, ok, count ->
+                    onSubscriptionStats = { staleSub, ok, count ->
+                        // Re-read so a name/usage update saved a moment ago isn't overwritten.
+                        val sub = dao.getSubscriptionByUrl(staleSub.url) ?: staleSub
                         val updatedSub = if (ok) {
                             sub.copy(
                                 successPulls = sub.successPulls + 1,
@@ -694,7 +702,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             sub.copy(failedPulls = sub.failedPulls + 1)
                         }
                         dao.updateSubscription(updatedSub)
-                    }
+                    },
+                    onSubscriptionMeta = ::saveSubscriptionMeta
                 )
 
                 subResult.fold(
@@ -762,6 +771,27 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Stores the name / usage / expiry a provider reported for [url] (shown in the pill and info bar). */
+    private suspend fun saveSubscriptionMeta(url: String, meta: SubscriptionMeta) {
+        val row = dao.getSubscriptionByUrl(url.trim()) ?: dao.getSubscriptionByUrl(url) ?: return
+        dao.updateSubscription(row.withMeta(meta))
+    }
+
+    /** Removes a subscription and every server that came from it. */
+    fun deleteSubscription(url: String) {
+        viewModelScope.launch {
+            val key = url.trim()
+            val count = dao.getAllServersOnce().count { !it.isCustom && it.subscriptionUrl.trim() == key }
+            dao.deleteServersBySubscription(key)
+            dao.deleteSubscriptionByUrl(key)
+            if (_settings.value.activeSubscriptionUrl.trim() == key) {
+                updateSettings { it.copy(activeSubscriptionUrl = "") }
+            }
+            if (_selectedCategory.value == key) _selectedCategory.value = ServerCategory.ALL_KEY
+            showMessage(if (count == 1) "Subscription and 1 server deleted" else "Subscription and $count servers deleted")
+        }
+    }
+
     /**
      * Adds a user-provided V2Ray Subscription URL (or inline URI/Base64 payload), streams nodes,
      * and tests reachability + Xray handshakes concurrently in a producer-consumer pipeline.
@@ -811,13 +841,16 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                     },
                     onProgress = { status ->
                         _fetchingStatusMessage.value = status
-                    }
+                    },
+                    onSubscriptionMeta = ::saveSubscriptionMeta
                 )
 
                 fetchResult.fold(
                     onSuccess = { topNodes ->
+                        // Only this subscription's servers are replaced, so adding a second link
+                        // doesn't wipe the servers (and pill) of the first one.
                         if (_settings.value.subReplaceExisting) {
-                            dao.deleteFetchedServers()
+                            dao.deleteFetchedServersForSubscription(input)
                         }
                         dao.clearSelection()
                         val marked = topNodes.mapIndexed { index, srv ->

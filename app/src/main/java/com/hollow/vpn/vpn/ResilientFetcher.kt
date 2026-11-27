@@ -6,6 +6,7 @@ import java.io.File
 import java.io.InputStreamReader
 import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -32,7 +33,9 @@ class ResilientFetcher(
     data class FetchOutcome(
         val body: String,
         val routeLabel: String,
-        val fromCache: Boolean
+        val fromCache: Boolean,
+        /** Response headers (lower-cased keys) of the route that won; empty for cache hits. */
+        val headers: Map<String, String> = emptyMap()
     )
 
     /**
@@ -48,10 +51,12 @@ class ResilientFetcher(
     ): Result<FetchOutcome> = withContext(Dispatchers.IO) {
         val cleanUrl = url.trim()
         val routes = buildRouteCandidates(cleanUrl, mirrorsEnabled)
+        val winnerHeaders = AtomicReference<Map<String, String>>(emptyMap())
 
         val winner = raceAndStreamRoutes(
             routes = routes,
             onRouteSelected = onRouteSelected,
+            onHeaders = { winnerHeaders.set(it) },
             onBatchText = onBatchText
         )
         if (winner != null) {
@@ -62,7 +67,8 @@ class ResilientFetcher(
                 FetchOutcome(
                     body = winner.first,
                     routeLabel = winner.second,
-                    fromCache = false
+                    fromCache = false,
+                    headers = winnerHeaders.get()
                 )
             )
         }
@@ -88,6 +94,7 @@ class ResilientFetcher(
     private suspend fun raceAndStreamRoutes(
         routes: List<Pair<String, String>>,
         onRouteSelected: (String) -> Unit,
+        onHeaders: (Map<String, String>) -> Unit,
         onBatchText: suspend (String) -> Unit
     ): Pair<String, String>? = coroutineScope {
         if (routes.isEmpty()) return@coroutineScope null
@@ -103,6 +110,7 @@ class ResilientFetcher(
                     routeLabel = label,
                     routeClaimed = routeClaimed,
                     onRouteSelected = onRouteSelected,
+                    onHeaders = onHeaders,
                     onBatchText = onBatchText
                 )
                 if (!text.isNullOrBlank()) {
@@ -127,6 +135,7 @@ class ResilientFetcher(
         routeLabel: String,
         routeClaimed: AtomicBoolean,
         onRouteSelected: (String) -> Unit,
+        onHeaders: (Map<String, String>) -> Unit,
         onBatchText: suspend (String) -> Unit
     ): String? {
         return try {
@@ -142,8 +151,21 @@ class ResilientFetcher(
                 val acceptsRanges = resp.header("Accept-Ranges")
                     ?.contains("bytes", ignoreCase = true) == true
 
+                // Only the route that claims the race publishes its headers (name, usage, expiry).
+                fun claimRoute(): Boolean {
+                    val won = routeClaimed.compareAndSet(false, true)
+                    if (won) {
+                        val map = HashMap<String, String>()
+                        for (i in 0 until resp.headers.size) {
+                            map.putIfAbsent(resp.headers.name(i).lowercase(), resp.headers.value(i))
+                        }
+                        onHeaders(map)
+                    }
+                    return won
+                }
+
                 if (acceptsRanges && contentLength > LARGE_FILE_THRESHOLD_BYTES) {
-                    if (!routeClaimed.compareAndSet(false, true)) return null
+                    if (!claimRoute()) return null
                     onRouteSelected(routeLabel)
                     resp.close()
                     return sampleLargeSubscriptionByRangeParallel(
@@ -170,7 +192,7 @@ class ResilientFetcher(
                         if (looksLikeHtmlBlockPage(head)) {
                             return null
                         }
-                        if (!routeClaimed.compareAndSet(false, true)) {
+                        if (!claimRoute()) {
                             return null
                         }
                         onRouteSelected(routeLabel)
@@ -191,7 +213,7 @@ class ResilientFetcher(
 
                 if (isPlaintextStream == null) {
                     // Small payload (< 256 chars)
-                    if (!routeClaimed.compareAndSet(false, true)) return null
+                    if (!claimRoute()) return null
                     onRouteSelected(routeLabel)
                     onBatchText(fullText)
                 } else if (isPlaintextStream == true) {

@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowText
 import android.content.ClipData
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -349,7 +350,7 @@ internal fun PerAppProxyPickerDialog(
                     Text(
                         text = "${workingSelection.size} apps",
                         fontFamily = HollowSansFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = HollowType.Small,
                         lineHeight = HollowLineHeight.Small,
                         letterSpacing = HollowTracking.Small,
@@ -438,7 +439,7 @@ internal fun PerAppProxyPickerDialog(
                         Text(
                             text = "Clear all",
                             color = HollowOrange,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -501,9 +502,7 @@ internal fun PerAppProxyPickerDialog(
                                     Text(
                                         text = app.label,
                                         color = HollowInk,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.SemiBold
-                                        ),
+                                        style = HollowText.Body,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -557,7 +556,7 @@ internal fun PerAppProxyPickerDialog(
                         .weight(1f)
                         .height(HollowSizes.Button)
                 ) {
-                    Text("Cancel", fontWeight = FontWeight.SemiBold)
+                    Text("Cancel", fontWeight = FontWeight.Medium)
                 }
                 Button(
                     onClick = { onSave(workingSelection) },
@@ -572,7 +571,7 @@ internal fun PerAppProxyPickerDialog(
                 ) {
                     Text(
                         text = if (workingSelection.isEmpty()) "Save (Off)" else "Save (${workingSelection.size})",
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -727,7 +726,7 @@ fun SettingOptionPickerDialog(
                     .fillMaxWidth()
                     .height(HollowSizes.Button)
             ) {
-                Text("Close", fontWeight = FontWeight.SemiBold)
+                Text("Close", fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -889,11 +888,7 @@ internal fun AboutHollowSheet(
                             ) {
                                 Text(
                                     text = "v${BuildConfig.VERSION_NAME}",
-                                    fontFamily = HollowSansFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = HollowType.Caption,
-                                    lineHeight = HollowLineHeight.Caption,
-                                    letterSpacing = HollowTracking.Caption,
+                                    style = HollowText.Label,
                                     color = Color.White,
                                     modifier = Modifier.padding(horizontal = HollowSpace.Md, vertical = HollowSpace.Xs)
                                 )
@@ -919,11 +914,7 @@ internal fun AboutHollowSheet(
 
             Text(
                 text = "ARCHITECTURE & PRIVACY",
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = HollowType.Caption,
-                lineHeight = HollowLineHeight.Caption,
-                letterSpacing = HollowTracking.Caption,
+                style = HollowText.Section,
                 color = HollowOrange
             )
             Spacer(modifier = Modifier.height(HollowSpace.Md))
@@ -967,11 +958,7 @@ internal fun AboutHollowSheet(
 
             Text(
                 text = "BUILD METADATA",
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = HollowType.Caption,
-                lineHeight = HollowLineHeight.Caption,
-                letterSpacing = HollowTracking.Caption,
+                style = HollowText.Section,
                 color = HollowInkSecondary
             )
             Spacer(modifier = Modifier.height(HollowSpace.Md))
@@ -1023,7 +1010,7 @@ internal fun AboutHollowSheet(
                         fontSize = HollowType.Body,
                         lineHeight = HollowLineHeight.Body,
                         letterSpacing = HollowTracking.Body,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 1
                     )
                 }
@@ -1060,18 +1047,13 @@ private fun AboutFeatureRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = HollowType.BodyStrong,
-                    lineHeight = HollowLineHeight.BodyStrong,
-                    letterSpacing = HollowTracking.BodyStrong,
-                ),
+                style = HollowText.Body,
                 color = HollowInk
             )
             Spacer(modifier = Modifier.height(HollowSpace.Xxs))
             Text(
                 text = detail,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Small),
+                style = HollowText.Small,
                 color = HollowInkSecondary
             )
         }

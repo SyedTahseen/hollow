@@ -92,6 +92,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.data.ServerCategory
+import com.hollow.vpn.data.SubscriptionEntity
+import com.hollow.vpn.data.categoryLabel
+import androidx.compose.runtime.SideEffect
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.shape.CircleShape
+import com.hollow.vpn.ui.theme.HollowAmber
+import java.util.Locale
 import com.hollow.vpn.data.favoriteKey
 import com.hollow.vpn.ui.components.HollowTopSquareButton
 import com.hollow.vpn.ui.components.NothingDottedDivider
@@ -127,6 +136,9 @@ fun CountryServerListScreen(
     isTestingFastest: Boolean = false,
     isLoading: Boolean = false,
     onToggleFavorite: (ServerEntity) -> Unit = {},
+    subscriptions: List<SubscriptionEntity> = emptyList(),
+    onDeleteSubscription: (String) -> Unit = {},
+    onCopySubscription: (String) -> Unit = {},
     onConnectFastest: (List<ServerEntity>) -> Unit = {},
     onSelectServer: (ServerEntity) -> Unit,
     onRefresh: () -> Unit,
@@ -156,6 +168,7 @@ fun CountryServerListScreen(
     var query by remember { mutableStateOf("") }
     var menuPage by remember { mutableStateOf("main") }
     var confirmDel by remember { mutableStateOf<ServerDelAction?>(null) }
+    var deletingSubscription by remember { mutableStateOf<SubscriptionEntity?>(null) }
     val searchFocus = remember { FocusRequester() }
     LaunchedEffect(searching) { if (searching) runCatching { searchFocus.requestFocus() } }
 
@@ -169,14 +182,13 @@ fun CountryServerListScreen(
     val displayedServers = remember(servers, sortMode, favoriteKeys, favOnly, query) {
         val pool = (if (favOnly) servers.filter { it.favoriteKey() in favoriteKeys } else servers)
             .filter { query.isBlank() || it.countryName.contains(query, true) || it.host.contains(query, true) }
-        val base = when (sortMode) {
+        // Like Outrun: starring a server never moves it. Only the chosen sort decides the order.
+        when (sortMode) {
             ServerSortMode.Default -> pool
             ServerSortMode.Name -> pool.sortedBy { it.countryName.lowercase() }
             ServerSortMode.Protocol -> pool.sortedBy { it.protocolCore }
             ServerSortMode.Latency -> pool.sortedBy { if (it.pingMs > 0) it.pingMs else Int.MAX_VALUE }
         }
-        // Starred servers float to the top, keeping the current order inside each group.
-        base.sortedByDescending { it.favoriteKey() in favoriteKeys }
     }
 
     val selectedTabIndex = categories.indexOfFirst { it.key == selectedCategoryKey }.let { if (it >= 0) it else 0 }
@@ -239,11 +251,7 @@ fun CountryServerListScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "SERVERS",
-                        fontFamily = DotoDisplayFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = HollowType.Display,
-                        lineHeight = HollowLineHeight.Display,
-                        letterSpacing = HollowTracking.Display,
+                        style = HollowText.Headline,
                         maxLines = 1,
                         color = NothingOnCanvas
                     )
@@ -436,7 +444,11 @@ fun CountryServerListScreen(
                     }
                 },
                 tabTestTags = tabEntries.map { if (it.first == favTabKey) "server_category_favorites" else "server_category_${it.first.hashCode()}" },
-                fontSize = HollowType.Caption
+                onLongPressTab = { idx ->
+                    // Long-press a subscription pill to delete it (same as Outrun).
+                    val key = tabEntries.getOrNull(idx)?.first
+                    deletingSubscription = subscriptions.firstOrNull { it.url.trim() == key }
+                }
             )
 
 
@@ -544,11 +556,7 @@ fun CountryServerListScreen(
                                 )
                                 Text(
                                     text = if (isDefaultCategory) "No default servers" else "No matching servers",
-                                    fontFamily = HollowSansFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = HollowType.Heading,
-                                    lineHeight = HollowLineHeight.Heading,
-                                    letterSpacing = HollowTracking.Heading,
+                                    style = HollowText.BodyMedium,
                                     color = HollowInk
                                 )
                                 val emptyMsg = when {
@@ -587,11 +595,7 @@ fun CountryServerListScreen(
                     item(key = "list_header") {
                         Text(
                             text = "$listTitle (${displayedServers.size})",
-                            fontFamily = HollowSansFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = HollowType.Caption,
-                            lineHeight = HollowLineHeight.Caption,
-                            letterSpacing = HollowTracking.Caption,
+                            style = HollowText.Small,
                             color = HollowInkSecondary,
                             modifier = Modifier.padding(bottom = HollowSpace.Sm)
                         )
@@ -652,7 +656,47 @@ fun CountryServerListScreen(
                     }
                 }
             }
+
+            // Subscription info (name, expiry, usage, copy link) for the selected subscription pill.
+            val activeSub = if (favOnly) null else subscriptions.firstOrNull { it.url.trim() == selectedCategoryKey }
+            val lastSub = remember { mutableStateOf<SubscriptionEntity?>(null) }
+            SideEffect { if (activeSub != null) lastSub.value = activeSub }
+            AnimatedVisibility(
+                visible = activeSub != null,
+                enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
+                exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
+            ) {
+                (activeSub ?: lastSub.value)?.let { sub ->
+                    SubscriptionInfoBar(sub = sub, onCopy = { onCopySubscription(sub.url.trim()) })
+                }
+            }
         }
+    }
+
+    deletingSubscription?.let { sub ->
+        AlertDialog(
+            onDismissRequest = { deletingSubscription = null },
+            containerColor = HollowDialog.containerColor,
+            shape = HollowDialog.Shape,
+            title = { Text(text = "Delete subscription?", style = HollowText.Heading, color = HollowInk) },
+            text = {
+                Text(
+                    text = "${sub.categoryLabel()} and its servers will be removed.",
+                    style = HollowText.Small,
+                    color = HollowInk
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onDeleteSubscription(sub.url.trim()); deletingSubscription = null }) {
+                    Text("Delete", style = HollowText.ButtonSmall, color = HollowOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingSubscription = null }) {
+                    Text("Cancel", style = HollowText.ButtonSmall, color = HollowInk)
+                }
+            }
+        )
     }
 
     confirmDel?.let { d ->
@@ -715,7 +759,7 @@ private fun ServerMenuChoice(label: String, selected: Boolean, onClick: () -> Un
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
-                Text(label, style = HollowText.Small, color = HollowInk, modifier = Modifier.weight(1f, fill = false))
+                Text(label, style = HollowText.Body, color = if (selected) HollowOrange else HollowInk, modifier = Modifier.weight(1f, fill = false))
                 if (selected) Icon(Icons.Rounded.Check, null, tint = HollowOrange, modifier = Modifier.size(HollowSizes.IconSm))
             }
         },
@@ -762,22 +806,9 @@ private fun FastestServerRow(
         }
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Fastest server",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = HollowType.Title,
-                    lineHeight = HollowLineHeight.Title,
-                    letterSpacing = HollowTracking.Title,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = HollowInk
-            )
+            Text(text = "Fastest server", style = HollowText.Body, color = HollowInk, maxLines = 1)
             if (isTesting) {
-                Text(
-                    text = "Testing all servers…",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Small),
-                    color = HollowInkSecondary
-                )
+                Text(text = "Testing servers…", style = HollowText.Caption, color = HollowInkSecondary, maxLines = 1)
             }
         }
     }
@@ -808,12 +839,7 @@ private fun ServerOverflowMenuItem(
                 )
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = HollowType.BodyStrong,
-                        lineHeight = HollowLineHeight.BodyStrong,
-                        letterSpacing = HollowTracking.BodyStrong,
-                        fontWeight = FontWeight.Medium
-                    ),
+                    style = HollowText.Body,
                     color = color,
                     modifier = if (trailing != null) Modifier.weight(1f) else Modifier
                 )
@@ -822,4 +848,109 @@ private fun ServerOverflowMenuItem(
         },
         onClick = onClick
     )
+}
+
+
+/** 1024-based size text, as shown for subscription traffic (same as Outrun's `fmtSize(binary = true)`). */
+private fun fmtBinarySize(bytes: Long): String {
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    var v = bytes.toDouble()
+    var i = 0
+    while (v >= 1024 && i < units.lastIndex) { v /= 1024; i++ }
+    return if (i == 0) "$bytes B" else String.format(Locale.US, if (v >= 100) "%.0f %s" else "%.1f %s", v, units[i])
+}
+
+/**
+ * What the provider reports about the selected subscription: its name, time left, traffic used
+ * and a button to copy the link. Shown under the list while a subscription pill is selected.
+ */
+@Composable
+private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
+    val now = System.currentTimeMillis()
+    val hasExpiry = sub.expireAt > 0L
+    val left = sub.expireAt * 1000L - now
+    val days = (left + 86_399_999L) / 86_400_000L
+    val expired = hasExpiry && left <= 0L
+    val exhausted = sub.totalBytes > 0L && sub.usedBytes >= sub.totalBytes
+    val expText = when {
+        !hasExpiry -> null
+        expired -> "Expired"
+        left < 86_400_000L -> "${maxOf(1L, left / 3_600_000L)}h left"
+        else -> "$days days left"
+    }
+    val expColor = when {
+        expired -> HollowOrange
+        days <= 7 -> HollowAmber
+        else -> HollowInkSecondary
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = HollowSpace.Sm),
+        shape = RoundedCornerShape(HollowRadius.Md),
+        color = NothingSurfaceElevated,
+        border = BorderStroke(HollowStroke.Hairline, NothingBorder)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = HollowSpace.Lg, end = HollowSpace.Xs, top = HollowSpace.Sm, bottom = HollowSpace.Sm)
+                .testTag("subscription_info_bar"),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = sub.categoryLabel(),
+                        style = HollowText.Small,
+                        color = HollowInk,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (expText != null) {
+                        Spacer(Modifier.width(HollowSpace.Sm))
+                        Text(text = expText, style = HollowText.SmallMedium, color = expColor, maxLines = 1)
+                    }
+                }
+                if (sub.totalBytes > 0L || sub.usedBytes > 0L) {
+                    Text(
+                        text = if (sub.totalBytes > 0L) {
+                            "${fmtBinarySize(sub.usedBytes)} of ${fmtBinarySize(sub.totalBytes)} used"
+                        } else {
+                            "${fmtBinarySize(sub.usedBytes)} used · Unlimited"
+                        },
+                        style = HollowText.Caption,
+                        color = if (exhausted) HollowOrange else HollowInkSecondary,
+                        maxLines = 1
+                    )
+                    if (sub.totalBytes > 0L) {
+                        val frac = (sub.usedBytes.toFloat() / sub.totalBytes).coerceIn(0f, 1f)
+                        Spacer(Modifier.height(HollowSpace.Xs))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(HollowSpace.Xs)
+                                .clip(CircleShape)
+                                .background(NothingBorder)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(frac)
+                                    .height(HollowSpace.Xs)
+                                    .background(if (exhausted) HollowOrange else if (frac > 0.9f) HollowAmber else HollowInk)
+                            )
+                        }
+                    }
+                }
+            }
+            IconButton(onClick = onCopy) {
+                Icon(
+                    imageVector = Icons.Outlined.ContentCopy,
+                    contentDescription = "Copy subscription link",
+                    tint = HollowInkSecondary,
+                    modifier = Modifier.size(HollowSizes.IconSm)
+                )
+            }
+        }
+    }
 }

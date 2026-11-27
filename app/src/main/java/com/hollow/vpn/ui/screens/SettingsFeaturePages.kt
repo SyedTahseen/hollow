@@ -1,5 +1,6 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowText
 import android.content.Context
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -203,11 +204,7 @@ private fun FeatureToggleCard(
         ) {
             Text(
                 text = title,
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Small,
-                lineHeight = HollowLineHeight.Small,
-                letterSpacing = HollowTracking.Small,
+                style = HollowText.Body,
                 color = HollowInk,
                 modifier = Modifier.weight(1f)
             )
@@ -250,11 +247,7 @@ internal fun FeatureButton(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Text(
                 text = label,
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.BodyStrong,
-                lineHeight = HollowLineHeight.BodyStrong,
-                letterSpacing = HollowTracking.BodyStrong,
+                style = HollowText.Button,
                 color = content,
                 maxLines = 1
             )
@@ -341,11 +334,7 @@ internal fun NetShieldPage(
         FeatureCard(modifier = Modifier.padding(vertical = HollowSpace.Sm)) {
             Text(
                 text = "NetShield is unavailable",
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Small,
-                lineHeight = HollowLineHeight.Small,
-                letterSpacing = HollowTracking.Small,
+                style = HollowText.Body,
                 color = HollowInk
             )
             Spacer(Modifier.height(HollowSpace.Xs))
@@ -602,11 +591,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
     Spacer(Modifier.height(HollowSpace.Lg))
     Text(
         text = "How to enable kill switch",
-        fontFamily = HollowSansFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = HollowType.Title,
-        lineHeight = HollowLineHeight.Title,
-        letterSpacing = HollowTracking.Title,
+        style = HollowText.Heading,
         color = HollowInk
     )
     Spacer(Modifier.height(HollowSpace.Md))
@@ -844,11 +829,7 @@ internal fun UsageHistoryPage() {
             UsageDivider()
             Text(
                 text = "Open Usage access settings",
-                fontFamily = HollowSansFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = HollowType.Small,
-                lineHeight = HollowLineHeight.Small,
-                letterSpacing = HollowTracking.Small,
+                style = HollowText.ButtonSmall,
                 color = HollowOrange,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -876,11 +857,7 @@ internal fun UsageHistoryPage() {
                     ) {
                         Text(
                             text = a.label,
-                            fontFamily = HollowSansFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = HollowType.Small,
-                            lineHeight = HollowLineHeight.Small,
-                            letterSpacing = HollowTracking.Small,
+                            style = HollowText.Body,
                             color = HollowInk,
                             maxLines = 1,
                             modifier = Modifier.weight(1f)
@@ -921,11 +898,7 @@ internal fun UsageHistoryPage() {
     if (sessions.isNotEmpty() || today.first + today.second + week.first + week.second > 0) {
         Text(
             text = "Clear history",
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
+            style = HollowText.ButtonSmall,
             color = HollowOrange,
             modifier = Modifier
                 .padding(top = HollowSpace.Md)
@@ -1005,11 +978,7 @@ private fun UsageSessionRow(s: UsageSession) {
     ) {
         Text(
             text = s.server.ifBlank { "Server" },
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
+            style = HollowText.Body,
             color = HollowInk,
             maxLines = 1
         )
