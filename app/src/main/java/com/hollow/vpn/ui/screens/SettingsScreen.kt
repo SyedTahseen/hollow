@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.components.NothingDottedDivider
+import com.hollow.vpn.ui.theme.HollowLine2
 import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
 import com.hollow.vpn.ui.theme.HollowText
@@ -65,7 +67,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CloudQueue
 import androidx.compose.material.icons.outlined.DarkMode
@@ -74,8 +76,8 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.SettingsBrightness
 import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -530,6 +532,7 @@ internal fun SettingsRow(
     testTag: String,
     external: Boolean = false
 ) {
+    Column(Modifier.fillMaxWidth()) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -556,7 +559,7 @@ internal fun SettingsRow(
                 Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Text(
                     text = subtitle,
-                    style = HollowText.Body,
+                    style = HollowText.Small,
                     color = HollowInkSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -571,6 +574,8 @@ internal fun SettingsRow(
                 modifier = Modifier.padding(start = HollowSpace.Sm).size(HollowSizes.IconSm)
             )
         }
+    }
+    NothingDottedDivider()
     }
 }
 
@@ -617,7 +622,7 @@ private fun SettingsDetail(
             modifier = Modifier.testTag("btn_navigate_back")
         ) { tint ->
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -720,7 +725,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
             modifier = Modifier.testTag("btn_display_size_minus")
         ) { tint ->
             Icon(
-                imageVector = Icons.Rounded.Remove,
+                imageVector = Icons.Outlined.Remove,
                 contentDescription = null,
                 tint = if (percent > HollowDisplay.MIN) tint else tint.copy(alpha = 0.3f),
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -747,7 +752,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
             modifier = Modifier.testTag("btn_display_size_plus")
         ) { tint ->
             Icon(
-                imageVector = Icons.Rounded.Add,
+                imageVector = Icons.Outlined.Add,
                 contentDescription = null,
                 tint = if (percent < HollowDisplay.MAX) tint else tint.copy(alpha = 0.3f),
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -865,7 +870,7 @@ private fun ThemeModeInlineSelector(
             .padding(vertical = HollowSpace.Sm),
         shape = RoundedCornerShape(HollowRadius.Sm),
         color = HollowCreamSurface,
-        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
+        border = BorderStroke(HollowStroke.Hairline, HollowLine2)
     ) {
         BoxWithConstraints(
             modifier = Modifier

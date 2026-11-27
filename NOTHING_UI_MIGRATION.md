@@ -5,3 +5,8 @@ Shape.kt + HollowDesign.kt (radius 6 / 8 / pill), NothingMotion.kt (ease-in-out 
 Fonts in res/font (SIL OFL, licenses in /fonts-licenses). 9x9 dot glyphs: ui/components/NothingDotGlyph.kt.
 Shared controls: HollowPrimaryButton, HollowOutlineButton, hollowFieldColors, NothingSegmentedBar, nothingDashedBorder.
 Not built/tested here (no Gradle offline) - run `./gradlew assembleDebug` and fix any import warnings.
+
+## Pass 2 (checked against css/nothing-ui.css)
+Switch 44x24 / knob 18, OFF = line-2 track + muted knob. Solid 1px list dividers. Mono input values. Outlined (stroke) icons.
+Menus 6dp + line-2 border, mono items. Modal border. `.alert`, `.pill(.sig)`, state dots, dot-colon clock, `.metric` values.
+Red signals: unprotected "needs-input" dot, EXPIRED pill, ERROR log lines, over-limit bar, text selection, error alerts/destructive items.

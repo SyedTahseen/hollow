@@ -1,5 +1,8 @@
 package com.hollow.vpn.ui.screens
 
+import androidx.compose.foundation.border
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowAccentText
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
 import com.hollow.vpn.ui.theme.HollowLine2
@@ -37,7 +40,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -119,7 +122,7 @@ internal fun SettingsFullPage(
                 modifier = Modifier.testTag("btn_navigate_back")
             ) { tint ->
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                     contentDescription = null,
                     tint = tint,
                     modifier = Modifier.size(HollowSizes.Icon)
@@ -151,9 +154,10 @@ private fun HeaderTextAction(label: String, onClick: () -> Unit) {
 private fun DiscardDialog(onDiscard: () -> Unit, onKeep: () -> Unit) {
     AlertDialog(
         onDismissRequest = onKeep,
+        modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
         containerColor = HollowDialog.containerColor,
         shape = HollowDialog.Shape,
-        title = { Text("Discard unsaved changes?", style = HollowText.Heading, color = HollowInk) },
+        title = { Text("Discard unsaved changes?", style = HollowText.Heading, color = HollowDisplayInk) },
         confirmButton = {
             HollowPrimaryButton(onClick = onDiscard) { Text("DISCARD", style = HollowText.ButtonSmall) }
         },
@@ -246,7 +250,7 @@ internal fun DebugLogsPage(
                     Text(
                         text = shown[i],
                         style = HollowText.Caption.copy(fontFamily = HollowMonoFamily),
-                        color = if (shown[i].contains("ERROR:", ignoreCase = true)) HollowError else HollowInk
+                        color = if (shown[i].contains("ERROR:", ignoreCase = true)) HollowAccentText else HollowInk
                     )
                 }
             }

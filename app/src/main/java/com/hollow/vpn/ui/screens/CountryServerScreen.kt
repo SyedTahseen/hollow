@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import androidx.compose.foundation.border
+import com.hollow.vpn.ui.components.HollowPill
 import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowLine2
 import com.hollow.vpn.ui.theme.HollowAccentText
@@ -62,20 +64,20 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PublicOff
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -255,7 +257,7 @@ fun CountryServerListScreen(
                         onClick = { searching = false; query = "" },
                         modifier = Modifier.testTag("server_search_close")
                     ) { tint ->
-                        Icon(Icons.Rounded.Close, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
+                        Icon(Icons.Outlined.Close, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
                     }
                 }
             } else Row(
@@ -284,7 +286,7 @@ fun CountryServerListScreen(
                         onClick = { searching = true },
                         modifier = Modifier.testTag("server_search")
                     ) { tint ->
-                        Icon(Icons.Rounded.Search, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
+                        Icon(Icons.Outlined.Search, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
                     }
 
                     AddServerButton(state = addServerState, actions = addServerActions)
@@ -299,7 +301,7 @@ fun CountryServerListScreen(
                             modifier = Modifier.testTag("country_more_menu")
                         ) { tint ->
                             Icon(
-                                imageVector = Icons.Rounded.MoreHoriz,
+                                imageVector = Icons.Outlined.MoreHoriz,
                                 contentDescription = null,
                                 tint = tint,
                                 modifier = Modifier.size(HollowSizes.Icon)
@@ -311,7 +313,8 @@ fun CountryServerListScreen(
                             onDismissRequest = { overflowMenuExpanded = false },
                             offset = DpOffset(x = 0.dp, y = 8.dp),
                             containerColor = NothingSurface,
-                            shape = RoundedCornerShape(HollowRadius.Lg),
+                            shape = RoundedCornerShape(HollowRadius.Sm),
+                            border = BorderStroke(HollowStroke.Hairline, HollowLine2),
                             modifier = Modifier.widthIn(min = 220.dp)
                         ) {
                             when (menuPage) {
@@ -376,7 +379,7 @@ fun CountryServerListScreen(
                                 }
                                 else -> {
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Rounded.Bolt,
+                                        icon = Icons.Outlined.Bolt,
                                         label = if (isTestingFastest) "Testing…" else "Test latency",
                                         color = HollowInk,
                                         onClick = {
@@ -385,14 +388,14 @@ fun CountryServerListScreen(
                                         }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Rounded.Tune,
+                                        icon = Icons.Outlined.Tune,
                                         label = "Sort",
                                         color = HollowInk,
                                         trailing = { ServerMenuChevron() },
                                         onClick = { menuPage = "sort" }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Rounded.Refresh,
+                                        icon = Icons.Outlined.Refresh,
                                         label = "Update subscription",
                                         color = HollowInk,
                                         onClick = {
@@ -636,9 +639,10 @@ fun CountryServerListScreen(
     deletingSubscription?.let { sub ->
         AlertDialog(
             onDismissRequest = { deletingSubscription = null },
+            modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
             containerColor = HollowDialog.containerColor,
             shape = HollowDialog.Shape,
-            title = { Text(text = "Delete subscription?", style = HollowText.Heading, color = HollowInk) },
+            title = { Text(text = "Delete subscription?", style = HollowText.Heading, color = HollowDisplayInk) },
             text = {
                 Text(
                     text = "${sub.categoryLabel()} and its servers will be removed.",
@@ -662,9 +666,10 @@ fun CountryServerListScreen(
     confirmDel?.let { d ->
         AlertDialog(
             onDismissRequest = { confirmDel = null },
+            modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
             containerColor = HollowDialog.containerColor,
             shape = HollowDialog.Shape,
-            title = { Text(text = d.title, style = HollowText.Heading, color = HollowInk) },
+            title = { Text(text = d.title, style = HollowText.Heading, color = HollowDisplayInk) },
             text = { Text(text = d.text, style = HollowText.Small, color = HollowInkSecondary) },
             confirmButton = {
                 HollowPrimaryButton(onClick = { confirmDel = null; d.onConfirm() }) {
@@ -686,7 +691,7 @@ private class ServerDelAction(val title: String, val text: String, val onConfirm
 
 @Composable
 private fun ServerMenuChevron() {
-    Icon(Icons.Rounded.ChevronRight, null, tint = HollowInkSecondary, modifier = Modifier.size(HollowSizes.Icon))
+    Icon(Icons.Outlined.ChevronRight, null, tint = HollowInkSecondary, modifier = Modifier.size(HollowSizes.Icon))
 }
 
 @Composable
@@ -702,8 +707,8 @@ private fun ServerMenuHeader(title: String, onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
-                Text(title, style = HollowText.BodyMedium, color = HollowInk)
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+                Text(title, style = HollowText.Data, color = HollowInk)
             }
         },
         onClick = onBack
@@ -718,8 +723,8 @@ private fun ServerMenuChoice(label: String, selected: Boolean, onClick: () -> Un
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
-                Text(label, style = HollowText.Body, color = HollowInk, modifier = Modifier.weight(1f, fill = false))
-                if (selected) Icon(Icons.Rounded.Check, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+                Text(label, style = HollowText.Data, color = HollowInk, modifier = Modifier.weight(1f, fill = false))
+                if (selected) Icon(Icons.Outlined.Check, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
             }
         },
         onClick = onClick
@@ -781,7 +786,7 @@ private fun ServerOverflowMenuItem(
                 )
                 Text(
                     text = label,
-                    style = HollowText.Body,
+                    style = HollowText.Data,
                     color = color,
                     modifier = if (trailing != null) Modifier.weight(1f) else Modifier
                 )
@@ -845,7 +850,8 @@ private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
                     )
                     if (expText != null) {
                         Spacer(Modifier.width(HollowSpace.Sm))
-                        Text(text = expText, style = HollowText.SmallMedium, color = expColor, maxLines = 1)
+                        if (expired) HollowPill(text = expText, signal = true)
+                        else Text(text = expText, style = HollowText.Caption, color = expColor, maxLines = 1)
                     }
                 }
                 if (sub.totalBytes > 0L || sub.usedBytes > 0L) {
@@ -866,6 +872,7 @@ private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
                             NothingSegmentedBar(
                                 fraction = frac,
                                 overLimit = exhausted,
+                                cellHeight = 7.dp,
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(Modifier.width(HollowSpace.Md))

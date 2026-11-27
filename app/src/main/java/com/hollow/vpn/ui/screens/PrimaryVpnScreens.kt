@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.components.NothingClock
+import com.hollow.vpn.ui.components.HollowStateDot
 import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowText
 import com.hollow.vpn.ui.theme.HollowUploadAccent
@@ -66,11 +68,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -345,7 +347,8 @@ private fun HomeContent(
 
         Column(modifier = Modifier.fillMaxSize()) {
             HomeTopBar(
-                dotColor = pc.accent, textColor = HollowDisplayInk,
+                dotState = when (phase) { 2 -> HollowStateDot.Done; 1 -> HollowStateDot.Running; else -> HollowStateDot.NeedsInput },
+                textColor = HollowDisplayInk,
                 buttonContainer = NothingTopBtnFill, buttonContent = NothingOnCanvas, buttonBorder = NothingTopBtnBorder,
                 addServerState = addServerState, addServerActions = addServerActions, onOpenSettings = onOpenSettings
             )
@@ -441,7 +444,7 @@ private fun HomeContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Add,
+                                imageVector = Icons.Outlined.Add,
                                 contentDescription = null,
                                 tint = HollowInk,
                                 modifier = Modifier.size(HollowSizes.Icon)
@@ -493,7 +496,7 @@ private fun HomeContent(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Rounded.Add,
+                            imageVector = Icons.Outlined.Add,
                             contentDescription = "Add server",
                             tint = HollowInkSecondary,
                             modifier = Modifier.size(HollowSizes.Icon)
@@ -640,11 +643,10 @@ private fun ConnectionStatsCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
+                NothingClock(
                     text = formatConnectedFor(telemetry.elapsedSeconds),
                     style = HollowText.NumeralSm,
                     color = HollowDisplayInk,
-                    maxLines = 1,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("connection_timer_text")
@@ -854,14 +856,14 @@ private fun ServerDetailsPanel(
         TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = HollowSpace.Xs)) {
             Text("MANAGE SERVERS", style = HollowText.ButtonSmall, color = HollowInk)
             Spacer(modifier = Modifier.width(HollowSpace.Xs))
-            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+            Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
         }
     }
 }
 
 @Composable
 private fun HomeTopBar(
-    dotColor: Color,
+    dotState: HollowStateDot,
     textColor: Color,
     buttonContainer: Color,
     buttonContent: Color,
@@ -876,7 +878,7 @@ private fun HomeTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         HollowStatusBrandRow(
-            dotColor = dotColor,
+            dotState = dotState,
             textColor = textColor
         )
 
@@ -1012,7 +1014,7 @@ fun ServerItemRowContent(
                 modifier = Modifier.minimumInteractiveComponentSize()
             ) {
                 Icon(
-                    imageVector = if (isFavorite) Icons.Rounded.Star else Icons.Outlined.StarBorder,
+                    imageVector = if (isFavorite) Icons.Outlined.Star else Icons.Outlined.StarBorder,
                     contentDescription = if (isFavorite) "Remove ${server.countryName} from favorites" else "Add ${server.countryName} to favorites",
                     tint = if (isFavorite) HollowDisplayInk else HollowInkSecondary,
                     modifier = Modifier.size(HollowSizes.Icon)
@@ -1027,7 +1029,7 @@ fun ServerItemRowContent(
                     modifier = Modifier.minimumInteractiveComponentSize()
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.MoreHoriz,
+                        imageVector = Icons.Outlined.MoreHoriz,
                         contentDescription = "Server Options for ${server.countryName}",
                         tint = HollowInkSecondary,
                         modifier = Modifier.size(HollowSizes.Icon)
@@ -1037,10 +1039,12 @@ fun ServerItemRowContent(
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
-                    containerColor = NothingSurface
+                    containerColor = NothingSurface,
+                    shape = RoundedCornerShape(HollowRadius.Sm),
+                    border = BorderStroke(HollowStroke.Hairline, HollowLine2)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("COPY", style = HollowText.ButtonSmall, color = HollowInk) },
+                        text = { Text("Copy", style = HollowText.Data, color = HollowInk) },
                         onClick = {
                             menuExpanded = false
                             val payload = server.shareUri.ifBlank { server.rawConfigJson }
@@ -1052,14 +1056,14 @@ fun ServerItemRowContent(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("EDIT", style = HollowText.ButtonSmall, color = HollowInk) },
+                        text = { Text("Edit", style = HollowText.Data, color = HollowInk) },
                         onClick = {
                             menuExpanded = false
                             onEdit()
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("DELETE", style = HollowText.ButtonSmall, color = HollowError) },
+                        text = { Text("Delete", style = HollowText.Data, color = HollowError) },
                         onClick = {
                             menuExpanded = false
                             onDelete()

@@ -1,5 +1,10 @@
 package com.hollow.vpn.ui.components
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
 import com.hollow.vpn.ui.theme.HollowSizes
 import com.hollow.vpn.ui.theme.HollowRadius
 import com.hollow.vpn.ui.theme.HollowSansFamily
@@ -95,31 +100,18 @@ fun NothingDotMatrixBackdrop(
     }
 }
 
+/** List divider: a solid 1dp hairline in the `line` token (name kept for existing call sites). */
 @Composable
 fun NothingDottedDivider(
     modifier: Modifier = Modifier,
-    color: Color = NothingDottedLine,
-    dotWidth: Dp = 1.5.dp,
-    gapWidth: Dp = 3.5.dp
+    color: Color = com.hollow.vpn.ui.theme.NothingBorder
 ) {
-    Canvas(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(1.dp)
-    ) {
-        val cy = size.height / 2f
-        drawLine(
-            color = color,
-            start = Offset(0f, cy),
-            end = Offset(size.width, cy),
-            strokeWidth = 1.dp.toPx(),
-            cap = StrokeCap.Round,
-            pathEffect = PathEffect.dashPathEffect(
-                floatArrayOf(dotWidth.toPx(), gapWidth.toPx()),
-                0f
-            )
-        )
-    }
+            .background(color)
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -183,8 +175,8 @@ fun NothingPillTabRow(
                     border = BorderStroke(HollowStroke.Hairline, borderColor)
                 ) {
                     Text(
-                        text = title.uppercase(),
-                        style = HollowText.Label,
+                        text = title,
+                        style = HollowText.Caption,
                         color = contentColor,
                         maxLines = 1,
                         modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm)
@@ -342,12 +334,13 @@ fun NothingSegmentedBar(
     fraction: Float,
     modifier: Modifier = Modifier,
     segments: Int = 20,
-    overLimit: Boolean = false
+    overLimit: Boolean = false,
+    cellHeight: Dp = 11.dp
 ) {
     val lit = if (overLimit) com.hollow.vpn.ui.theme.NothingRed else com.hollow.vpn.ui.theme.HollowDisplayInk
     val empty = com.hollow.vpn.ui.theme.NothingBorder
     val filled = (fraction.coerceIn(0f, 1f) * segments).let { kotlin.math.ceil(it.toDouble()).toInt() }
-    Canvas(modifier = modifier.fillMaxWidth().height(8.dp)) {
+    Canvas(modifier = modifier.fillMaxWidth().height(cellHeight)) {
         val gap = 2.dp.toPx()
         val cellW = (size.width - gap * (segments - 1)) / segments
         for (i in 0 until segments) {
@@ -373,3 +366,128 @@ fun Modifier.nothingDashedBorder(color: Color, radius: Dp = HollowRadius.Lg): Mo
         )
     }
 )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Alerts, state dots, dot-matrix clock, pills  (mirrors .alert / .livedot / .clock / .pill)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum class HollowAlertKind { Success, Warning, Error }
+
+/** `.alert` — 3dp left border in the status colour + ~9% tint of the same colour. Title in display, text in secondary. */
+@Composable
+fun HollowAlert(
+    kind: HollowAlertKind,
+    text: String,
+    modifier: Modifier = Modifier,
+    title: String? = null
+) {
+    val tone = when (kind) {
+        HollowAlertKind.Success -> com.hollow.vpn.ui.theme.HollowSuccess
+        HollowAlertKind.Warning -> com.hollow.vpn.ui.theme.HollowWarning
+        HollowAlertKind.Error -> com.hollow.vpn.ui.theme.HollowError
+    }
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(HollowRadius.Sm)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(tone.copy(alpha = 0.09f))
+            .drawBehind { drawRect(tone, size = androidx.compose.ui.geometry.Size(3.dp.toPx(), size.height)) }
+            .padding(start = HollowSpace.Lg, end = HollowSpace.Md, top = HollowSpace.Md, bottom = HollowSpace.Md)
+    ) {
+        Box(Modifier.padding(top = 5.dp).size(HollowSizes.Dot).clip(CircleShape).background(tone))
+        Spacer(Modifier.width(HollowSpace.Md))
+        Column(Modifier.weight(1f)) {
+            if (title != null) {
+                Text(title, style = HollowText.BodyBold, color = com.hollow.vpn.ui.theme.HollowDisplayInk)
+            }
+            Text(text, style = HollowText.Small, color = com.hollow.vpn.ui.theme.HollowInkSecondary)
+        }
+    }
+}
+
+enum class HollowStateDot { Idle, Running, NeedsInput, Live, Done }
+
+/**
+ * Unified state machine dot:
+ *  Idle = grey static · Running = display, hard-stepped blink · NeedsInput = signal red static
+ *  Live = signal red, hard-stepped blink (1.5s, steps(1) like `.livedot`) · Done = grey solid.
+ */
+@Composable
+fun HollowStateDotView(state: HollowStateDot, modifier: Modifier = Modifier, size: Dp = 12.dp) {
+    var on by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    val blinking = state == HollowStateDot.Running || state == HollowStateDot.Live
+    androidx.compose.runtime.LaunchedEffect(blinking) {
+        on = true
+        while (blinking) {
+            kotlinx.coroutines.delay(750)
+            on = !on
+        }
+    }
+    val color = when (state) {
+        HollowStateDot.Idle, HollowStateDot.Done -> com.hollow.vpn.ui.theme.HollowInkMuted
+        HollowStateDot.Running -> com.hollow.vpn.ui.theme.HollowDisplayInk
+        HollowStateDot.NeedsInput, HollowStateDot.Live -> com.hollow.vpn.ui.theme.NothingRed
+    }
+    Box(
+        modifier = modifier
+            .size(size)
+            .alpha(if (blinking && !on) 0.3f else 1f)
+            .clip(CircleShape)
+            .background(color)
+    )
+}
+
+/** `.pill` — a: display fill · i: outline · sig: signal red fill with white text (needs-decision only). */
+@Composable
+fun HollowPill(text: String, modifier: Modifier = Modifier, signal: Boolean = false, active: Boolean = false) {
+    val bg = when {
+        signal -> com.hollow.vpn.ui.theme.NothingRed
+        active -> com.hollow.vpn.ui.theme.NothingInvertedSurface
+        else -> Color.Transparent
+    }
+    val fg = when {
+        signal -> com.hollow.vpn.ui.theme.NothingAccentInk
+        active -> com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+        else -> com.hollow.vpn.ui.theme.HollowInkMuted
+    }
+    Text(
+        text = text.uppercase(),
+        style = HollowText.Label,
+        color = fg,
+        modifier = modifier
+            .clip(CircleShape)
+            .background(bg)
+            .then(if (bg == Color.Transparent) Modifier.border(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowLine2, CircleShape) else Modifier)
+            .padding(horizontal = HollowSpace.Sm, vertical = 2.dp)
+    )
+}
+
+/** Dot-matrix punctuation `:` — two round dots (`.colon`), slightly smaller than the digit dots. */
+@Composable
+fun NothingDotColon(color: Color, modifier: Modifier = Modifier, dot: Dp = 3.dp) {
+    Column(
+        modifier = modifier.padding(horizontal = HollowSpace.Xs),
+        verticalArrangement = Arrangement.spacedBy(dot * 1.6f),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(Modifier.size(dot).clip(CircleShape).background(color))
+        Box(Modifier.size(dot).clip(CircleShape).background(color))
+    }
+}
+
+/** `.clock` — Doto digits with round-dot colons. Pass "HH:MM:SS" (or any `:`-separated numerals). */
+@Composable
+fun NothingClock(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = HollowText.NumeralSm,
+    color: Color = com.hollow.vpn.ui.theme.HollowDisplayInk
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        text.split(":").forEachIndexed { i, part ->
+            if (i > 0) NothingDotColon(color = com.hollow.vpn.ui.theme.HollowInkSecondary)
+            Text(part, style = style, color = color, maxLines = 1)
+        }
+    }
+}

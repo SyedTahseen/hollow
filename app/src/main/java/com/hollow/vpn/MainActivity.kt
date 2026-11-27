@@ -56,7 +56,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -335,7 +335,7 @@ fun HollowVpnApp(
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.CONNECT,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME) },
-                        icon = { Icon(Icons.Rounded.PowerSettingsNew, contentDescription = "Connect") },
+                        icon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = "Connect") },
                         label = { Text("Connect") },
                         colors = railColors
                     )

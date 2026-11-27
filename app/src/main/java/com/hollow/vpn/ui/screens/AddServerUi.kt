@@ -1,5 +1,8 @@
 package com.hollow.vpn.ui.screens
 
+import androidx.compose.foundation.border
+import com.hollow.vpn.ui.components.HollowAlertKind
+import com.hollow.vpn.ui.components.HollowAlert
 import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.HollowLine2
 import com.hollow.vpn.ui.theme.HollowError
@@ -44,14 +47,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.QrCodeScanner
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -188,7 +191,7 @@ fun AddServerButton(
             modifier = Modifier.testTag(testTag)
         ) { tint ->
             Icon(
-                imageVector = Icons.Rounded.Add,
+                imageVector = Icons.Outlined.Add,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -200,7 +203,8 @@ fun AddServerButton(
             onDismissRequest = { state.menuOpen = false },
             offset = DpOffset(x = 0.dp, y = 8.dp),
             containerColor = NothingSurface,
-            shape = RoundedCornerShape(HollowRadius.Lg),
+            shape = RoundedCornerShape(HollowRadius.Sm),
+            border = BorderStroke(HollowStroke.Hairline, HollowLine2),
             modifier = Modifier.width(240.dp)
         ) {
             AddServerMenuItem(Icons.Outlined.QrCodeScanner, "Scan QR code", "menu_add_scan") {
@@ -249,7 +253,7 @@ private fun AddServerMenuItem(
                     tint = HollowInk,
                     modifier = Modifier.size(HollowSizes.IconSm)
                 )
-                Text(text = label.uppercase(), style = HollowText.Button, color = HollowInk)
+                Text(text = label, style = HollowText.Data, color = HollowInk)
             }
         },
         onClick = onClick,
@@ -314,9 +318,10 @@ private fun AddSubscriptionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
         containerColor = HollowDialog.containerColor,
         shape = HollowDialog.Shape,
-        title = { Text("Add subscription link", style = HollowText.Heading, color = HollowInk) },
+        title = { Text("Add subscription link", style = HollowText.Heading, color = HollowDisplayInk) },
         text = {
             Column {
                 Text(
@@ -329,8 +334,8 @@ private fun AddSubscriptionDialog(
                     value = url,
                     onValueChange = { url = it },
                     singleLine = true,
-                    textStyle = HollowText.Body,
-                    placeholder = { Text("https://…", style = HollowText.Body, color = HollowInkMuted) },
+                    textStyle = HollowText.Data,
+                    placeholder = { Text("https://…", style = HollowText.Data, color = HollowInkMuted) },
                     shape = RoundedCornerShape(HollowRadius.Md),
                     colors = hollowFieldColors(),
                     modifier = Modifier.fillMaxWidth().testTag("subscription_url_input")
@@ -361,9 +366,10 @@ private fun AddManualServerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
         containerColor = HollowDialog.containerColor,
         shape = HollowDialog.Shape,
-        title = { Text("Add manually", style = HollowText.Heading, color = HollowInk) },
+        title = { Text("Add manually", style = HollowText.Heading, color = HollowDisplayInk) },
         text = {
             Column {
                 Text(
@@ -378,16 +384,15 @@ private fun AddManualServerDialog(
                     singleLine = false,
                     minLines = 3,
                     maxLines = 8,
-                    textStyle = HollowText.Body,
+                    textStyle = HollowText.Data,
                     shape = RoundedCornerShape(HollowRadius.Md),
                     colors = hollowFieldColors(),
                     modifier = Modifier.fillMaxWidth().testTag("manual_links_field")
                 )
                 if (bad) {
-                    Text(
-                        "[ERROR: NO VALID LINK FOUND]",
-                        style = HollowText.Caption,
-                        color = HollowError,
+                    HollowAlert(
+                        kind = HollowAlertKind.Error,
+                        text = "No valid link found.",
                         modifier = Modifier.padding(top = HollowSpace.Sm)
                     )
                 }

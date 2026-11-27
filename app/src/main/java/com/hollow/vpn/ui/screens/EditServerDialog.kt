@@ -1,5 +1,10 @@
 package com.hollow.vpn.ui.screens
 
+import androidx.compose.foundation.border
+import com.hollow.vpn.ui.theme.HollowStroke
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.components.HollowAlertKind
+import com.hollow.vpn.ui.components.HollowAlert
 import com.hollow.vpn.ui.theme.NothingSurface
 import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.HollowError
@@ -64,9 +69,10 @@ fun EditServerDialog(
     if (model == null) {
         AlertDialog(
             onDismissRequest = onDismiss,
+            modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
             containerColor = HollowDialog.containerColor,
             shape = HollowDialog.Shape,
-            title = { Text("Can't edit this server", style = HollowText.Heading, color = HollowInk) },
+            title = { Text("Can't edit this server", style = HollowText.Heading, color = HollowDisplayInk) },
             text = {
                 Text(
                     "The editor can't read this link. Delete it and add it again.",
@@ -92,9 +98,10 @@ fun EditServerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
         containerColor = HollowDialog.containerColor,
         shape = HollowDialog.Shape,
-        title = { Text("Edit server", style = HollowText.Heading, color = HollowInk) },
+        title = { Text("Edit server", style = HollowText.Heading, color = HollowDisplayInk) },
         text = {
             Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
                 Text(
@@ -155,10 +162,9 @@ fun EditServerDialog(
                     )
                 }
                 error?.let {
-                    Text(
-                        "[ERROR: " + it.uppercase() + "]",
-                        style = HollowText.Caption,
-                        color = HollowError,
+                    HollowAlert(
+                        kind = HollowAlertKind.Error,
+                        text = it,
                         modifier = Modifier.padding(top = HollowSpace.Md)
                     )
                 }

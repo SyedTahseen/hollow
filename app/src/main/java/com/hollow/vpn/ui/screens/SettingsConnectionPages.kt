@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.components.HollowAlertKind
+import com.hollow.vpn.ui.components.HollowAlert
 import com.hollow.vpn.ui.theme.HollowWarning
 import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.HollowError
@@ -23,7 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Tune
@@ -235,7 +237,7 @@ private fun AdvancedValueItem(
                 color = HollowInk
             )
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = null,
                 tint = HollowInkSecondary,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -317,9 +319,10 @@ internal fun CustomDnsPage(
         testTag = "switch_custom_dns"
     )
     if (settings.customDnsEnabled && settings.netShieldEnabled) {
-        FeatureCaption(
-            "NetShield is on and takes priority, so these servers are not used until you turn NetShield off.",
-            color = HollowWarning
+        HollowAlert(
+            kind = HollowAlertKind.Warning,
+            text = "NetShield is on and takes priority, so these servers are not used until you turn NetShield off.",
+            modifier = Modifier.padding(vertical = HollowSpace.Sm)
         )
     }
 

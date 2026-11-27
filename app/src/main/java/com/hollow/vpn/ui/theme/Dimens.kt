@@ -40,9 +40,9 @@ object HollowSizes {
     val SettingRowMin = 56.dp
     val Border = 1.dp
     val Spinner = 2.dp
-    val SwitchWidth = 48.dp
-    val SwitchHeight = 28.dp
-    val SwitchThumb = 20.dp
+    val SwitchWidth = 44.dp
+    val SwitchHeight = 24.dp
+    val SwitchThumb = 18.dp
     val MaxContent = 800.dp
     val FocusMaxWidth = 480.dp
 }

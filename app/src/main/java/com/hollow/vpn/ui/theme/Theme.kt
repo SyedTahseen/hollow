@@ -55,7 +55,12 @@ fun HollowVpnTheme(
         CompositionLocalProvider(
             LocalHollowPalette provides hollowPalette,
             LocalHollowIsDark provides darkTheme,
-            LocalHollowIsOled provides (darkTheme && oledDark)
+            LocalHollowIsOled provides (darkTheme && oledDark),
+            androidx.compose.foundation.text.selection.LocalTextSelectionColors provides
+                androidx.compose.foundation.text.selection.TextSelectionColors(
+                    handleColor = NothingRed,
+                    backgroundColor = NothingRed.copy(alpha = 0.4f)
+                )
         ) {
             MaterialTheme(
                 colorScheme = colorScheme,

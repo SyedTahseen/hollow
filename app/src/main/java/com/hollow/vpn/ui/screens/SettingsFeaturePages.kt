@@ -818,27 +818,10 @@ private fun UsageSummaryCard(label: String, value: Pair<Long, Long>, modifier: M
             letterSpacing = HollowTracking.Micro,
             color = HollowInkSecondary
         )
+        Spacer(Modifier.height(HollowSpace.Sm))
+        MetricLine("↓", fmtSize(value.second), NothingMatrixGreen)
         Spacer(Modifier.height(HollowSpace.Xs))
-        Text(
-            text = "↓ ${fmtSize(value.second)}",
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
-            color = NothingMatrixGreen,
-            maxLines = 1
-        )
-        Text(
-            text = "↑ ${fmtSize(value.first)}",
-            fontFamily = HollowSansFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = HollowType.Small,
-            lineHeight = HollowLineHeight.Small,
-            letterSpacing = HollowTracking.Small,
-            color = HollowUploadAccent,
-            maxLines = 1
-        )
+        MetricLine("↑", fmtSize(value.first), HollowUploadAccent)
     }
 }
 
@@ -880,3 +863,19 @@ private fun UsageSessionRow(s: UsageSession) {
 }
 
 internal val UsageHistoryIcon: ImageVector get() = Icons.Outlined.QueryStats
+
+/** `.metric` value: Doto numeral + small mono unit, coloured delta arrow on the value only. */
+@Composable
+private fun MetricLine(arrow: String, size: String, tone: Color) {
+    val num = size.substringBefore(' ')
+    val unit = size.substringAfter(' ', "")
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(arrow, style = HollowText.Data, color = tone)
+        Spacer(Modifier.width(HollowSpace.Xs))
+        Text(num, style = HollowText.NumeralSm, color = HollowDisplayInk, maxLines = 1)
+        if (unit.isNotEmpty()) {
+            Spacer(Modifier.width(HollowSpace.Xs))
+            Text(unit, style = HollowText.Caption, color = HollowInkSecondary, modifier = Modifier.padding(bottom = 2.dp))
+        }
+    }
+}

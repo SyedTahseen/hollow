@@ -115,9 +115,9 @@ val DarkHollowPalette = HollowPalette(
     topBtnBorder = DarkLine2,
     dottedLine = DarkLine2,
     dotInactive = DarkLine2,
-    switchOffTrack = Color.Transparent,
+    switchOffTrack = DarkLine2,
     switchOffBorder = DarkLine2,
-    switchOffThumb = DarkSecondary,
+    switchOffThumb = DarkMuted,
     backdropDot = Color.White.copy(alpha = 0.34f)
 )
 
@@ -150,9 +150,9 @@ val LightHollowPalette = HollowPalette(
     topBtnBorder = LightLine2,
     dottedLine = LightLine2,
     dotInactive = LightLine2,
-    switchOffTrack = Color.Transparent,
+    switchOffTrack = LightLine2,
     switchOffBorder = LightLine2,
-    switchOffThumb = LightSecondary,
+    switchOffThumb = LightMuted,
     backdropDot = Color.Black.copy(alpha = 0.30f)
 )
 

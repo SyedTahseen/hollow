@@ -1,5 +1,8 @@
 package com.hollow.vpn.ui.components
 
+import androidx.compose.foundation.layout.Spacer
+import com.hollow.vpn.ui.components.HollowStateDotView
+import com.hollow.vpn.ui.components.HollowStateDot
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowSizes
 import com.hollow.vpn.ui.theme.HollowTracking
@@ -49,12 +52,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.rounded.PowerSettingsNew
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -180,10 +182,13 @@ fun HollowBrandShieldLogo(
 
 @Composable
 fun HollowStatusBrandRow(
-    @Suppress("UNUSED_PARAMETER") dotColor: Color,
+    dotState: HollowStateDot,
     textColor: Color,
     modifier: Modifier = Modifier
 ) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    HollowStateDotView(dotState, size = HollowSizes.Dot)
+    Spacer(Modifier.width(HollowSpace.Md))
     Text(
         text = "HOLLOW VPN",
         fontFamily = DotoDisplayFamily,
@@ -192,9 +197,9 @@ fun HollowStatusBrandRow(
         lineHeight = HollowLineHeight.Heading,
         letterSpacing = HollowTracking.Heading,
         maxLines = 1,
-        color = textColor,
-        modifier = modifier
+        color = textColor
     )
+    }
 }
 
 @Composable
@@ -593,7 +598,7 @@ fun HollowSwitch(
         label = "hollow_switch_thumb"
     )
     val thumbOffset by animateDpAsState(
-        targetValue = if (checked) (HollowSizes.SwitchWidth - HollowSpace.Sm - HollowSizes.SwitchThumb) else 0.dp,
+        targetValue = if (checked) (HollowSizes.SwitchWidth - 6.dp - HollowSizes.SwitchThumb) else 0.dp,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "hollow_switch_offset"
     )
@@ -624,7 +629,7 @@ fun HollowSwitch(
                 .clip(CircleShape)
                 .background(trackColor)
                 .border(HollowStroke.Hairline, borderColor, CircleShape)
-                .padding(horizontal = HollowSpace.Xs),
+                .padding(horizontal = 3.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Box(

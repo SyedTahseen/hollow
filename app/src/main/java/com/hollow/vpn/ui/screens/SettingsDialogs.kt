@@ -1,5 +1,7 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.theme.HollowDisplayInk
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
 import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
@@ -250,6 +252,7 @@ fun RawXrayJsonEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.border(HollowStroke.Hairline, HollowLine2, HollowDialog.Shape),
         containerColor = HollowDialog.containerColor,
         shape = HollowDialog.Shape,
         title = {
