@@ -300,50 +300,46 @@ fun HollowBottomNavigationBar(
             .padding(horizontal = HollowSpace.Gutter, vertical = HollowSpace.Sm),
         contentAlignment = Alignment.Center
     ) {
+        // .navbar — 1px line-2 outline, pill radius, icons only, space-around.
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(com.hollow.vpn.ui.theme.HollowBar.Height),
             shape = com.hollow.vpn.ui.theme.HollowBar.Shape,
             color = com.hollow.vpn.ui.theme.HollowBar.Fill,
-            border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowBar.Border)
+            border = BorderStroke(HollowStroke.Hairline, com.hollow.vpn.ui.theme.HollowLine2)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(HollowSpace.Xs),
+                    .padding(horizontal = HollowSpace.Sm),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
                 HollowBottomNavItem(
                     label = "Home",
                     selected = selectedTab == HollowBottomTab.CONNECT,
                     onClick = onSelectConnect,
                     modifier = Modifier.testTag("nav_tab_connect")
-                ) { tint ->
-                    NothingDotGlyph("home", size = 28.dp, color = tint)
-                }
+                ) { tint -> HollowLineIcon("home", color = tint) }
                 HollowBottomNavItem(
                     label = "Servers",
                     selected = selectedTab == HollowBottomTab.SERVERS,
                     onClick = onSelectServers,
                     modifier = Modifier.testTag("nav_tab_servers")
-                ) { tint ->
-                    NothingDotGlyph("grid", size = 28.dp, color = tint)
-                }
+                ) { tint -> HollowLineIcon("grid", color = tint) }
                 HollowBottomNavItem(
                     label = "Settings",
                     selected = selectedTab == HollowBottomTab.SETTINGS,
                     onClick = onSelectSettings,
                     modifier = Modifier.testTag("nav_tab_settings")
-                ) { tint ->
-                    NothingDotGlyph("gear", size = 28.dp, color = tint)
-                }
+                ) { tint -> HollowLineIcon("gear", color = tint) }
             }
         }
     }
 }
 
+/** `.navbar .i` (muted) / `.navbar .i.on` (display). No fill behind the active tab — colour only. */
 @Composable
 private fun RowScope.HollowBottomNavItem(
     label: String,
@@ -354,24 +350,10 @@ private fun RowScope.HollowBottomNavItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val weight by animateFloatAsState(
-        targetValue = if (selected) 1.6f else 1f,
-        animationSpec = tween(HollowMotion.Emphasized, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
-        label = "nav_item_weight"
-    )
-    // Active = black/white inversion (display on bg), never the accent.
-    val navActiveBg = NothingPillActiveBg
-    val navActiveContent = NothingPillActiveIcon
-    val navInactiveContent = com.hollow.vpn.ui.theme.HollowInkSecondary
-    val pillBg by animateColorAsState(
-        targetValue = if (selected) navActiveBg else Color.Transparent,
-        animationSpec = tween(HollowMotion.Standard, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
-        label = "nav_pill_bg"
-    )
     val iconTint by animateColorAsState(
-        targetValue = if (selected) navActiveContent else navInactiveContent,
+        targetValue = if (selected) com.hollow.vpn.ui.theme.HollowDisplayInk else com.hollow.vpn.ui.theme.HollowInkMuted,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
-        label = "nav_pill_tint"
+        label = "nav_item_tint"
     )
     val pressAlpha by animateFloatAsState(
         targetValue = if (isPressed) 0.6f else 1f,
@@ -380,12 +362,10 @@ private fun RowScope.HollowBottomNavItem(
     )
     Box(
         modifier = modifier
-            .weight(weight)
+            .weight(1f)
             .fillMaxHeight()
             .minimumInteractiveComponentSize()
             .graphicsLayer { alpha = pressAlpha }
-            .clip(CircleShape)
-            .background(pillBg)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

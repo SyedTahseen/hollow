@@ -334,21 +334,21 @@ fun HollowVpnApp(
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.CONNECT,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.CONNECTED_HOME) },
-                        icon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = "Connect") },
+                        icon = { com.hollow.vpn.ui.components.HollowLineIcon("home", color = androidx.compose.material3.LocalContentColor.current) },
                         label = { Text("CONNECT", style = com.hollow.vpn.ui.theme.HollowText.ButtonSmall) },
                         colors = railColors
                     )
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.SERVERS,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.SERVER_LIST) },
-                        icon = { Icon(Icons.Outlined.Dns, contentDescription = "Servers") },
+                        icon = { com.hollow.vpn.ui.components.HollowLineIcon("grid", color = androidx.compose.material3.LocalContentColor.current) },
                         label = { Text("SERVERS", style = com.hollow.vpn.ui.theme.HollowText.ButtonSmall) },
                         colors = railColors
                     )
                     NavigationRailItem(
                         selected = selectedBottomTab == HollowBottomTab.SETTINGS,
                         onClick = { vpnViewModel.navigateTo(VpnScreen.SETTINGS) },
-                        icon = { Icon(Icons.Outlined.Settings, contentDescription = "Settings") },
+                        icon = { com.hollow.vpn.ui.components.HollowLineIcon("gear", color = androidx.compose.material3.LocalContentColor.current) },
                         label = { Text("SETTINGS", style = com.hollow.vpn.ui.theme.HollowText.ButtonSmall) },
                         colors = railColors
                     )
