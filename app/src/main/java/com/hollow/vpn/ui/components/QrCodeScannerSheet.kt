@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
@@ -242,7 +240,7 @@ fun ServerQrShareDialog(
                 modifier = Modifier.testTag("btn_copy_qr_payload")
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.ContentCopy,
+                    imageVector = HollowIcons.Copy,
                     contentDescription = null,
                     modifier = Modifier.size(HollowSizes.IconSm)
                 )

@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import androidx.compose.foundation.border
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.components.HollowPill
 import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowLine2
@@ -58,26 +59,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material.icons.outlined.PublicOff
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.material.icons.outlined.MoreHoriz
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -113,7 +99,6 @@ import com.hollow.vpn.data.ServerCategory
 import com.hollow.vpn.data.SubscriptionEntity
 import com.hollow.vpn.data.categoryLabel
 import androidx.compose.runtime.SideEffect
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
@@ -257,7 +242,7 @@ fun CountryServerListScreen(
                         onClick = { searching = false; query = "" },
                         modifier = Modifier.testTag("server_search_close")
                     ) { tint ->
-                        Icon(Icons.Outlined.Close, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
+                        Icon(HollowIcons.Close, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
                     }
                 }
             } else Row(
@@ -286,7 +271,7 @@ fun CountryServerListScreen(
                         onClick = { searching = true },
                         modifier = Modifier.testTag("server_search")
                     ) { tint ->
-                        Icon(Icons.Outlined.Search, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
+                        Icon(HollowIcons.Search, null, tint = tint, modifier = Modifier.size(HollowSizes.Icon))
                     }
 
                     AddServerButton(state = addServerState, actions = addServerActions)
@@ -301,7 +286,7 @@ fun CountryServerListScreen(
                             modifier = Modifier.testTag("country_more_menu")
                         ) { tint ->
                             Icon(
-                                imageVector = Icons.Outlined.MoreHoriz,
+                                imageVector = HollowIcons.MoreHoriz,
                                 contentDescription = null,
                                 tint = tint,
                                 modifier = Modifier.size(HollowSizes.Icon)
@@ -334,7 +319,7 @@ fun CountryServerListScreen(
                                         .distinctBy { "${it.host.lowercase()}:${it.port}:${it.protocolCore.lowercase()}:${it.uuidOrPassword}" }
                                         .size
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.DeleteOutline,
+                                        icon = HollowIcons.Delete,
                                         label = "Invalid / unreachable",
                                         color = HollowError,
                                         enabled = invalidCount > 0,
@@ -349,7 +334,7 @@ fun CountryServerListScreen(
                                         }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.DeleteOutline,
+                                        icon = HollowIcons.Delete,
                                         label = "Duplicates",
                                         color = HollowError,
                                         enabled = dupeCount > 0,
@@ -364,7 +349,7 @@ fun CountryServerListScreen(
                                         }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.DeleteOutline,
+                                        icon = HollowIcons.Delete,
                                         label = "All servers",
                                         color = HollowError,
                                         onClick = {
@@ -379,7 +364,7 @@ fun CountryServerListScreen(
                                 }
                                 else -> {
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.Bolt,
+                                        icon = HollowIcons.Bolt,
                                         label = if (isTestingFastest) "Testing…" else "Test latency",
                                         color = HollowInk,
                                         onClick = {
@@ -388,14 +373,14 @@ fun CountryServerListScreen(
                                         }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.Tune,
+                                        icon = HollowIcons.Tune,
                                         label = "Sort",
                                         color = HollowInk,
                                         trailing = { ServerMenuChevron() },
                                         onClick = { menuPage = "sort" }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.Refresh,
+                                        icon = HollowIcons.Refresh,
                                         label = "Update subscription",
                                         color = HollowInk,
                                         onClick = {
@@ -404,7 +389,7 @@ fun CountryServerListScreen(
                                         }
                                     )
                                     ServerOverflowMenuItem(
-                                        icon = Icons.Outlined.DeleteOutline,
+                                        icon = HollowIcons.Delete,
                                         label = "Delete",
                                         color = HollowError,
                                         trailing = { ServerMenuChevron() },
@@ -691,7 +676,7 @@ private class ServerDelAction(val title: String, val text: String, val onConfirm
 
 @Composable
 private fun ServerMenuChevron() {
-    Icon(Icons.Outlined.ChevronRight, null, tint = HollowInkSecondary, modifier = Modifier.size(HollowSizes.Icon))
+    Icon(HollowIcons.ChevronRight, null, tint = HollowInkSecondary, modifier = Modifier.size(HollowSizes.Icon))
 }
 
 @Composable
@@ -707,7 +692,7 @@ private fun ServerMenuHeader(title: String, onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+                Icon(HollowIcons.ArrowBack, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
                 Text(title, style = HollowText.Data, color = HollowInk)
             }
         },
@@ -724,7 +709,7 @@ private fun ServerMenuChoice(label: String, selected: Boolean, onClick: () -> Un
                 horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
             ) {
                 Text(label, style = HollowText.Data, color = HollowInk, modifier = Modifier.weight(1f, fill = false))
-                if (selected) Icon(Icons.Outlined.Check, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+                if (selected) Icon(HollowIcons.Check, null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
             }
         },
         onClick = onClick
@@ -749,7 +734,7 @@ private fun FastestServerRow(
             modifier = Modifier.size(width = HollowSizes.FlagWidth, height = HollowSizes.FlagHeight),
             contentAlignment = Alignment.Center
         ) {
-            NothingDotGlyph("bolt", size = HollowSizes.IconLg, color = HollowInk)
+            Icon(HollowIcons.Bolt, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.Icon))
         }
         Spacer(modifier = Modifier.width(HollowSpace.Lg))
         Column(modifier = Modifier.weight(1f)) {
@@ -887,7 +872,7 @@ private fun SubscriptionInfoBar(sub: SubscriptionEntity, onCopy: () -> Unit) {
             }
             IconButton(onClick = onCopy) {
                 Icon(
-                    imageVector = Icons.Outlined.ContentCopy,
+                    imageVector = HollowIcons.Copy,
                     contentDescription = "Copy subscription link",
                     tint = HollowInkSecondary,
                     modifier = Modifier.size(HollowSizes.IconSm)

@@ -109,8 +109,8 @@ fun HollowLineIcon(
                     drawRoundRect(color, Offset(x, y), Size(6f, 6f), CornerRadius(1f, 1f), style = st)
                 }
                 "gear" -> {
-                    drawCircle(color, 3.4f, Offset(12f, 12f), style = st)
-                    path("M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2")
+                    path("M10.11 4.95 L10.47 2.32 L13.53 2.32 L13.89 4.95 L15.65 5.68 L17.76 4.07 L19.93 6.24 L18.32 8.35 L19.05 10.11 L21.68 10.47 L21.68 13.53 L19.05 13.89 L18.32 15.65 L19.93 17.76 L17.76 19.93 L15.65 18.32 L13.89 19.05 L13.53 21.68 L10.47 21.68 L10.11 19.05 L8.35 18.32 L6.24 19.93 L4.07 17.76 L5.68 15.65 L4.95 13.89 L2.32 13.53 L2.32 10.47 L4.95 10.11 L5.68 8.35 L4.07 6.24 L6.24 4.07 L8.35 5.68z")
+                    drawCircle(color, 3f, Offset(12f, 12f), style = st)
                 }
                 "user" -> {
                     drawCircle(color, 4f, Offset(12f, 8f), style = st)

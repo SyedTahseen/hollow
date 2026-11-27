@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.components.NothingDottedDivider
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.HollowLine2
 import com.hollow.vpn.ui.theme.HollowMonoFamily
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
@@ -9,17 +10,12 @@ import android.net.Uri
 import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
-import androidx.compose.material.icons.outlined.SupportAgent
-import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import com.hollow.vpn.data.AppLinks
 import com.hollow.vpn.vpn.XrayVpnService
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.app.NotificationManagerCompat
@@ -66,18 +62,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.outlined.CloudQueue
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.LightMode
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.SettingsBrightness
-import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -360,7 +344,7 @@ private fun SettingsOverview(
 
     SettingsSectionHeader("Features")
     SettingsRow(
-        icon = Icons.Outlined.Security,
+        icon = HollowIcons.Security,
         title = "NetShield",
         subtitle = when {
             !settings.netShieldEnabled -> "Off"
@@ -371,14 +355,14 @@ private fun SettingsOverview(
         testTag = "row_netshield"
     )
     SettingsRow(
-        icon = Icons.Outlined.Apps,
+        icon = HollowIcons.Apps,
         title = "Split tunneling",
         subtitle = if (settings.perAppProxyEnabled) "On" else "Off",
         onClick = { onOpenPage(SettingsPage.SPLIT_TUNNELING) },
         testTag = "row_per_app_selection"
     )
     SettingsRow(
-        icon = Icons.Outlined.Lock,
+        icon = HollowIcons.Lock,
         title = "Kill switch",
         subtitle = "Always-on VPN is managed by Android",
         onClick = { onOpenPage(SettingsPage.KILL_SWITCH) },
@@ -401,7 +385,7 @@ private fun SettingsOverview(
         testTag = "row_latency_test"
     )
     SettingsRow(
-        icon = Icons.Outlined.CloudQueue,
+        icon = HollowIcons.Cloud,
         title = "Auto-update subscriptions",
         subtitle = if (settings.subAutoUpdate) "On · every ${settings.updateIntervalLabel}" else "Off",
         onClick = { onOpenPage(SettingsPage.AUTO_UPDATE) },
@@ -417,7 +401,7 @@ private fun SettingsOverview(
 
     SettingsSectionHeader("General")
     SettingsRow(
-        icon = Icons.Outlined.Notifications,
+        icon = HollowIcons.Notifications,
         title = "Notifications",
         subtitle = onOff(notifOn),
         onClick = {
@@ -437,14 +421,14 @@ private fun SettingsOverview(
         testTag = "row_notifications"
     )
     SettingsRow(
-        icon = Icons.Outlined.SettingsBrightness,
+        icon = HollowIcons.ThemeAuto,
         title = "Appearance",
         subtitle = settings.themeMode,
         onClick = { onOpenPage(SettingsPage.APPEARANCE) },
         testTag = "row_appearance"
     )
     SettingsRow(
-        icon = Icons.Outlined.Widgets,
+        icon = HollowIcons.Widgets,
         title = "Widget",
         subtitle = if (widgetCount > 0) "Added to home screen" else "Add to home screen",
         onClick = {
@@ -458,7 +442,7 @@ private fun SettingsOverview(
 
     SettingsSectionHeader("Support")
     SettingsRow(
-        icon = Icons.Outlined.SupportAgent,
+        icon = HollowIcons.Support,
         title = "Support contact",
         subtitle = null,
         onClick = { ctx.openUrl(AppLinks.REPO_URL, onShowMessage) },
@@ -466,7 +450,7 @@ private fun SettingsOverview(
         external = true
     )
     SettingsRow(
-        icon = Icons.Outlined.BugReport,
+        icon = HollowIcons.Bug,
         title = "Report an issue",
         subtitle = null,
         onClick = { ctx.reportIssue(debugInfo(), onShowMessage) },
@@ -474,7 +458,7 @@ private fun SettingsOverview(
         external = true
     )
     SettingsRow(
-        icon = Icons.Outlined.Terminal,
+        icon = HollowIcons.Terminal,
         title = "Debug logs",
         subtitle = if (xrayLogs.isEmpty()) "Empty" else "${xrayLogs.size} lines",
         onClick = onOpenLogs,
@@ -568,7 +552,7 @@ internal fun SettingsRow(
         }
         if (external) {
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                imageVector = HollowIcons.OpenInNew,
                 contentDescription = null,
                 tint = HollowInkSecondary,
                 modifier = Modifier.padding(start = HollowSpace.Sm).size(HollowSizes.IconSm)
@@ -622,7 +606,7 @@ private fun SettingsDetail(
             modifier = Modifier.testTag("btn_navigate_back")
         ) { tint ->
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                imageVector = HollowIcons.ChevronLeft,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -725,7 +709,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
             modifier = Modifier.testTag("btn_display_size_minus")
         ) { tint ->
             Icon(
-                imageVector = Icons.Outlined.Remove,
+                imageVector = HollowIcons.Remove,
                 contentDescription = null,
                 tint = if (percent > HollowDisplay.MIN) tint else tint.copy(alpha = 0.3f),
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -752,7 +736,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
             modifier = Modifier.testTag("btn_display_size_plus")
         ) { tint ->
             Icon(
-                imageVector = Icons.Outlined.Add,
+                imageVector = HollowIcons.Add,
                 contentDescription = null,
                 tint = if (percent < HollowDisplay.MAX) tint else tint.copy(alpha = 0.3f),
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -899,7 +883,7 @@ private fun ThemeModeInlineSelector(
             ) {
                 ThemeModeSegment(
                     label = "Dark",
-                    icon = Icons.Outlined.DarkMode,
+                    icon = HollowIcons.DarkMode,
                     selected = activeMode == "Dark",
                     onClick = { onSelectMode("Dark") },
                     modifier = Modifier
@@ -908,7 +892,7 @@ private fun ThemeModeInlineSelector(
                 )
                 ThemeModeSegment(
                     label = "Light",
-                    icon = Icons.Outlined.LightMode,
+                    icon = HollowIcons.LightMode,
                     selected = activeMode == "Light",
                     onClick = { onSelectMode("Light") },
                     modifier = Modifier
@@ -917,7 +901,7 @@ private fun ThemeModeInlineSelector(
                 )
                 ThemeModeSegment(
                     label = "System",
-                    icon = Icons.Outlined.SettingsBrightness,
+                    icon = HollowIcons.ThemeAuto,
                     selected = activeMode == "System",
                     onClick = { onSelectMode("System") },
                     modifier = Modifier

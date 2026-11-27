@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.NothingInvertedSurface
 import com.hollow.vpn.ui.theme.HollowError
 import com.hollow.vpn.ui.theme.HollowDisplayInk
@@ -43,17 +44,6 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.QueryStats
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Settings as SettingsGlyph
-import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material.icons.outlined.CallSplit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -309,7 +299,7 @@ internal fun NetShieldPage(
     val ctx = LocalContext.current
     val privateDns = rememberPrivateDnsActive()
 
-    FeatureHero(Icons.Outlined.Security)
+    FeatureHero(HollowIcons.Security)
     Spacer(Modifier.height(HollowSpace.Md))
     DetailDescription(
         "Blocks ads, trackers and malicious websites while you are connected, by sending DNS " +
@@ -395,7 +385,7 @@ internal fun SplitTunnelingPage(
     val ips = if (including) settings.splitIncludeIps else settings.splitExcludeIps
     var modeDialog by remember { mutableStateOf(false) }
 
-    FeatureHero(Icons.Outlined.CallSplit)
+    FeatureHero(HollowIcons.CallSplit)
     Spacer(Modifier.height(HollowSpace.Md))
     DetailDescription("Customize your connection by deciding which apps and IP addresses are protected by VPN.")
 
@@ -416,21 +406,21 @@ internal fun SplitTunnelingPage(
 
     if (settings.perAppProxyEnabled) {
         SettingsRow(
-            icon = Icons.Outlined.CallSplit,
+            icon = HollowIcons.CallSplit,
             title = "Mode",
             subtitle = if (including) "Include" else "Exclude",
             onClick = { modeDialog = true },
             testTag = "row_split_mode"
         )
         SettingsRow(
-            icon = Icons.Outlined.Apps,
+            icon = HollowIcons.Apps,
             title = "$word apps",
             subtitle = formatItems(appNames),
             onClick = onOpenAppPicker,
             testTag = "row_per_app_selection_picker"
         )
         SettingsRow(
-            icon = Icons.Outlined.Terminal,
+            icon = HollowIcons.Terminal,
             title = "$word IP addresses",
             subtitle = formatItems(ips),
             onClick = onOpenIps,
@@ -465,7 +455,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
     val bold = SpanStyle(fontWeight = FontWeight.Bold, color = HollowInk)
     val cog = "cogwheel"
 
-    FeatureHero(Icons.Outlined.Lock)
+    FeatureHero(HollowIcons.Lock)
     Spacer(Modifier.height(HollowSpace.Lg))
     Text(
         text = "How to enable kill switch",
@@ -489,7 +479,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
         },
         inlineContent = mapOf(
             cog to InlineTextContent(Placeholder(1.25.em, 1.25.em, PlaceholderVerticalAlign.Center)) {
-                Icon(Icons.Outlined.SettingsGlyph, contentDescription = null, tint = HollowInk, modifier = Modifier.fillMaxSize())
+                Icon(HollowIcons.Gear, contentDescription = null, tint = HollowInk, modifier = Modifier.fillMaxSize())
             }
         ),
         style = stepStyle
@@ -509,7 +499,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
     FeatureCard {
         Row(verticalAlignment = Alignment.Top) {
             Icon(
-                imageVector = Icons.Outlined.Info,
+                imageVector = HollowIcons.Info,
                 contentDescription = null,
                 tint = HollowInkSecondary,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -536,7 +526,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
         label = "Settings",
         onClick = onOpenSystemVpnSettings,
         modifier = Modifier.fillMaxWidth(),
-        trailingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
+        trailingIcon = HollowIcons.OpenInNew,
         testTag = "row_open_system_vpn"
     )
     Spacer(Modifier.height(HollowSpace.Md))
@@ -551,7 +541,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
         },
         modifier = Modifier.fillMaxWidth(),
         primary = false,
-        trailingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
+        trailingIcon = HollowIcons.OpenInNew,
         testTag = "btn_kill_switch_learn_more"
     )
 }
@@ -862,7 +852,7 @@ private fun UsageSessionRow(s: UsageSession) {
     }
 }
 
-internal val UsageHistoryIcon: ImageVector get() = Icons.Outlined.QueryStats
+internal val UsageHistoryIcon: ImageVector get() = HollowIcons.Stats
 
 /** `.metric` value: Doto numeral + small mono unit, coloured delta arrow on the value only. */
 @Composable

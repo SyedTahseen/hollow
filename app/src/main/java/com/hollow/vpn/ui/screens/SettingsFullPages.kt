@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import androidx.compose.foundation.border
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowAccentText
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
@@ -39,13 +40,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.outlined.RemoveCircle
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -122,7 +116,7 @@ internal fun SettingsFullPage(
                 modifier = Modifier.testTag("btn_navigate_back")
             ) { tint ->
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                    imageVector = HollowIcons.ChevronLeft,
                     contentDescription = null,
                     tint = tint,
                     modifier = Modifier.size(HollowSizes.Icon)
@@ -226,14 +220,14 @@ internal fun DebugLogsPage(
         actions = {
             if (xrayLogs.isNotEmpty()) {
                 IconButton(onClick = onClear, modifier = Modifier.testTag("btn_clear_xray_logs")) {
-                    Icon(Icons.Outlined.DeleteOutline, contentDescription = "Clear logs", tint = HollowInkSecondary)
+                    Icon(HollowIcons.Delete, contentDescription = "Clear logs", tint = HollowInkSecondary)
                 }
             }
             IconButton(
                 onClick = { lines?.let { shareLogs(ctx, debugInfo(), it, onShowMessage) } },
                 modifier = Modifier.testTag("btn_copy_xray_logs")
             ) {
-                Icon(Icons.Outlined.Share, contentDescription = "Share logs", tint = HollowInk)
+                Icon(HollowIcons.Share, contentDescription = "Share logs", tint = HollowInk)
             }
         }
     ) {
@@ -423,7 +417,7 @@ private fun PickRow(app: AppInfo, add: Boolean, showIcon: Boolean = true, onActi
         )
         Spacer(Modifier.width(HollowSpace.Xs))
         Icon(
-            imageVector = if (add) Icons.Outlined.AddCircleOutline else Icons.Outlined.RemoveCircle,
+            imageVector = if (add) HollowIcons.AddCircle else HollowIcons.RemoveCircle,
             contentDescription = if (add) "Add" else "Remove",
             tint = if (add) HollowInkSecondary else HollowInk,
             modifier = Modifier.padding(HollowSpace.Sm).size(HollowSizes.Icon)
@@ -499,7 +493,7 @@ internal fun SplitIpsPage(
                 keyboardActions = KeyboardActions(onDone = { add() }),
                 trailingIcon = if (text.isNotEmpty()) ({
                     IconButton(onClick = { text = ""; error = false }) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Clear", tint = HollowInkSecondary)
+                        Icon(HollowIcons.Close, contentDescription = "Clear", tint = HollowInkSecondary)
                     }
                 }) else null
             )
@@ -509,7 +503,7 @@ internal fun SplitIpsPage(
                 modifier = Modifier.testTag("btn_add_split_ip")
             ) {
                 Icon(
-                    Icons.Outlined.AddCircleOutline,
+                    HollowIcons.AddCircle,
                     contentDescription = "Add",
                     tint = if (IpRoutes.parse(text) != null) HollowInk else HollowInkSecondary.copy(alpha = 0.4f),
                     modifier = Modifier.size(HollowSizes.Icon)

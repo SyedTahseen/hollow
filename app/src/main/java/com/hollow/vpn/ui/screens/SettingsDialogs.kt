@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowLine2
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.HollowDisplayInk
 import com.hollow.vpn.ui.theme.NothingOnInvertedSurface
 import com.hollow.vpn.ui.theme.HollowMonoFamily
@@ -39,15 +40,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Dns
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -429,7 +421,7 @@ internal fun AboutHollowSheet(
             ) {
                 Column(modifier = Modifier.padding(HollowSpace.Lg)) {
                     AboutFeatureRow(
-                        icon = Icons.Outlined.Shield,
+                        icon = HollowIcons.Shield,
                         title = "Xray-core Tunnel Engine",
                         detail = "Real Xray outbound latency verification & high-speed multi-transport routing"
                     )
@@ -439,7 +431,7 @@ internal fun AboutHollowSheet(
                         modifier = Modifier.padding(vertical = HollowSpace.Md)
                     )
                     AboutFeatureRow(
-                        icon = Icons.Outlined.Lock,
+                        icon = HollowIcons.Lock,
                         title = "Zero-Log Local State",
                         detail = "All servers, subscriptions, and routing preferences stay strictly on-device"
                     )
@@ -449,7 +441,7 @@ internal fun AboutHollowSheet(
                         modifier = Modifier.padding(vertical = HollowSpace.Md)
                     )
                     AboutFeatureRow(
-                        icon = Icons.Outlined.Dns,
+                        icon = HollowIcons.Dns,
                         title = "Encrypted DNS & Split Apps",
                         detail = "DoH DNS protection with per-app bypass and LAN routing controls"
                     )
@@ -502,7 +494,7 @@ internal fun AboutHollowSheet(
                         .height(HollowSizes.Button)
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
+                        imageVector = HollowIcons.Copy,
                         contentDescription = null,
                         modifier = Modifier.size(HollowSizes.IconSm)
                     )

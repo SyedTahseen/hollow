@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import androidx.compose.foundation.border
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowLine2
 import com.hollow.vpn.ui.components.HollowAlertKind
@@ -25,8 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -145,7 +144,7 @@ fun EditServerDialog(
                             placeholder = "value"
                         )
                         IconButton(onClick = { params.removeAt(i); error = null }) {
-                            Icon(Icons.Outlined.DeleteOutline, contentDescription = "Remove", tint = HollowInkSecondary)
+                            Icon(HollowIcons.Delete, contentDescription = "Remove", tint = HollowInkSecondary)
                         }
                     }
                 }

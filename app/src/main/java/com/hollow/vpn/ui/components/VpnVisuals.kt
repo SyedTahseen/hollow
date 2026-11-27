@@ -51,12 +51,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Dns
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -339,7 +333,7 @@ fun HollowBottomNavigationBar(
     }
 }
 
-/** `.navbar .i` (muted) / `.navbar .i.on` (display). No fill behind the active tab — colour only. */
+/** `.navbar .i` (muted) / active tab = filled pill (pillActiveBg) with pillActiveIcon glyph. */
 @Composable
 private fun RowScope.HollowBottomNavItem(
     label: String,
@@ -351,9 +345,14 @@ private fun RowScope.HollowBottomNavItem(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val iconTint by animateColorAsState(
-        targetValue = if (selected) com.hollow.vpn.ui.theme.HollowDisplayInk else com.hollow.vpn.ui.theme.HollowInkMuted,
+        targetValue = if (selected) com.hollow.vpn.ui.theme.NothingPillActiveIcon else com.hollow.vpn.ui.theme.HollowInkMuted,
         animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
         label = "nav_item_tint"
+    )
+    val pillBg by animateColorAsState(
+        targetValue = if (selected) com.hollow.vpn.ui.theme.NothingPillActiveBg else Color.Transparent,
+        animationSpec = tween(HollowMotion.Fast, easing = com.hollow.vpn.ui.theme.NothingMotion.FluidEase),
+        label = "nav_item_pill"
     )
     val pressAlpha by animateFloatAsState(
         targetValue = if (isPressed) 0.6f else 1f,
@@ -375,7 +374,15 @@ private fun RowScope.HollowBottomNavItem(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
-        icon(iconTint)
+        // Active tab: filled pill behind the icon (light pill + dark icon on dark theme, inverse on light).
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(pillBg, androidx.compose.foundation.shape.CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            icon(iconTint)
+        }
     }
 }
 

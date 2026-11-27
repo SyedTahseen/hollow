@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import androidx.compose.foundation.border
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.components.HollowAlertKind
 import com.hollow.vpn.ui.components.HollowAlert
 import com.hollow.vpn.ui.theme.HollowMonoFamily
@@ -46,15 +47,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FileOpen
-import androidx.compose.material.icons.outlined.Link
-import androidx.compose.material.icons.outlined.QrCodeScanner
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -191,7 +183,7 @@ fun AddServerButton(
             modifier = Modifier.testTag(testTag)
         ) { tint ->
             Icon(
-                imageVector = Icons.Outlined.Add,
+                imageVector = HollowIcons.Add,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -207,25 +199,25 @@ fun AddServerButton(
             border = BorderStroke(HollowStroke.Hairline, HollowLine2),
             modifier = Modifier.width(240.dp)
         ) {
-            AddServerMenuItem(Icons.Outlined.QrCodeScanner, "Scan QR code", "menu_add_scan") {
+            AddServerMenuItem(HollowIcons.QrScan, "Scan QR code", "menu_add_scan") {
                 state.menuOpen = false
                 state.showScanner = true
             }
-            AddServerMenuItem(Icons.Outlined.ContentPaste, "Paste from clipboard", "menu_add_paste") {
+            AddServerMenuItem(HollowIcons.Paste, "Paste from clipboard", "menu_add_paste") {
                 state.menuOpen = false
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                 val pasted = clipboard?.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()
                 routeIncoming(pasted, actions)
             }
-            AddServerMenuItem(Icons.Outlined.FileOpen, "Import from file", "menu_add_file") {
+            AddServerMenuItem(HollowIcons.FileOpen, "Import from file", "menu_add_file") {
                 state.menuOpen = false
                 fileLauncher.launch(arrayOf("*/*"))
             }
-            AddServerMenuItem(Icons.Outlined.Edit, "Add manually", "menu_add_manual") {
+            AddServerMenuItem(HollowIcons.Edit, "Add manually", "menu_add_manual") {
                 state.menuOpen = false
                 state.showManual = true
             }
-            AddServerMenuItem(Icons.Outlined.Link, "Add subscription link", "menu_add_subscription") {
+            AddServerMenuItem(HollowIcons.Link, "Add subscription link", "menu_add_subscription") {
                 state.menuOpen = false
                 state.showSubscription = true
             }

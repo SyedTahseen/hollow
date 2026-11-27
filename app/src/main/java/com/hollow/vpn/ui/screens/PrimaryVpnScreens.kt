@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.components.NothingClock
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.components.HollowStateDot
 import com.hollow.vpn.ui.theme.HollowInkMuted
 import com.hollow.vpn.ui.theme.HollowText
@@ -67,13 +68,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.MoreHoriz
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -446,7 +440,7 @@ private fun HomeContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Add,
+                                imageVector = HollowIcons.Add,
                                 contentDescription = null,
                                 tint = HollowInk,
                                 modifier = Modifier.size(HollowSizes.Icon)
@@ -498,7 +492,7 @@ private fun HomeContent(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Outlined.Add,
+                            imageVector = HollowIcons.Add,
                             contentDescription = "Add server",
                             tint = HollowInkSecondary,
                             modifier = Modifier.size(HollowSizes.Icon)
@@ -864,7 +858,7 @@ private fun ServerDetailsPanel(
         TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = HollowSpace.Xs)) {
             Text("MANAGE SERVERS", style = HollowText.ButtonSmall, color = HollowInk)
             Spacer(modifier = Modifier.width(HollowSpace.Xs))
-            Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
+            Icon(HollowIcons.ArrowForward, contentDescription = null, tint = HollowInk, modifier = Modifier.size(HollowSizes.IconSm))
         }
     }
 }
@@ -1022,7 +1016,7 @@ fun ServerItemRowContent(
                 modifier = Modifier.minimumInteractiveComponentSize()
             ) {
                 Icon(
-                    imageVector = if (isFavorite) Icons.Outlined.Star else Icons.Outlined.StarBorder,
+                    imageVector = if (isFavorite) HollowIcons.StarFilled else HollowIcons.Star,
                     contentDescription = if (isFavorite) "Remove ${server.countryName} from favorites" else "Add ${server.countryName} to favorites",
                     tint = if (isFavorite) HollowDisplayInk else HollowInkSecondary,
                     modifier = Modifier.size(HollowSizes.Icon)
@@ -1037,7 +1031,7 @@ fun ServerItemRowContent(
                     modifier = Modifier.minimumInteractiveComponentSize()
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.MoreHoriz,
+                        imageVector = HollowIcons.MoreHoriz,
                         contentDescription = "Server Options for ${server.countryName}",
                         tint = HollowInkSecondary,
                         modifier = Modifier.size(HollowSizes.Icon)

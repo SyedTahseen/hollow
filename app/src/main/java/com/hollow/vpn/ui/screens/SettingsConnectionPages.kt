@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.components.HollowAlertKind
+import com.hollow.vpn.ui.components.HollowIcons
 import com.hollow.vpn.ui.components.HollowAlert
 import com.hollow.vpn.ui.theme.HollowWarning
 import com.hollow.vpn.ui.theme.HollowMonoFamily
@@ -24,11 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -71,8 +67,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal val LatencyTestIcon = Icons.Outlined.Speed
-internal val AdvancedSettingsIcon = Icons.Outlined.Tune
+internal val LatencyTestIcon = HollowIcons.Speed
+internal val AdvancedSettingsIcon = HollowIcons.Tune
 
 private const val ROUTING_BYPASS_LAN = "Bypass LAN"
 private const val ROUTING_GLOBAL = "Global"
@@ -237,7 +233,7 @@ private fun AdvancedValueItem(
                 color = HollowInk
             )
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                imageVector = HollowIcons.ChevronRight,
                 contentDescription = null,
                 tint = HollowInkSecondary,
                 modifier = Modifier.size(HollowSizes.Icon)
@@ -309,7 +305,7 @@ internal fun CustomDnsPage(
         }
     }
 
-    FeatureHero(Icons.Outlined.Tune)
+    FeatureHero(HollowIcons.Tune)
     Spacer(Modifier.height(HollowSpace.Lg))
     DetailDescription("Connect with a self-hosted or third-party DNS instead of the default DNS.")
     DetailToggleRow(
@@ -341,7 +337,7 @@ internal fun CustomDnsPage(
             trailingIcon = {
                 if (text.isNotEmpty()) {
                     IconButton(onClick = { text = ""; error = false }) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Clear", tint = HollowInkSecondary)
+                        Icon(HollowIcons.Close, contentDescription = "Clear", tint = HollowInkSecondary)
                     }
                 }
             },
@@ -389,7 +385,7 @@ internal fun CustomDnsPage(
                 onClick = { onUpdateSettings { it.copy(customDnsList = it.customDnsList - ip) } },
                 modifier = Modifier.testTag("btn_remove_dns_$ip")
             ) {
-                Icon(Icons.Outlined.Close, contentDescription = "Remove $ip", tint = HollowInkSecondary)
+                Icon(HollowIcons.Close, contentDescription = "Remove $ip", tint = HollowInkSecondary)
             }
         }
     }

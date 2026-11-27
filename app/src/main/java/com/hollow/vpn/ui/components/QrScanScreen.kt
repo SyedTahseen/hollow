@@ -37,12 +37,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.outlined.FlashOff
-import androidx.compose.material.icons.outlined.FlashOn
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -160,7 +154,7 @@ fun QrScanScreen(
                 modifier = Modifier.testTag("btn_scan_back")
             ) { tint ->
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                    imageVector = HollowIcons.ChevronLeft,
                     contentDescription = null,
                     tint = tint,
                     modifier = Modifier.size(HollowSizes.Icon)
@@ -188,7 +182,7 @@ fun QrScanScreen(
                         modifier = Modifier.testTag("btn_scan_flash")
                     ) { tint ->
                         Icon(
-                            imageVector = if (torchOn) Icons.Outlined.FlashOn else Icons.Outlined.FlashOff,
+                            imageVector = if (torchOn) HollowIcons.FlashOn else HollowIcons.FlashOff,
                             contentDescription = null,
                             tint = tint,
                             modifier = Modifier.size(HollowSizes.Icon)
@@ -209,7 +203,7 @@ fun QrScanScreen(
                     modifier = Modifier.testTag("btn_scan_gallery")
                 ) { tint ->
                     Icon(
-                        imageVector = Icons.Outlined.PhotoLibrary,
+                        imageVector = HollowIcons.Image,
                         contentDescription = null,
                         tint = tint,
                         modifier = Modifier.size(HollowSizes.Icon)
@@ -236,7 +230,7 @@ fun QrScanScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.QrCodeScanner,
+                        imageVector = HollowIcons.QrScan,
                         contentDescription = null,
                         tint = com.hollow.vpn.ui.theme.HollowInk,
                         modifier = Modifier.size(HollowSizes.Field)
