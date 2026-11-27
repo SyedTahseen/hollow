@@ -1,9 +1,9 @@
 package com.hollow.vpn.ui.screens
 
 import androidx.compose.foundation.clickable
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
-import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -232,7 +232,7 @@ private fun AdvancedValueItem(
         Row(modifier = Modifier.heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = value,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -253,7 +253,7 @@ private fun AdvancedValueItem(
 private fun AdvancedTitle(text: String, enabled: Boolean) {
     Text(
         text = text,
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontWeight = FontWeight.Bold,
         fontSize = HollowType.Small,
         lineHeight = HollowLineHeight.Small,
@@ -266,7 +266,7 @@ private fun AdvancedTitle(text: String, enabled: Boolean) {
 private fun AdvancedDescription(text: String) {
     Text(
         text = text,
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontSize = HollowType.Micro,
         letterSpacing = HollowTracking.Micro,
         lineHeight = HollowLineHeight.Micro,
@@ -343,7 +343,7 @@ internal fun CustomDnsPage(
         OutlinedTextField(
             value = text,
             onValueChange = { text = it; error = false },
-            placeholder = { Text("9.9.9.9", color = HollowInkMuted, fontFamily = DotoDisplayFamily) },
+            placeholder = { Text("9.9.9.9", color = HollowInkMuted, fontFamily = HollowSansFamily) },
             isError = error,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
@@ -391,7 +391,7 @@ internal fun CustomDnsPage(
         ) {
             Text(
                 text = ip,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = HollowType.Body,
                 lineHeight = HollowLineHeight.Body,
@@ -402,7 +402,7 @@ internal fun CustomDnsPage(
                 modifier = Modifier.weight(1f)
             )
             if (!settings.ipv6Enabled && ':' in ip) {
-                Text("IPv6 off", fontFamily = DotoDisplayFamily, fontSize = HollowType.Micro, color = HollowInkMuted)
+                Text("IPv6 off", fontFamily = HollowSansFamily, fontSize = HollowType.Micro, color = HollowInkMuted)
             }
             IconButton(
                 onClick = { onUpdateSettings { it.copy(customDnsList = it.customDnsList - ip) } },

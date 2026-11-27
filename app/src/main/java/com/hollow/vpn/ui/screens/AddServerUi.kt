@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowScreenPadding
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowDialog
@@ -366,7 +367,7 @@ private fun AddSubscriptionDialog(
                         if (url.isEmpty()) {
                             Text(
                                 text = "https://example.com/sub",
-                                fontFamily = DotoDisplayFamily,
+                                fontFamily = HollowSansFamily,
                                 fontSize = HollowType.Body,
                                 lineHeight = HollowLineHeight.Body,
                                 letterSpacing = HollowTracking.Body,
@@ -378,7 +379,7 @@ private fun AddSubscriptionDialog(
                             onValueChange = { url = it },
                             singleLine = true,
                             textStyle = TextStyle(
-                                fontFamily = DotoDisplayFamily,
+                                fontFamily = HollowSansFamily,
                                 fontSize = HollowType.Body,
                                 lineHeight = HollowLineHeight.Body,
                                 letterSpacing = HollowTracking.Body,
@@ -417,7 +418,7 @@ private fun AddSubscriptionDialog(
                     ) {
                         Text(
                             text = settings.updateIntervalLabel,
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontSize = HollowType.Small,
                             lineHeight = HollowLineHeight.Small,
                             letterSpacing = HollowTracking.Small,

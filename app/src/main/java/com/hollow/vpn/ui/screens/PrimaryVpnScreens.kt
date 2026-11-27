@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import com.hollow.vpn.ui.theme.HollowUploadAccent
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.hollowPhaseColors
@@ -109,7 +110,6 @@ import com.hollow.vpn.data.FetchingProgressState
 import com.hollow.vpn.data.FetchingStage
 import com.hollow.vpn.data.ServerEntity
 import com.hollow.vpn.ui.ConnectionTelemetryState
-import com.hollow.vpn.ui.components.FetchingSpinnerRing
 import com.hollow.vpn.ui.components.HollowBlinkingDot
 import com.hollow.vpn.ui.components.HollowBrandShieldLogo
 import com.hollow.vpn.ui.components.HollowIndeterminateBar
@@ -173,483 +173,6 @@ internal fun formatConsumerProtocol(raw: String, transport: String? = null): Str
     }
 }
 
-/**
- * SCREEN 1: Hollow Startup & Subscription Streaming Pipeline Fetching Screen
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun SplashFetchingScreen(
-    statusSubtitle: String,
-    progress: FetchingProgressState = FetchingProgressState(isActive = true, detail = statusSubtitle),
-    onCancelOrSkip: () -> Unit
-) {
-    BackHandler { onCancelOrSkip() }
-    val rawDetail = progress.detail.ifBlank { statusSubtitle }
-    val displaySubtitle = rawDetail
-        .replace("V2Ray / Xray ", "", ignoreCase = true)
-        .replace("V2Ray/Xray ", "", ignoreCase = true)
-
-    val rawProgressFraction = when (progress.stage) {
-        FetchingStage.DOWNLOADING -> 0.14f
-        FetchingStage.TESTING_PIPELINE -> {
-            val total = progress.targetTotalCount.coerceAtLeast(1)
-            (0.18f + 0.62f * (progress.testedCount.toFloat() / total.toFloat())).coerceIn(0.18f, 0.80f)
-        }
-        FetchingStage.SPEED_AND_GEO -> 0.88f
-        FetchingStage.FINALIZING -> 1.0f
-        FetchingStage.IDLE -> 0.12f
-    }
-    val animatedProgress by animateFloatAsState(
-        targetValue = rawProgressFraction,
-        animationSpec = tween(durationMillis = HollowMotion.Emphasized),
-        label = "fetch_pipeline_progress"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(HollowCream)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        NothingDotMatrixBackdrop()
-        Column(
-            modifier = Modifier
-                .widthIn(max = HollowSizes.FocusMaxWidth)
-                .fillMaxSize()
-                .align(Alignment.Center)
-                .padding(horizontal = HollowScreenPadding, vertical = HollowSpace.Lg),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Top bar: Brand + Live Pipeline status on left, Hide button on right
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
-                ) {
-                    HollowBrandShieldLogo(size = 34.dp, cornerRadius = 10.dp)
-                    Column {
-                        Text(
-                            text = stringResource(R.string.app_name).uppercase(),
-                            fontFamily = DotoDisplayFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = HollowType.Heading,
-                            lineHeight = HollowLineHeight.Heading,
-                            letterSpacing = HollowTracking.Heading,
-                            color = HollowInk
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
-                        ) {
-                            HollowBlinkingDot(color = HollowOrange)
-                            Text(
-                                text = "LIVE PIPELINE",
-                                fontFamily = DotoDisplayFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = HollowType.Micro,
-                                lineHeight = HollowLineHeight.Micro,
-                                letterSpacing = HollowTracking.Micro,
-                                color = HollowInkSecondary
-                            )
-                        }
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(HollowRadius.Pill),
-                    color = HollowCreamSurface,
-                    border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider),
-                    modifier = Modifier
-                        .minimumInteractiveComponentSize()
-                        .clip(RoundedCornerShape(HollowRadius.Pill))
-                        .clickable(role = Role.Button, onClick = onCancelOrSkip)
-                        .testTag("btn_hide_fetching_top")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.KeyboardArrowDown,
-                            contentDescription = "Hide",
-                            tint = HollowInk,
-                            modifier = Modifier.size(HollowSizes.IconSm)
-                        )
-                        Text(
-                            text = "Hide",
-                            fontFamily = DotoDisplayFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = HollowType.Body,
-                            lineHeight = HollowLineHeight.Body,
-                            letterSpacing = HollowTracking.Body,
-                            color = HollowInk
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(HollowSpace.Md))
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-            // Main Editorial Pipeline Card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(HollowRadius.Xl),
-                color = HollowCreamSurface,
-                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = HollowSpace.Xl, vertical = HollowSpace.Xxl),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    FetchingSpinnerRing(size = 64.dp)
-
-                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
-
-                    Text(
-                        text = progress.headline.ifBlank { stringResource(R.string.fetching_servers_title) },
-                        fontFamily = DotoDisplayFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = HollowType.Heading,
-                        letterSpacing = HollowTracking.Heading,
-                        lineHeight = HollowLineHeight.Heading,
-                        color = HollowInk,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(HollowSpace.Xs))
-
-                    Text(
-                        text = displaySubtitle,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = HollowType.Small),
-                        color = HollowInkSecondary,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
-
-                    // Progress track
-                    if (progress.stage == FetchingStage.DOWNLOADING && progress.parsedCount == 0) {
-                        HollowIndeterminateBar(
-                            color = HollowOrange,
-                            track = HollowCreamDivider,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(HollowRadius.Bar)),
-                            color = if (progress.workingCount > 0) NothingMatrixGreen else HollowOrange,
-                            trackColor = HollowCreamDivider,
-                            strokeCap = StrokeCap.Round
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
-
-                    // Dual-Lane Concurrent Pipeline Strip: FETCH -> TEST
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(HollowRadius.Md),
-                        color = HollowCream,
-                        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = HollowSpace.Lg, vertical = HollowSpace.Md),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-                                ) {
-                                    HollowBlinkingDot(color = HollowOrange)
-                                    Text(
-                                        text = "FETCH",
-                                        fontFamily = DotoDisplayFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = HollowType.Micro,
-                                        lineHeight = HollowLineHeight.Micro,
-                                        letterSpacing = HollowTracking.Micro,
-                                        color = HollowInkSecondary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(HollowSpace.Xs))
-                                Text(
-                                    text = "${progress.parsedCount} parsed",
-                                    fontFamily = DotoDisplayFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = HollowType.Body,
-                                    lineHeight = HollowLineHeight.Body,
-                                    letterSpacing = HollowTracking.Body,
-                                    color = HollowInk
-                                )
-                            }
-
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                contentDescription = null,
-                                tint = HollowInkSecondary,
-                                modifier = Modifier
-                                    .padding(horizontal = HollowSpace.Sm)
-                                    .size(HollowSizes.IconSm)
-                            )
-
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.End
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm)
-                                ) {
-                                    HollowBlinkingDot(
-                                        color = if (progress.workingCount > 0) NothingMatrixGreen else HollowOrange
-                                    )
-                                    Text(
-                                        text = "TEST",
-                                        fontFamily = DotoDisplayFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = HollowType.Micro,
-                                        lineHeight = HollowLineHeight.Micro,
-                                        letterSpacing = HollowTracking.Micro,
-                                        color = HollowInkSecondary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(HollowSpace.Xs))
-                                Text(
-                                    text = "${progress.workingCount} ready · ${progress.testedCount} probed",
-                                    fontFamily = DotoDisplayFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = HollowType.Body,
-                                    lineHeight = HollowLineHeight.Body,
-                                    letterSpacing = HollowTracking.Body,
-                                    color = if (progress.workingCount > 0) NothingMatrixGreen else HollowInk,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(HollowSpace.Lg))
-
-                    // 3-Column Live Metrics Strip
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FetchingMetricCell(
-                            label = "REACHABLE",
-                            value = "${progress.reachableCount}",
-                            valueColor = HollowInk,
-                            modifier = Modifier.weight(1f)
-                        )
-                        VerticalDivider(
-                            thickness = 1.dp,
-                            color = HollowCreamDivider,
-                            modifier = Modifier.padding(vertical = HollowSpace.Xs)
-                        )
-                        FetchingMetricCell(
-                            label = "WORKING",
-                            value = "${progress.workingCount}",
-                            valueColor = if (progress.workingCount > 0) NothingMatrixGreen else HollowInk,
-                            modifier = Modifier.weight(1f)
-                        )
-                        VerticalDivider(
-                            thickness = 1.dp,
-                            color = HollowCreamDivider,
-                            modifier = Modifier.padding(vertical = HollowSpace.Xs)
-                        )
-                        FetchingMetricCell(
-                            label = "FASTEST",
-                            value = if (progress.fastestPingMs > 0) "${progress.fastestPingMs}ms" else "—",
-                            valueColor = if (progress.fastestPingMs > 0) NothingMatrixGreen else HollowInkSecondary,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    // Live Discovered Country Flags
-                    AnimatedVisibility(
-                        visible = progress.discoveredCountries.isNotEmpty(),
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = HollowSpace.Lg),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            HorizontalDivider(thickness = 1.dp, color = HollowCreamDivider)
-                            Spacer(modifier = Modifier.height(HollowSpace.Md))
-                            Text(
-                                text = "DISCOVERED LOCATIONS (${progress.countryCount})",
-                                fontFamily = DotoDisplayFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = HollowType.Micro,
-                                lineHeight = HollowLineHeight.Micro,
-                                letterSpacing = HollowTracking.Micro,
-                                color = HollowInkSecondary
-                            )
-                            Spacer(modifier = Modifier.height(HollowSpace.Sm))
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(HollowSpace.Sm, Alignment.CenterHorizontally),
-                                verticalArrangement = Arrangement.spacedBy(HollowSpace.Sm),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                progress.discoveredCountries.take(8).forEach { (code, _) ->
-                                    Surface(
-                                        shape = RoundedCornerShape(HollowRadius.Pill),
-                                        color = HollowCream,
-                                        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)
-                                        ) {
-                                            Text(
-                                                text = code,
-                                                fontFamily = DotoDisplayFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = HollowType.Caption,
-                                                lineHeight = HollowLineHeight.Caption,
-                                                letterSpacing = HollowTracking.Caption,
-                                                color = HollowInk
-                                            )
-                                        }
-                                    }
-                                }
-                                val extraCountries = progress.countryCount - progress.discoveredCountries.take(8).size
-                                if (extraCountries > 0) {
-                                    Surface(
-                                        shape = RoundedCornerShape(HollowRadius.Pill),
-                                        color = HollowCream,
-                                        border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider)
-                                    ) {
-                                        Text(
-                                            text = "+$extraCountries",
-                                            fontFamily = DotoDisplayFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = HollowType.Caption,
-                                            lineHeight = HollowLineHeight.Caption,
-                                            letterSpacing = HollowTracking.Caption,
-                                            color = HollowInkSecondary,
-                                            modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(HollowSpace.Lg))
-
-            OutlinedButton(
-                onClick = onCancelOrSkip,
-                shape = RoundedCornerShape(HollowRadius.Md),
-                border = BorderStroke(HollowStroke.Hairline, HollowCreamDivider),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(HollowSizes.Button)
-                    .testTag("btn_hide_fetching")
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = HollowInk,
-                    modifier = Modifier.size(HollowSizes.IconSm)
-                )
-                Spacer(modifier = Modifier.width(HollowSpace.Sm))
-                Text(
-                    text = "Hide",
-                    fontFamily = DotoDisplayFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = HollowType.Title,
-                    lineHeight = HollowLineHeight.Title,
-                    letterSpacing = HollowTracking.Title,
-                    color = HollowInk
-                )
-            }
-
-            Spacer(modifier = Modifier.height(HollowSpace.Sm))
-
-            Text(
-                text = "Runs in background — keep using Hollow while servers verify",
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = HollowType.Caption),
-                color = HollowInkSecondary,
-                textAlign = TextAlign.Center
-            )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FetchingMetricCell(
-    label: String,
-    value: String,
-    valueColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(horizontal = HollowSpace.Xs),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = label,
-            fontFamily = DotoDisplayFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = HollowType.Micro,
-            lineHeight = HollowLineHeight.Micro,
-            letterSpacing = HollowTracking.Micro,
-            color = HollowInkSecondary
-        )
-        Spacer(modifier = Modifier.height(HollowSpace.Xs))
-        Text(
-            text = value,
-            fontFamily = DotoDisplayFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = HollowType.Title,
-            lineHeight = HollowLineHeight.Title,
-            letterSpacing = HollowTracking.Title,
-            color = valueColor,
-            maxLines = 1
-        )
-    }
-}
-
-/**
- * PAGES 1, 2, 3: Hollow Home / Connect Dashboard (Disconnected, Connecting, Protected)
- */
 @Composable
 fun ConnectedHomeScreen(
     selectedServer: ServerEntity?,
@@ -882,7 +405,7 @@ private fun HomeContent(
             ) {
                 Text(
                     text = infoLine,
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = HollowType.Body,
                     lineHeight = HollowLineHeight.Body,
@@ -974,7 +497,7 @@ private fun HomeContent(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = selectedServer?.countryName ?: "Add a server",
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Title,
                             lineHeight = HollowLineHeight.Title,
@@ -1009,7 +532,7 @@ private fun HomeContent(
                         Spacer(modifier = Modifier.width(HollowSpace.Sm))
                         Text(
                             text = if (selectedServer.pingMs > 0) "${selectedServer.pingMs} ms" else "—",
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Caption,
                             lineHeight = HollowLineHeight.Caption,
@@ -1150,7 +673,7 @@ private fun ConnectionStatsCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Connected for",
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontSize = HollowType.Micro,
                     lineHeight = HollowLineHeight.Micro,
                     letterSpacing = HollowTracking.Micro,
@@ -1160,7 +683,7 @@ private fun ConnectionStatsCard(
                 Spacer(modifier = Modifier.height(HollowSpace.Xxs))
                 Text(
                     text = formatConnectedFor(telemetry.elapsedSeconds),
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = HollowType.BodyStrong,
                     lineHeight = HollowLineHeight.BodyStrong,
@@ -1175,14 +698,14 @@ private fun ConnectionStatsCard(
                     Text("↓", fontSize = HollowType.Caption, color = downColor)
                     Text(
                         formatSpeed2(telemetry.downloadBytesPerSec),
-                        fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
+                        fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HollowSpace.Xs)) {
                     Text("↑", fontSize = HollowType.Caption, color = upColor)
                     Text(
                         formatSpeed2(telemetry.uploadBytesPerSec),
-                        fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
+                        fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = HollowDarkInk, maxLines = 1
                     )
                 }
                 val chevronRotation by animateFloatAsState(if (expanded) 180f else 0f, tween(HollowMotion.Standard), label = "stats_card_chevron")
@@ -1256,7 +779,7 @@ private fun ServerDetailsPanel(
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
                 Text(
                     text = label,
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontSize = HollowType.Caption,
                     lineHeight = HollowLineHeight.Caption,
                     letterSpacing = HollowTracking.Caption,
@@ -1265,7 +788,7 @@ private fun ServerDetailsPanel(
                 )
                 Text(
                     text = value,
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = HollowType.Caption,
                     lineHeight = HollowLineHeight.Caption,
@@ -1280,15 +803,15 @@ private fun ServerDetailsPanel(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(modifier = Modifier.size(HollowSizes.IconSm), strokeWidth = 1.5.dp, color = accentColor)
                 Spacer(modifier = Modifier.width(HollowSpace.Sm))
-                Text("Loading server info…", fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = mutedColor)
+                Text("Loading server info…", fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = mutedColor)
             }
         } else if (details == null) {
             Spacer(modifier = Modifier.height(HollowSpace.Xs))
-            Text("Extra network info unavailable right now.", fontFamily = DotoDisplayFamily, fontSize = HollowType.Caption, color = mutedColor)
+            Text("Extra network info unavailable right now.", fontFamily = HollowSansFamily, fontSize = HollowType.Caption, color = mutedColor)
         }
         Spacer(modifier = Modifier.height(HollowSpace.Xs))
         TextButton(onClick = onManageServers, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
-            Text("Manage servers", fontFamily = DotoDisplayFamily, fontWeight = FontWeight.SemiBold, fontSize = HollowType.Small, color = accentColor)
+            Text("Manage servers", fontFamily = HollowSansFamily, fontWeight = FontWeight.SemiBold, fontSize = HollowType.Small, color = accentColor)
             Spacer(modifier = Modifier.width(4.dp))
             Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = accentColor, modifier = Modifier.size(HollowSizes.IconSm))
         }
@@ -1416,7 +939,7 @@ fun ServerItemRowContent(
                     ) {
                         Text(
                             text = "FAST",
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = HollowType.Micro,
                             lineHeight = HollowLineHeight.Micro,

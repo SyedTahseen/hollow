@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowType
@@ -298,7 +299,7 @@ fun QrScanScreen(
             notice?.let { msg ->
                 Text(
                     text = msg,
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontSize = HollowType.Small,
                     lineHeight = HollowLineHeight.Small,
                     letterSpacing = HollowTracking.Small,
@@ -423,7 +424,7 @@ private fun ScanCameraArea(
 
         Text(
             text = "Align the QR code within the frame",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
             letterSpacing = HollowTracking.Small,

@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import android.content.ClipData
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import android.content.ClipboardManager
@@ -192,7 +193,7 @@ internal fun XrayDiagnosticLogsDialog(
                             Text(
                                 text = line,
                                 style = TextStyle(
-                                    fontFamily = DotoDisplayFamily,
+                                    fontFamily = HollowSansFamily,
                                     fontSize = HollowType.Caption,
                                     letterSpacing = HollowTracking.Caption,
                                     lineHeight = HollowLineHeight.Caption,
@@ -322,7 +323,7 @@ internal fun PerAppProxyPickerDialog(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (including) "Included apps" else "Excluded apps",
-                        fontFamily = DotoDisplayFamily,
+                        fontFamily = HollowSansFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Display,
                         lineHeight = HollowLineHeight.Display,
@@ -347,7 +348,7 @@ internal fun PerAppProxyPickerDialog(
                 ) {
                     Text(
                         text = "${workingSelection.size} apps",
-                        fontFamily = DotoDisplayFamily,
+                        fontFamily = HollowSansFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = HollowType.Small,
                         lineHeight = HollowLineHeight.Small,
@@ -508,7 +509,7 @@ internal fun PerAppProxyPickerDialog(
                                     )
                                     Text(
                                         text = app.packageName,
-                                        fontFamily = DotoDisplayFamily,
+                                        fontFamily = HollowSansFamily,
                                         color = HollowInkSecondary,
                                         fontSize = HollowType.Caption,
                                         lineHeight = HollowLineHeight.Caption,
@@ -757,7 +758,7 @@ fun RawXrayJsonEditorDialog(
                 value = jsonText,
                 onValueChange = { jsonText = it },
                 textStyle = TextStyle(
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontSize = HollowType.Small,
                     lineHeight = HollowLineHeight.Small,
                     letterSpacing = HollowTracking.Small,
@@ -888,7 +889,7 @@ internal fun AboutHollowSheet(
                             ) {
                                 Text(
                                     text = "v${BuildConfig.VERSION_NAME}",
-                                    fontFamily = DotoDisplayFamily,
+                                    fontFamily = HollowSansFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = HollowType.Caption,
                                     lineHeight = HollowLineHeight.Caption,
@@ -918,7 +919,7 @@ internal fun AboutHollowSheet(
 
             Text(
                 text = "ARCHITECTURE & PRIVACY",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
                 lineHeight = HollowLineHeight.Caption,
@@ -966,7 +967,7 @@ internal fun AboutHollowSheet(
 
             Text(
                 text = "BUILD METADATA",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
                 lineHeight = HollowLineHeight.Caption,
@@ -1089,7 +1090,7 @@ private fun AboutMetaRow(
     ) {
         Text(
             text = label,
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
@@ -1099,7 +1100,7 @@ private fun AboutMetaRow(
         Spacer(modifier = Modifier.width(HollowSpace.Md))
         Text(
             text = value,
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,

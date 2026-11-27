@@ -1,11 +1,11 @@
 package com.hollow.vpn.ui.components
 
 import com.hollow.vpn.ui.theme.HollowSizes
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import com.hollow.vpn.ui.theme.HollowType
-import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowStroke
 import com.hollow.vpn.ui.theme.HollowSpace
 import androidx.compose.animation.animateColorAsState
@@ -180,7 +180,7 @@ fun NothingPillTabRow(
                 ) {
                     Text(
                         text = title.uppercase(),
-                        fontFamily = DotoDisplayFamily,
+                        fontFamily = HollowSansFamily,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         fontSize = fontSize,
                         lineHeight = HollowLineHeight.Caption,

@@ -1,6 +1,7 @@
 package com.hollow.vpn.ui.screens
 
 import android.net.Uri
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
 import androidx.compose.material.icons.outlined.SupportAgent
@@ -475,7 +476,7 @@ private fun SettingsOverview(
     ) {
         Text(
             text = "App version: ${BuildConfig.VERSION_NAME}",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -488,7 +489,7 @@ private fun SettingsOverview(
         )
         Text(
             text = "Third party licenses",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -507,7 +508,7 @@ private fun SettingsOverview(
 internal fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontSize = HollowType.Micro,
         lineHeight = HollowLineHeight.Micro,
         letterSpacing = HollowTracking.Micro,
@@ -544,7 +545,7 @@ internal fun SettingsRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Small,
                 lineHeight = HollowLineHeight.Small,
@@ -555,7 +556,7 @@ internal fun SettingsRow(
                 Spacer(modifier = Modifier.height(HollowSpace.Xs))
                 Text(
                     text = subtitle,
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontSize = HollowType.Micro,
                     letterSpacing = HollowTracking.Micro,
                     lineHeight = HollowLineHeight.Micro,
@@ -712,7 +713,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
     ) {
         Text(
             text = "Display size",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
@@ -738,7 +739,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
         Box(modifier = Modifier.widthIn(min = 56.dp), contentAlignment = Alignment.Center) {
             Text(
                 text = "$percent%",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = HollowType.Small,
                 lineHeight = HollowLineHeight.Small,
@@ -769,7 +770,7 @@ private fun DisplaySizeStepper(percent: Int, onChange: (Int) -> Unit) {
 internal fun DetailDescription(text: String) {
     Text(
         text = text,
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontSize = HollowType.Micro,
         letterSpacing = HollowTracking.Micro,
         lineHeight = HollowLineHeight.Micro,
@@ -796,7 +797,7 @@ internal fun DetailToggleRow(
     ) {
         Text(
             text = title,
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
@@ -838,7 +839,7 @@ internal fun DetailRadioList(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = option.label,
-                        fontFamily = DotoDisplayFamily,
+                        fontFamily = HollowSansFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = HollowType.Small,
                         lineHeight = HollowLineHeight.Small,
@@ -848,7 +849,7 @@ internal fun DetailRadioList(
                     Spacer(modifier = Modifier.height(HollowSpace.Xs))
                     Text(
                         text = option.subtitle,
-                        fontFamily = DotoDisplayFamily,
+                        fontFamily = HollowSansFamily,
                         fontSize = HollowType.Micro,
                         letterSpacing = HollowTracking.Micro,
                         lineHeight = HollowLineHeight.Micro,
@@ -987,7 +988,7 @@ private fun ThemeModeSegment(
             Spacer(modifier = Modifier.width(HollowSpace.Xs))
             Text(
                 text = label,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
                 lineHeight = HollowLineHeight.Caption,
@@ -1033,7 +1034,7 @@ private fun InlineModeSegment(
         ) {
             Text(
                 text = label,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = HollowType.Caption,
                 lineHeight = HollowLineHeight.Caption,

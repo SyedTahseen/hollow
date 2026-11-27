@@ -1,9 +1,14 @@
 package com.hollow.vpn
 
+import com.hollow.vpn.ui.theme.HollowSizes
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
 import com.hollow.vpn.ui.theme.HollowRadius
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
-import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import com.hollow.vpn.ui.theme.HollowType
 import com.hollow.vpn.ui.theme.HollowMotion
 import com.hollow.vpn.ui.theme.HollowStroke
@@ -92,7 +97,6 @@ import com.hollow.vpn.ui.screens.ConnectedHomeScreen
 import com.hollow.vpn.ui.screens.CountryServerListScreen
 import com.hollow.vpn.ui.screens.RawXrayJsonEditorDialog
 import com.hollow.vpn.ui.screens.SettingsScreen
-import com.hollow.vpn.ui.screens.SplashFetchingScreen
 import com.hollow.vpn.ui.theme.HollowAmber
 import com.hollow.vpn.ui.theme.HollowCream
 import com.hollow.vpn.ui.theme.HollowCreamDivider
@@ -136,6 +140,7 @@ fun HollowVpnApp(
     val filteredServers by vpnViewModel.filteredServers.collectAsStateWithLifecycle()
     val favoriteKeys by vpnViewModel.favoriteKeys.collectAsStateWithLifecycle()
     val isTestingFastest by vpnViewModel.isTestingFastest.collectAsStateWithLifecycle()
+    val isRepingAll by vpnViewModel.isRepingAll.collectAsStateWithLifecycle()
     val serverCategories by vpnViewModel.serverCategories.collectAsStateWithLifecycle()
     val selectedCategory by vpnViewModel.selectedCategory.collectAsStateWithLifecycle()
     val selectedServer by vpnViewModel.selectedServer.collectAsStateWithLifecycle()
@@ -375,72 +380,25 @@ fun HollowVpnApp(
                     }
                 },
                 bottomBar = {
-                    val showFetchingPill = fetchingProgress.isActive &&
-                        currentScreen != VpnScreen.SPLASH_FETCHING
+                    val isBusy = fetchingProgress.isActive || isRepingAll || isTestingFastest
+                    // Thin loading bar (same idea as Outrun's latency test). The server list draws its own under the header.
+                    val showLoadingBar = isBusy && currentScreen != VpnScreen.SERVER_LIST
                     val renderNavBar = showBottomNav && !useNavigationRail
-                    if (showFetchingPill || renderNavBar) {
+                    if (showLoadingBar || renderNavBar) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             AnimatedVisibility(
-                                visible = showFetchingPill,
-                                enter = fadeIn() + slideInVertically { it / 2 },
-                                exit = fadeOut() + slideOutVertically { it / 2 }
+                                visible = showLoadingBar,
+                                enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
+                                exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(HollowRadius.Pill),
-                                    color = NothingSurfaceElevated,
-                                    border = BorderStroke(HollowStroke.Hairline, NothingBorder),
-                                    shadowElevation = 6.dp,
-                                    modifier = Modifier
-                                        .padding(
-                                            start = HollowSpace.Lg,
-                                            end = HollowSpace.Lg,
-                                            top = HollowSpace.Xs,
-                                            bottom = if (renderNavBar) HollowSpace.Sm else HollowSpace.Md
-                                        )
-                                        .then(if (!renderNavBar) Modifier.navigationBarsPadding() else Modifier)
-                                        .minimumInteractiveComponentSize()
-                                        .clip(RoundedCornerShape(HollowRadius.Pill))
-                                        .clickable(role = Role.Button) {
-                                            vpnViewModel.reopenFetchingScreen()
-                                        }
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(start = HollowSpace.Lg, end = HollowSpace.Sm, top = HollowSpace.Sm, bottom = HollowSpace.Sm),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(HollowSpace.Md)
-                                    ) {
-                                        HollowBlinkingDot(
-                                            color = if (fetchingProgress.workingCount > 0) NothingMatrixGreen else HollowOrange
-                                        )
-                                        Text(
-                                            text = "Fetching · ${fetchingProgress.workingCount} ready",
-                                            fontFamily = DotoDisplayFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = HollowType.Small,
-                                            lineHeight = HollowLineHeight.Small,
-                                            letterSpacing = HollowTracking.Small,
-                                            color = HollowInk
-                                        )
-                                        Surface(
-                                            shape = RoundedCornerShape(HollowRadius.Pill),
-                                            color = HollowOrange
-                                        ) {
-                                            Text(
-                                                text = "SHOW",
-                                                fontFamily = DotoDisplayFamily,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = HollowType.Micro,
-                                                lineHeight = HollowLineHeight.Micro,
-                                                letterSpacing = HollowTracking.Micro,
-                                                color = Color.White,
-                                                modifier = Modifier.padding(horizontal = HollowSpace.Sm, vertical = HollowSpace.Xs)
-                                            )
-                                        }
-                                    }
-                                }
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth().height(HollowSizes.Spinner),
+                                    color = HollowOrange,
+                                    trackColor = NothingBorder
+                                )
                             }
 
                             AnimatedVisibility(
@@ -490,13 +448,7 @@ fun HollowVpnApp(
                         label = "vpn_screen_motion"
                     ) { screen ->
                         when (screen) {
-                            VpnScreen.SPLASH_FETCHING -> {
-                                SplashFetchingScreen(
-                                    statusSubtitle = fetchingStatus,
-                                    progress = fetchingProgress,
-                                    onCancelOrSkip = vpnViewModel::hideFetchingScreen
-                                )
-                            }
+                            VpnScreen.SPLASH_FETCHING -> Unit
 
                             VpnScreen.SERVER_LIST -> {
                                 CountryServerListScreen(
@@ -507,6 +459,7 @@ fun HollowVpnApp(
                                     onSelectCategory = vpnViewModel::setCategory,
                                     favoriteKeys = favoriteKeys,
                                     isTestingFastest = isTestingFastest,
+                                    isLoading = fetchingProgress.isActive || isRepingAll || isTestingFastest,
                                     onToggleFavorite = vpnViewModel::toggleFavorite,
                                     onConnectFastest = { candidates ->
                                         vpnViewModel.testAndPickFastest(candidates) { server ->

@@ -1,6 +1,15 @@
 package com.hollow.vpn.ui.screens
 
+import com.hollow.vpn.ui.theme.HollowMotion
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
 import com.hollow.vpn.ui.theme.HollowDialog
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowText
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
@@ -116,6 +125,7 @@ fun CountryServerListScreen(
     onSelectCategory: (String) -> Unit = {},
     favoriteKeys: Set<String> = emptySet(),
     isTestingFastest: Boolean = false,
+    isLoading: Boolean = false,
     onToggleFavorite: (ServerEntity) -> Unit = {},
     onConnectFastest: (List<ServerEntity>) -> Unit = {},
     onSelectServer: (ServerEntity) -> Unit,
@@ -430,6 +440,18 @@ fun CountryServerListScreen(
             )
 
 
+            AnimatedVisibility(
+                visible = isLoading,
+                enter = fadeIn(tween(HollowMotion.Standard)) + expandVertically(tween(HollowMotion.Standard)),
+                exit = fadeOut(tween(HollowMotion.Fast)) + shrinkVertically(tween(HollowMotion.Fast))
+            ) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().padding(top = HollowSpace.Sm).height(HollowSizes.Spinner),
+                    color = HollowOrange,
+                    trackColor = NothingBorder
+                )
+            }
+
             if (isSelectionMode) {
                 Spacer(modifier = Modifier.height(HollowSpace.Md))
                 Surface(
@@ -522,7 +544,7 @@ fun CountryServerListScreen(
                                 )
                                 Text(
                                     text = if (isDefaultCategory) "No default servers" else "No matching servers",
-                                    fontFamily = DotoDisplayFamily,
+                                    fontFamily = HollowSansFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = HollowType.Heading,
                                     lineHeight = HollowLineHeight.Heading,
@@ -565,7 +587,7 @@ fun CountryServerListScreen(
                     item(key = "list_header") {
                         Text(
                             text = "$listTitle (${displayedServers.size})",
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = HollowType.Caption,
                             lineHeight = HollowLineHeight.Caption,

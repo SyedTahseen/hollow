@@ -190,6 +190,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     private val _favoriteKeys = MutableStateFlow(prefsStore.loadFavoriteKeys())
     val favoriteKeys: StateFlow<Set<String>> = _favoriteKeys.asStateFlow()
 
+    private val _isRepingAll = MutableStateFlow(false)
+    val isRepingAll: StateFlow<Boolean> = _isRepingAll.asStateFlow()
+
     private val _isTestingFastest = MutableStateFlow(false)
     val isTestingFastest: StateFlow<Boolean> = _isTestingFastest.asStateFlow()
 
@@ -463,6 +466,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun navigateTo(screen: VpnScreen) {
+        // The full-screen fetching / proxy-testing page is gone: progress is shown as a thin loading bar instead.
+        if (screen == VpnScreen.SPLASH_FETCHING) return
         if (_currentScreen.value == screen) return
         _screenStack.update { it + screen }
         _currentScreen.value = screen
@@ -743,7 +748,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                             }
                             showMessage("Updated latency for ${reRanked.size} reachable servers")
                         } else {
-                            if (showLoadingScreen && _currentScreen.value == VpnScreen.SPLASH_FETCHING) {
+                            if (showLoadingScreen) {
                                 _currentScreen.value = VpnScreen.SERVER_LIST
                                 _addServerRequest.value = AddServerRequest.SUBSCRIPTION
                             }
@@ -834,10 +839,7 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     },
                     onFailure = { err ->
-                        if (_currentScreen.value == VpnScreen.SPLASH_FETCHING) {
-                            _currentScreen.value = VpnScreen.SERVER_LIST
-                                _addServerRequest.value = AddServerRequest.SUBSCRIPTION
-                        }
+                        _addServerRequest.value = AddServerRequest.SUBSCRIPTION
                         showMessage("Could not fetch servers: ${err.message}")
                     }
                 )
@@ -1016,6 +1018,8 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         repingJob = viewModelScope.launch {
+            _isRepingAll.value = true
+            try {
             val existing = dao.getAllServersOnce()
             if (existing.isEmpty()) {
                 showMessage("No saved servers to test")
@@ -1043,6 +1047,9 @@ class VpnViewModel(application: Application) : AndroidViewModel(application) {
                 )
             } else {
                 showMessage("Tested ${existing.size} server(s), none passed proxy check")
+            }
+            } finally {
+                _isRepingAll.value = false
             }
         }
     }

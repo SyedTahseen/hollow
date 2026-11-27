@@ -40,13 +40,16 @@ val DotoDisplayFamily = FontFamily(
     )
 )
 
+/** Body / UI text uses the system sans-serif, exactly like Outrun. */
+val HollowSansFamily: FontFamily = FontFamily.SansSerif
+
 /**
- * Doto is the only typeface in the app. Sizes, line heights and tracking follow Outrun's scale
+ * Doto is kept for titles and display text only (Headline, Heading, Subheadline); everything else is sans-serif. Sizes, line heights and tracking follow Outrun's scale
  * (Headline 28 · Heading/Subheadline 20 · Body 16 · Small 14 · Caption/Label 12) so both apps read the same.
  */
 
-private fun outrun(size: Int, weight: FontWeight, line: Int, spacingEm: Float = 0f) = TextStyle(
-    fontFamily = DotoDisplayFamily,
+private fun outrun(size: Int, weight: FontWeight, line: Int, spacingEm: Float = 0f, family: FontFamily = HollowSansFamily) = TextStyle(
+    fontFamily = family,
     fontSize = size.sp,
     fontWeight = weight,
     lineHeight = line.sp,
@@ -59,8 +62,8 @@ object HollowText {
         fontFamily = DotoDisplayFamily, fontSize = 28.sp, fontWeight = FontWeight.Bold,
         lineHeight = 34.sp, letterSpacing = 0.45.sp
     )
-    val Heading = outrun(20, FontWeight.Bold, 24, 0.01f)
-    val Subheadline = outrun(20, FontWeight.Normal, 24, 0.01f)
+    val Heading = outrun(20, FontWeight.Bold, 24, 0.01f, DotoDisplayFamily)
+    val Subheadline = outrun(20, FontWeight.Normal, 24, 0.01f, DotoDisplayFamily)
     val Body = outrun(16, FontWeight.Normal, 24, 0.03f)
     val BodyBold = outrun(16, FontWeight.Bold, 24, 0.03f)
     val BodyMedium = outrun(16, FontWeight.Medium, 24, 0.03f)

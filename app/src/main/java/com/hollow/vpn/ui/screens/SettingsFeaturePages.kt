@@ -1,9 +1,9 @@
 package com.hollow.vpn.ui.screens
 
 import android.content.Context
+import com.hollow.vpn.ui.theme.HollowSansFamily
 import com.hollow.vpn.ui.theme.HollowTracking
 import com.hollow.vpn.ui.theme.HollowLineHeight
-import com.hollow.vpn.ui.theme.DotoDisplayFamily
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.LinkProperties
@@ -203,7 +203,7 @@ private fun FeatureToggleCard(
         ) {
             Text(
                 text = title,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Small,
                 lineHeight = HollowLineHeight.Small,
@@ -250,7 +250,7 @@ internal fun FeatureButton(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Text(
                 text = label,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.BodyStrong,
                 lineHeight = HollowLineHeight.BodyStrong,
@@ -270,7 +270,7 @@ internal fun FeatureButton(
 internal fun FeatureCaption(text: String, modifier: Modifier = Modifier, color: Color = HollowInkSecondary) {
     Text(
         text = text,
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontSize = HollowType.Micro,
         letterSpacing = HollowTracking.Micro,
         lineHeight = HollowLineHeight.Micro,
@@ -341,7 +341,7 @@ internal fun NetShieldPage(
         FeatureCard(modifier = Modifier.padding(vertical = HollowSpace.Sm)) {
             Text(
                 text = "NetShield is unavailable",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Small,
                 lineHeight = HollowLineHeight.Small,
@@ -352,7 +352,7 @@ internal fun NetShieldPage(
             Text(
                 text = "Your device is using a private DNS provider, which overrides the DNS this VPN sets. " +
                     "Turn Private DNS off, or set it to Automatic, to use NetShield.",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 letterSpacing = HollowTracking.Micro,
                 lineHeight = HollowLineHeight.Micro,
@@ -523,7 +523,7 @@ internal fun SplitIpAddressesPage(
         OutlinedTextField(
             value = text,
             onValueChange = { text = it; error = false },
-            placeholder = { Text("192.0.2.0", color = HollowInkMuted, fontFamily = DotoDisplayFamily) },
+            placeholder = { Text("192.0.2.0", color = HollowInkMuted, fontFamily = HollowSansFamily) },
             isError = error,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
@@ -574,7 +574,7 @@ internal fun SplitIpAddressesPage(
         ) {
             Text(
                 text = ip,
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = HollowType.Body,
                 lineHeight = HollowLineHeight.Body,
@@ -602,7 +602,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
     Spacer(Modifier.height(HollowSpace.Lg))
     Text(
         text = "How to enable kill switch",
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontWeight = FontWeight.Bold,
         fontSize = HollowType.Title,
         lineHeight = HollowLineHeight.Title,
@@ -612,7 +612,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
     Spacer(Modifier.height(HollowSpace.Md))
 
     val stepStyle = androidx.compose.ui.text.TextStyle(
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontSize = HollowType.BodyStrong,
         letterSpacing = HollowTracking.BodyStrong,
         lineHeight = HollowLineHeight.BodyStrong,
@@ -655,7 +655,7 @@ internal fun KillSwitchPage(onOpenSystemVpnSettings: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "When kill switch is on, you won’t be able to connect to:",
-                    fontFamily = DotoDisplayFamily,
+                    fontFamily = HollowSansFamily,
                     fontSize = HollowType.Micro,
                     letterSpacing = HollowTracking.Micro,
                     lineHeight = HollowLineHeight.Micro,
@@ -698,7 +698,7 @@ private fun KillSwitchBullet(text: String) {
     Row {
         Text(
             text = "•",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -707,7 +707,7 @@ private fun KillSwitchBullet(text: String) {
         )
         Text(
             text = text,
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontSize = HollowType.Micro,
             letterSpacing = HollowTracking.Micro,
             lineHeight = HollowLineHeight.Micro,
@@ -810,7 +810,7 @@ internal fun UsageHistoryPage() {
         Row(Modifier.fillMaxWidth()) {
             Text(
                 text = days.first().first.substring(5),
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -819,7 +819,7 @@ internal fun UsageHistoryPage() {
             )
             Text(
                 text = if (peak > 0) "peak ${fmtSize(peak)}" else "no data yet",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -834,7 +834,7 @@ internal fun UsageHistoryPage() {
             Text(
                 text = "Android only shares per-app data with apps that have Usage access. Turn it on for " +
                     "Hollow to see which apps used data while the VPN was connected.",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 letterSpacing = HollowTracking.Micro,
                 lineHeight = HollowLineHeight.Micro,
@@ -844,7 +844,7 @@ internal fun UsageHistoryPage() {
             UsageDivider()
             Text(
                 text = "Open Usage access settings",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = HollowType.Small,
                 lineHeight = HollowLineHeight.Small,
@@ -876,7 +876,7 @@ internal fun UsageHistoryPage() {
                     ) {
                         Text(
                             text = a.label,
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = HollowType.Small,
                             lineHeight = HollowLineHeight.Small,
@@ -887,7 +887,7 @@ internal fun UsageHistoryPage() {
                         )
                         Text(
                             text = fmtSize(a.bytes),
-                            fontFamily = DotoDisplayFamily,
+                            fontFamily = HollowSansFamily,
                             fontSize = HollowType.Caption,
                             lineHeight = HollowLineHeight.Caption,
                             letterSpacing = HollowTracking.Caption,
@@ -899,7 +899,7 @@ internal fun UsageHistoryPage() {
             }
             Text(
                 text = "Approximate. Android groups app data in hourly blocks, and this includes apps skipped by the VPN.",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 letterSpacing = HollowTracking.Micro,
                 lineHeight = HollowLineHeight.Micro,
@@ -921,7 +921,7 @@ internal fun UsageHistoryPage() {
     if (sessions.isNotEmpty() || today.first + today.second + week.first + week.second > 0) {
         Text(
             text = "Clear history",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
@@ -951,7 +951,7 @@ private fun UsageDivider() {
 private fun UsageNote(text: String) {
     Text(
         text = text,
-        fontFamily = DotoDisplayFamily,
+        fontFamily = HollowSansFamily,
         fontSize = HollowType.Micro,
         lineHeight = HollowLineHeight.Micro,
         letterSpacing = HollowTracking.Micro,
@@ -965,7 +965,7 @@ private fun UsageSummaryCard(label: String, value: Pair<Long, Long>, modifier: M
     FeatureCard(modifier = modifier, contentPadding = HollowSpace.Md) {
         Text(
             text = label,
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontSize = HollowType.Micro,
             lineHeight = HollowLineHeight.Micro,
             letterSpacing = HollowTracking.Micro,
@@ -974,7 +974,7 @@ private fun UsageSummaryCard(label: String, value: Pair<Long, Long>, modifier: M
         Spacer(Modifier.height(HollowSpace.Xs))
         Text(
             text = "↓ ${fmtSize(value.second)}",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
@@ -984,7 +984,7 @@ private fun UsageSummaryCard(label: String, value: Pair<Long, Long>, modifier: M
         )
         Text(
             text = "↑ ${fmtSize(value.first)}",
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Medium,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
@@ -1005,7 +1005,7 @@ private fun UsageSessionRow(s: UsageSession) {
     ) {
         Text(
             text = s.server.ifBlank { "Server" },
-            fontFamily = DotoDisplayFamily,
+            fontFamily = HollowSansFamily,
             fontWeight = FontWeight.Bold,
             fontSize = HollowType.Small,
             lineHeight = HollowLineHeight.Small,
@@ -1017,7 +1017,7 @@ private fun UsageSessionRow(s: UsageSession) {
         Row(Modifier.fillMaxWidth()) {
             Text(
                 text = "${fmt.format(Date(s.start))} · ${fmtDuration(s.end - s.start)}",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
@@ -1026,7 +1026,7 @@ private fun UsageSessionRow(s: UsageSession) {
             )
             Text(
                 text = "↓ ${fmtSize(s.down)}  ↑ ${fmtSize(s.up)}",
-                fontFamily = DotoDisplayFamily,
+                fontFamily = HollowSansFamily,
                 fontSize = HollowType.Micro,
                 lineHeight = HollowLineHeight.Micro,
                 letterSpacing = HollowTracking.Micro,
